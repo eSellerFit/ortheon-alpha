@@ -1,1 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Ortheon Alpha Waitlist Test</title>
+</head>
+<body>
+  <h1>Ortheon Alpha Waitlist Test</h1>
 
+  <form id="waitlistForm">
+    <input name="firstName" placeholder="First name" value="George" required><br><br>
+    <input name="email" type="email" placeholder="Email" value="test@example.com" required><br><br>
+
+    <select name="joinerType">
+      <option>Career transition user</option>
+      <option>Career coach / advisor</option>
+      <option>HR / outplacement professional</option>
+      <option>Other</option>
+    </select><br><br>
+
+    <select name="currentSituation">
+      <option>Considering career change</option>
+      <option>Recently laid off / in transition</option>
+      <option>Exploring consulting / fractional work</option>
+      <option>Considering starting a business</option>
+      <option>Considering retraining</option>
+      <option>Unsure / exploring</option>
+      <option>Advisor interested in tool</option>
+      <option>Other</option>
+    </select><br><br>
+
+    <input name="linkedInUrl" placeholder="LinkedIn URL" value=""><br><br>
+
+    <label>
+      <input name="consentAccepted" type="checkbox" checked>
+      I agree to join the Ortheon Alpha waitlist.
+    </label><br><br>
+
+    <button type="submit">Submit test</button>
+  </form>
+
+  <p id="status"></p>
+
+  <script>
+    const WEBHOOK_URL = "https://hook.us2.make.com/39nmg8uu67eg3ibnhnhakktvna715wo3";
+
+    document.getElementById("waitlistForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const form = e.target;
+      const params = new URLSearchParams(window.location.search);
+
+      const payload = {
+        waitlistId: "WL-" + Date.now(),
+        firstName: form.firstName.value,
+        email: form.email.value,
+        joinerType: form.joinerType.value,
+        currentSituation: form.currentSituation.value,
+        linkedInUrl: form.linkedInUrl.value,
+        source: params.get("source") || "Direct",
+        utmSource: params.get("utm_source") || "",
+        utmMedium: params.get("utm_medium") || "",
+        utmCampaign: params.get("utm_campaign") || "",
+        consentAccepted: form.consentAccepted.checked,
+        consentTimestamp: new Date().toISOString(),
+        status: "New"
+      };
+
+      document.getElementById("status").innerText = "Sending...";
+
+      try {
+        const res = await fetch(WEBHOOK_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error("Request failed");
+
+        document.getElementById("status").innerText = "Submitted successfully.";
+      } catch (err) {
+        console.error(err);
+        document.getElementById("status").innerText = "Error sending test.";
+      }
+    });
+  </script>
+</body>
+</html>
