@@ -2,85 +2,774 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Ortheon Alpha Waitlist Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ortheon — Career Direction with Clarity</title>
+  <meta name="description" content="Ortheon is an AI-powered career direction tool for people at a career crossroads. Join the free Alpha cohort.">
+
+  <style>
+    :root {
+      --bg: #07111f;
+      --bg-soft: #0d1b2f;
+      --card: #122238;
+      --card-light: #172b45;
+      --text: #f5f7fb;
+      --muted: #aab6c8;
+      --accent: #7dd3fc;
+      --accent-strong: #38bdf8;
+      --border: rgba(255,255,255,0.12);
+      --success: #86efac;
+      --danger: #fca5a5;
+      --max: 1120px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Arial, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(56,189,248,0.18), transparent 34%),
+        radial-gradient(circle at top right, rgba(125,211,252,0.10), transparent 32%),
+        var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .container {
+      width: 100%;
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    header {
+      padding: 28px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand {
+      font-size: 22px;
+      font-weight: 750;
+      letter-spacing: 0.02em;
+    }
+
+    .brand span {
+      color: var(--accent);
+    }
+
+    .nav-note {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .hero {
+      padding: 76px 0 54px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 40px;
+      align-items: center;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--accent);
+      background: rgba(255,255,255,0.04);
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      margin: 0 0 20px;
+      font-size: clamp(42px, 6vw, 72px);
+      line-height: 0.98;
+      letter-spacing: -0.055em;
+    }
+
+    .hero-sub {
+      font-size: 20px;
+      color: var(--muted);
+      max-width: 690px;
+      margin-bottom: 28px;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 14px;
+      margin-top: 28px;
+    }
+
+    .btn {
+      border: 0;
+      cursor: pointer;
+      padding: 14px 20px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 16px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.2s ease;
+    }
+
+    .btn-primary {
+      background: var(--accent-strong);
+      color: #04101d;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      background: #7dd3fc;
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .small-note {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .hero-card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: 0 20px 70px rgba(0,0,0,0.25);
+    }
+
+    .report-preview-title {
+      font-weight: 750;
+      font-size: 18px;
+      margin-bottom: 14px;
+    }
+
+    .mini-card {
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      border-radius: 16px;
+      padding: 16px;
+      margin-top: 12px;
+    }
+
+    .metric-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding: 10px 0;
+      font-size: 14px;
+    }
+
+    .metric-row:last-child {
+      border-bottom: 0;
+    }
+
+    .metric-label {
+      color: var(--muted);
+    }
+
+    .metric-value {
+      text-align: right;
+      font-weight: 700;
+    }
+
+    section {
+      padding: 58px 0;
+    }
+
+    .section-title {
+      font-size: clamp(28px, 4vw, 42px);
+      line-height: 1.1;
+      letter-spacing: -0.035em;
+      margin: 0 0 16px;
+    }
+
+    .section-sub {
+      color: var(--muted);
+      font-size: 18px;
+      max-width: 760px;
+      margin-bottom: 28px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.045);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 22px;
+    }
+
+    .card h3 {
+      margin: 0 0 8px;
+      font-size: 19px;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .method-number {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(56,189,248,0.16);
+      color: var(--accent);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+
+    .founder {
+      display: grid;
+      grid-template-columns: 0.8fr 1.2fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .founder-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+    }
+
+    ul.clean {
+      padding-left: 20px;
+      color: var(--muted);
+    }
+
+    ul.clean li {
+      margin-bottom: 8px;
+    }
+
+    .form-wrap {
+      background: linear-gradient(180deg, var(--card), rgba(18,34,56,0.78));
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 28px;
+    }
+
+    form {
+      display: grid;
+      gap: 16px;
+    }
+
+    label {
+      display: block;
+      font-weight: 650;
+      font-size: 14px;
+      margin-bottom: 7px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 13px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      font-size: 16px;
+      outline: none;
+    }
+
+    select option {
+      color: #0b1220;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent-strong);
+      box-shadow: 0 0 0 3px rgba(56,189,248,0.12);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .checkbox-row input {
+      width: auto;
+      margin-top: 4px;
+    }
+
+    .status {
+      min-height: 24px;
+      font-weight: 650;
+    }
+
+    .status.success {
+      color: var(--success);
+    }
+
+    .status.error {
+      color: var(--danger);
+    }
+
+    .disclaimer {
+      color: var(--muted);
+      font-size: 14px;
+      border-top: 1px solid var(--border);
+      padding-top: 18px;
+      margin-top: 18px;
+    }
+
+    footer {
+      padding: 30px 0 50px;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      font-size: 14px;
+    }
+
+    @media (max-width: 860px) {
+      .hero-grid,
+      .grid-2,
+      .grid-3,
+      .founder,
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        padding-top: 48px;
+      }
+
+      .nav {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+  </style>
 </head>
+
 <body>
-  <h1>Ortheon Alpha Waitlist Test</h1>
+  <header>
+    <div class="container nav">
+      <div class="brand">Ortheon<span>.</span></div>
+      <div class="nav-note">Alpha waitlist now open</div>
+    </div>
+  </header>
 
-  <form id="waitlistForm">
-    <input name="firstName" placeholder="First name" value="George" required><br><br>
-    <input name="email" type="email" placeholder="Email" value="test@example.com" required><br><br>
+  <main>
+    <!-- HERO -->
+    <section class="hero">
+      <div class="container hero-grid">
+        <div>
+          <div class="eyebrow">Career direction tool · Free Alpha cohort</div>
+          <h1>Career change with clarity, dignity, and financial realism.</h1>
+          <p class="hero-sub">
+            Ortheon helps people at a career crossroads evaluate possible next paths through competence,
+            career anchors, financial reality, and the durability of roles in an AI- and digital-shaped labor market.
+          </p>
 
-    <select name="joinerType">
-      <option>Career transition user</option>
-      <option>Career coach / advisor</option>
-      <option>HR / outplacement professional</option>
-      <option>Other</option>
-    </select><br><br>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#join">Join the Free Alpha Cohort</a>
+            <a class="btn btn-secondary" href="#method">See the Method</a>
+          </div>
 
-    <select name="currentSituation">
-      <option>Considering career change</option>
-      <option>Recently laid off / in transition</option>
-      <option>Exploring consulting / fractional work</option>
-      <option>Considering starting a business</option>
-      <option>Considering retraining</option>
-      <option>Unsure / exploring</option>
-      <option>Advisor interested in tool</option>
-      <option>Other</option>
-    </select><br><br>
+          <p class="small-note">
+            First beta users will receive a free early Career Direction Report when Ortheon Alpha opens.
+          </p>
+        </div>
 
-    <input name="linkedInUrl" placeholder="LinkedIn URL" value=""><br><br>
+        <div class="hero-card">
+          <div class="report-preview-title">What Ortheon will evaluate</div>
 
-    <label>
-      <input name="consentAccepted" type="checkbox" checked>
-      I agree to join the Ortheon Alpha waitlist.
-    </label><br><br>
+          <div class="mini-card">
+            <div class="metric-row">
+              <span class="metric-label">Competence Fit</span>
+              <span class="metric-value">What you can credibly do</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">Career Anchors</span>
+              <span class="metric-value">What gives work meaning</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">Financial Reality</span>
+              <span class="metric-value">What you can actually afford</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">Decision Archetype</span>
+              <span class="metric-value">What drives this move now</span>
+            </div>
+            <div class="metric-row">
+              <span class="metric-label">AI & Digital Durability</span>
+              <span class="metric-value">How the role may evolve</span>
+            </div>
+          </div>
 
-    <button type="submit">Submit test</button>
-  </form>
+          <p class="small-note" style="margin-top:14px;">
+            Sample visual career maps and reports will be added during the Alpha preview.
+          </p>
+        </div>
+      </div>
+    </section>
 
-  <p id="status"></p>
+    <!-- PROBLEM -->
+    <section>
+      <div class="container">
+        <h2 class="section-title">Skills alone are not enough.</h2>
+        <p class="section-sub">
+          Many career tools look mainly at resumes, job titles, or keywords. But a serious career move depends on more than what you have done before.
+        </p>
+
+        <div class="grid-2">
+          <div class="card">
+            <h3>You may be qualified and still misaligned.</h3>
+            <p>A role can fit your skills but conflict with your values, energy, autonomy needs, or lifestyle.</p>
+          </div>
+          <div class="card">
+            <h3>A meaningful path may be financially unrealistic.</h3>
+            <p>Some transitions require lower income, bridge work, retraining, or a longer runway.</p>
+          </div>
+          <div class="card">
+            <h3>Some roles are transforming quickly.</h3>
+            <p>AI, automation, and digital tools are changing which roles grow, shrink, or require new capabilities.</p>
+          </div>
+          <div class="card">
+            <h3>Career change is often not one jump.</h3>
+            <p>The right move may require a staged path, a transfer point, or a safer bridge before the destination.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- METHOD -->
+    <section id="method">
+      <div class="container">
+        <h2 class="section-title">The Ortheon Method</h2>
+        <p class="section-sub">
+          Ortheon is being designed as a structured career decision-support tool, not a generic job quiz.
+        </p>
+
+        <div class="grid-3">
+          <div class="card">
+            <div class="method-number">1</div>
+            <h3>Competence Fit</h3>
+            <p>What you can credibly do based on your experience, roles, industries, and transferable skills.</p>
+          </div>
+
+          <div class="card">
+            <div class="method-number">2</div>
+            <h3>Career Anchors</h3>
+            <p>What gives your work energy, dignity, motivation, and long-term fit.</p>
+          </div>
+
+          <div class="card">
+            <div class="method-number">3</div>
+            <h3>Financial Reality</h3>
+            <p>Whether a path can support your income needs, transition runway, and real-life obligations.</p>
+          </div>
+
+          <div class="card">
+            <div class="method-number">4</div>
+            <h3>Decision Archetype</h3>
+            <p>Whether your current decision is driven more by competence, meaning, money, autonomy, stability, or reinvention.</p>
+          </div>
+
+          <div class="card">
+            <div class="method-number">5</div>
+            <h3>AI & Digital Role Durability</h3>
+            <p>Whether the roles you are considering are likely to grow, transform, become automated, or lose value as AI and digital tools reshape work.</p>
+          </div>
+
+          <div class="card">
+            <div class="method-number">6</div>
+            <h3>Transition Route</h3>
+            <p>Whether your next direction is a direct move, a staged path, or a transition that requires a bridge first.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WHAT USERS GET -->
+    <section>
+      <div class="container">
+        <h2 class="section-title">What Alpha users will receive</h2>
+        <p class="section-sub">
+          The first cohort will receive a free early Career Direction Report and help shape the product before public launch.
+        </p>
+
+        <div class="grid-2">
+          <div class="card">
+            <h3>Career Direction Report</h3>
+            <p>Top possible career directions, why they may fit, and what risks or trade-offs to consider.</p>
+          </div>
+          <div class="card">
+            <h3>Financial and transition notes</h3>
+            <p>Signals about whether a path is viable now, viable with a bridge, or too risky under current constraints.</p>
+          </div>
+          <div class="card">
+            <h3>Role durability signal</h3>
+            <p>A directional view of whether the role is rising, stable, transforming, pressured, or declining.</p>
+          </div>
+          <div class="card">
+            <h3>Visual career map</h3>
+            <p>A future report format will include a metro-style map showing routes, transfer points, and journey length.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WHO IT IS FOR -->
+    <section>
+      <div class="container">
+        <h2 class="section-title">Who this is for</h2>
+        <p class="section-sub">
+          Ortheon is designed for people who need more than generic career advice.
+        </p>
+
+        <div class="grid-2">
+          <div class="card">
+            <h3>Mid-career professionals</h3>
+            <p>People considering a serious shift after years of accumulated experience.</p>
+          </div>
+          <div class="card">
+            <h3>Career transitioners</h3>
+            <p>People choosing between corporate work, consulting, entrepreneurship, retraining, or mission-driven paths.</p>
+          </div>
+          <div class="card">
+            <h3>People balancing meaning and money</h3>
+            <p>People who want a better fit but cannot ignore income, family, or financial obligations.</p>
+          </div>
+          <div class="card">
+            <h3>Career coaches and advisors</h3>
+            <p>Professionals interested in structured pre-session diagnostics and decision-support tools.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOUNDER -->
+    <section>
+      <div class="container founder">
+        <div>
+          <h2 class="section-title">Who is building Ortheon?</h2>
+          <p class="section-sub">
+            Ortheon is being built by George Chakhidze, a workforce and talent systems professional with 18+ years of experience.
+          </p>
+        </div>
+
+        <div class="founder-box">
+          <ul class="clean">
+            <li>Led talent acquisition and workforce projects across companies including PepsiCo, Abbott, Kelly OCG, Sber, and Wildberries.</li>
+            <li>Built and scaled workforce-related systems, including AI-enabled hiring and marketplace enablement platforms.</li>
+            <li>Works with career transition, entrepreneurship, and small business audiences through SCORE in Greater New York.</li>
+            <li>Building Ortheon to help people make career moves with more structure, dignity, and financial realism.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- JOIN FORM -->
+    <section id="join">
+      <div class="container">
+        <div class="form-wrap">
+          <h2 class="section-title">Join the Free Alpha Cohort</h2>
+          <p class="section-sub">
+            Leave your email to be considered for the first free Ortheon Alpha group.
+          </p>
+
+          <form id="waitlistForm">
+            <div class="form-grid">
+              <div>
+                <label for="firstName">First name</label>
+                <input id="firstName" name="firstName" type="text" placeholder="George" required>
+              </div>
+
+              <div>
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" placeholder="you@example.com" required>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div>
+                <label for="joinerType">I am joining as</label>
+                <select id="joinerType" name="joinerType" required>
+                  <option value="">Select one</option>
+                  <option>Career transition user</option>
+                  <option>Career coach / advisor</option>
+                  <option>HR / outplacement professional</option>
+                  <option>Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="currentSituation">Current situation</label>
+                <select id="currentSituation" name="currentSituation" required>
+                  <option value="">Select one</option>
+                  <option>Considering career change</option>
+                  <option>Recently laid off / in transition</option>
+                  <option>Exploring consulting / fractional work</option>
+                  <option>Considering starting a business</option>
+                  <option>Considering retraining</option>
+                  <option>Unsure / exploring</option>
+                  <option>Advisor interested in tool</option>
+                  <option>Other</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label for="linkedInUrl">LinkedIn URL optional</label>
+              <input id="linkedInUrl" name="linkedInUrl" type="url" placeholder="https://www.linkedin.com/in/...">
+            </div>
+
+            <div class="checkbox-row">
+              <input id="consentAccepted" name="consentAccepted" type="checkbox" required>
+              <span>
+                I agree to join the Ortheon Alpha waitlist and receive email updates about the free Alpha cohort.
+              </span>
+            </div>
+
+            <button class="btn btn-primary" type="submit">Join the Free Alpha Cohort</button>
+            <div id="formStatus" class="status"></div>
+          </form>
+
+          <div class="disclaimer">
+            Ortheon is currently in Alpha. The first cohort is free because the methodology and report experience are being tested.
+            Ortheon is not a job placement service, financial advice, legal advice, or a guarantee of employment.
+            It is a structured career decision-support tool.
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      © 2026 Ortheon. Alpha waitlist.
+    </div>
+  </footer>
 
   <script>
+    // Replace this with your Make webhook URL.
     const WEBHOOK_URL = "https://hook.us2.make.com/39nmg8uu67eg3ibnhnhakktvna715wo3";
 
-    document.getElementById("waitlistForm").addEventListener("submit", async function (e) {
-      e.preventDefault();
-
-      const form = e.target;
+    function getQueryParam(name) {
       const params = new URLSearchParams(window.location.search);
+      return params.get(name) || "";
+    }
+
+    function detectSource() {
+      const sourceParam = getQueryParam("source");
+      const utmSource = getQueryParam("utm_source");
+
+      if (sourceParam) return sourceParam;
+      if (!utmSource) return "Direct";
+
+      const normalized = utmSource.toLowerCase();
+
+      if (normalized.includes("linkedin")) return "LinkedIn";
+      if (normalized.includes("meta")) return "Meta Ads";
+      if (normalized.includes("instagram")) return "Instagram Reels";
+      if (normalized.includes("tiktok")) return "TikTok";
+      if (normalized.includes("google")) return "Google Ads";
+
+      return "Other";
+    }
+
+    document.getElementById("waitlistForm").addEventListener("submit", async function (event) {
+      event.preventDefault();
+
+      const form = event.target;
+      const status = document.getElementById("formStatus");
+      const submitButton = form.querySelector("button[type='submit']");
 
       const payload = {
         waitlistId: "WL-" + Date.now(),
-        firstName: form.firstName.value,
-        email: form.email.value,
+        firstName: form.firstName.value.trim(),
+        email: form.email.value.trim(),
         joinerType: form.joinerType.value,
         currentSituation: form.currentSituation.value,
-        linkedInUrl: form.linkedInUrl.value,
-        source: params.get("source") || "Direct",
-        utmSource: params.get("utm_source") || "",
-        utmMedium: params.get("utm_medium") || "",
-        utmCampaign: params.get("utm_campaign") || "",
+        linkedInUrl: form.linkedInUrl.value.trim(),
+        source: detectSource(),
+        utmSource: getQueryParam("utm_source"),
+        utmMedium: getQueryParam("utm_medium"),
+        utmCampaign: getQueryParam("utm_campaign"),
         consentAccepted: form.consentAccepted.checked,
         consentTimestamp: new Date().toISOString(),
         status: "New"
       };
 
-      document.getElementById("status").innerText = "Sending...";
+      status.className = "status";
+      status.textContent = "Submitting...";
+      submitButton.disabled = true;
+      submitButton.textContent = "Submitting...";
 
       try {
-        const res = await fetch(WEBHOOK_URL, {
+        const response = await fetch(WEBHOOK_URL, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json"
+          },
           body: JSON.stringify(payload)
         });
 
-        if (!res.ok) throw new Error("Request failed");
+        if (!response.ok) {
+          throw new Error("Submission failed");
+        }
 
-        document.getElementById("status").innerText = "Submitted successfully.";
-      } catch (err) {
-        console.error(err);
-        document.getElementById("status").innerText = "Error sending test.";
+        status.className = "status success";
+        status.textContent = "Thank you. You’re on the Ortheon Alpha waitlist.";
+        form.reset();
+
+      } catch (error) {
+        console.error(error);
+        status.className = "status error";
+        status.textContent = "Something went wrong. Please try again.";
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = "Join the Free Alpha Cohort";
       }
     });
   </script>
