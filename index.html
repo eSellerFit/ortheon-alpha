@@ -1080,8 +1080,20 @@
         }
 
         status.className = "status success";
-        status.textContent = "Thank you. You’re on the Ortheon Alpha waitlist.";
-        form.reset();
+status.textContent = "Thank you. You’re on the Ortheon Alpha waitlist.";
+
+if (typeof gtag === "function") {
+  gtag("event", "waitlist_submit", {
+    joiner_type: payload.joinerType,
+    current_situation: payload.currentSituation,
+    source: payload.source,
+    utm_source: payload.utmSource,
+    utm_medium: payload.utmMedium,
+    utm_campaign: payload.utmCampaign
+  });
+}
+
+form.reset();
 
       } catch (error) {
         console.error(error);
