@@ -262,28 +262,50 @@
 
     .founder {
       display: grid;
-      grid-template-columns: 0.8fr 1.2fr;
-      gap: 24px;
+      grid-template-columns: 0.85fr 1.15fr;
+      gap: 28px;
       align-items: start;
     }
 
-    .founder-box {
-      .founder-photo-wrap {
-  width: 160px;
-  height: 160px;
-  border-radius: 24px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  background: rgba(255,255,255,0.06);
-  margin-bottom: 18px;
-}
+    .founder-head {
+      display: flex;
+      align-items: flex-start;
+      gap: 18px;
+    }
 
-.founder-photo {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
+    .founder-photo-wrap {
+      width: 88px;
+      height: 88px;
+      min-width: 88px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 2px solid rgba(125,211,252,0.35);
+      background: rgba(255,255,255,0.06);
+      box-shadow: 0 10px 28px rgba(0,0,0,0.25);
+    }
+
+    .founder-photo {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 25%;
+      display: block;
+    }
+
+    .founder-head .section-title {
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+
+    .founder-head .section-sub {
+      margin-bottom: 0;
+    }
+
+    .founder-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
     }
 
     ul.clean {
@@ -396,6 +418,12 @@
 
       .nav {
         align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .founder-head {
         flex-direction: column;
       }
     }
@@ -603,20 +631,25 @@
     <!-- FOUNDER -->
     <section>
       <div class="container founder">
-       <div>
-  <div class="founder-photo-wrap">
-    <img src="assets/images/gio.jpg" alt="George Chakhidze" class="founder-photo">
-  </div>
-  <h2 class="section-title">Who is building Ortheon?</h2>
-  <p class="section-sub">
-    Ortheon is being built by George Chakhidze, a workforce and talent systems professional with 18+ years of experience.
-  </p>
-</div>
+        <div>
+          <div class="founder-head">
+            <div class="founder-photo-wrap">
+              <img src="assets/images/gio.jpg" alt="George Chakhidze" class="founder-photo">
+            </div>
+
+            <div>
+              <h2 class="section-title">Who is building Ortheon?</h2>
+              <p class="section-sub">
+                Ortheon is being built by George Chakhidze, a workforce and talent systems professional with 18+ years of experience.
+              </p>
+            </div>
+          </div>
+        </div>
 
         <div class="founder-box">
           <ul class="clean">
             <li>Led talent acquisition and workforce projects across companies including PepsiCo, Abbott, Kelly OCG, Sber, and Wildberries.</li>
-            <li>Built and scaled gyg workforce-related systems, including AI-enabled hiring and marketplace enablement platforms.</li>
+            <li>Built and scaled gig workforce-related systems, including AI-enabled hiring and marketplace enablement platforms.</li>
             <li>Works with career transition, entrepreneurship, and small business audiences through SCORE in Greater New York.</li>
             <li>Building Ortheon to help people make career moves with more structure, dignity, and financial realism.</li>
           </ul>
@@ -707,7 +740,6 @@
   </footer>
 
   <script>
-    // Replace this with your Make webhook URL.
     const WEBHOOK_URL = "https://hook.us2.make.com/39nmg8uu67eg3ibnhnhakktvna715wo3";
 
     function getQueryParam(name) {
