@@ -747,23 +747,32 @@
       return params.get(name) || "";
     }
 
-    function detectSource() {
-      const sourceParam = getQueryParam("source");
-      const utmSource = getQueryParam("utm_source");
+    function normalizeTrafficSource(value) {
+  if (!value) return "";
 
-      if (sourceParam) return sourceParam;
-      if (!utmSource) return "Direct";
+  const normalized = value.toLowerCase();
 
-      const normalized = utmSource.toLowerCase();
+  if (normalized.includes("linkedin")) return "LinkedIn";
+  if (normalized.includes("meta") || normalized.includes("facebook")) return "Meta Ads";
+  if (normalized.includes("instagram") || normalized.includes("reels")) return "Instagram Reels";
+  if (normalized.includes("tiktok")) return "TikTok";
+  if (normalized.includes("google")) return "Google Ads";
+  if (normalized.includes("score")) return "SCORE";
+  if (normalized.includes("referral")) return "Referral";
+  if (normalized.includes("direct")) return "Direct";
 
-      if (normalized.includes("linkedin")) return "LinkedIn";
-      if (normalized.includes("meta")) return "Meta Ads";
-      if (normalized.includes("instagram")) return "Instagram Reels";
-      if (normalized.includes("tiktok")) return "TikTok";
-      if (normalized.includes("google")) return "Google Ads";
+  return "Other";
+}
 
-      return "Other";
-    }
+function detectSource() {
+  const sourceParam = getQueryParam("source");
+  const utmSource = getQueryParam("utm_source");
+
+  if (sourceParam) return normalizeTrafficSource(sourceParam);
+  if (utmSource) return normalizeTrafficSource(utmSource);
+
+  return "Direct";
+}
 
     document.getElementById("waitlistForm").addEventListener("submit", async function (event) {
       event.preventDefault();
