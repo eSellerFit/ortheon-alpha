@@ -3,15 +3,16 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-X0NKN22Q3P"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
 
-  gtag('config', 'G-X0NKN22Q3P');
-</script>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-X0NKN22Q3P"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-X0NKN22Q3P');
+  </script>
+
   <title>Ortheon — Career Direction with Clarity</title>
   <meta name="description" content="Ortheon is an AI-powered career direction tool for people at a career crossroads. Join the free Alpha cohort.">
 
@@ -109,11 +110,11 @@
     }
 
     h1 {
-  margin: 0 0 20px;
-  font-size: clamp(32px, 4vw, 52px);
-  line-height: 1.05;
-  letter-spacing: -0.04em;
-}
+      margin: 0 0 20px;
+      font-size: clamp(32px, 4vw, 52px);
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+    }
 
     .hero-sub {
       font-size: 20px;
@@ -335,10 +336,10 @@
     }
 
     .line-label {
-  font-size: 12px;
-  font-weight: 800;
-  fill: #f5f7fb;
-}
+      font-size: 12px;
+      font-weight: 800;
+      fill: #f5f7fb;
+    }
 
     .quadrant-label {
       font-size: 12px;
@@ -589,8 +590,8 @@
           <div class="eyebrow">Career direction tool · Free Alpha cohort</div>
           <h1>You may be qualified for the role. That doesn't mean it's the right move.</h1>
           <p class="hero-sub">
-  Ortheon evaluates your next career move across four dimensions — what you can credibly do, what gives work meaning, what you can financially sustain, and how your target roles are changing. The result is a structured direction report, not a list of job titles.
-</p>
+            Ortheon evaluates your next career move across four dimensions — what you can credibly do, what gives work meaning, what you can financially sustain, and how your target roles are changing. The result is a structured direction report, not a list of job titles.
+          </p>
 
           <div class="hero-actions">
             <a class="btn btn-primary" href="#join">Join the Free Alpha Cohort</a>
@@ -620,7 +621,7 @@
             </div>
             <div class="metric-row">
               <span class="metric-label">Decision Archetype</span>
-<span class="metric-value">How you weight the trade-offs</span>
+              <span class="metric-value">How you weight the trade-offs</span>
             </div>
             <div class="metric-row">
               <span class="metric-label">AI & Digital Durability</span>
@@ -694,7 +695,7 @@
           <div class="card">
             <div class="method-number">4</div>
             <h3>Decision Archetype</h3>
-<p>How you personally weight the trade-offs — between meaning, income, autonomy, stability, and growth — shapes which paths are right for you, not just which ones you qualify for.</p>
+            <p>How you personally weight the trade-offs — between meaning, income, autonomy, stability, and growth — shapes which paths are right for you, not just which ones you qualify for.</p>
           </div>
 
           <div class="card">
@@ -838,7 +839,7 @@
             </div>
 
             <div class="legend-item">
-              <strong>D1–D4</strong>
+              <strong>D0–D4</strong>
               AI & digital durability
             </div>
 
@@ -885,7 +886,8 @@
         </div>
       </div>
     </section>
-<!-- MID-PAGE CTA -->
+
+    <!-- MID-PAGE CTA -->
     <section style="padding: 20px 0 48px;">
       <div class="container">
         <div style="background: linear-gradient(135deg, rgba(56,189,248,0.10), rgba(125,211,252,0.05)); border: 1px solid rgba(125,211,252,0.25); border-radius: 24px; padding: 40px; text-align: center;">
@@ -898,6 +900,7 @@
         </div>
       </div>
     </section>
+
     <!-- FOUNDER -->
     <section>
       <div class="container founder">
@@ -992,8 +995,8 @@
             </div>
 
             <button class="btn btn-primary" type="submit">Join the Free Alpha Cohort</button>
-<p style="color: var(--muted); font-size: 13px; margin: 8px 0 0;">Ortheon is a decision-support tool. It does not place jobs, guarantee outcomes, or replace professional advice.</p>
-<div id="formStatus" class="status"></div>
+            <p style="color: var(--muted); font-size: 13px; margin: 8px 0 0;">Ortheon is a decision-support tool. It does not place jobs, guarantee outcomes, or replace professional advice.</p>
+            <div id="formStatus" class="status"></div>
           </form>
 
           <div class="disclaimer">
@@ -1047,31 +1050,47 @@
       return "Direct";
     }
 
-    document.getElementById("waitlistForm").addEventListener("submit", async function (event) {
-      event.preventDefault();
+    const waitlistForm = document.getElementById("waitlistForm");
 
-      if (event.target.companyWebsite.value) {
-        return;
-      }
+    waitlistForm.addEventListener("submit", async function (event) {
+      event.preventDefault();
 
       const form = event.target;
       const status = document.getElementById("formStatus");
       const submitButton = form.querySelector("button[type='submit']");
 
+      if (form.companyWebsite.value) {
+        return;
+      }
+
+      const firstName = form.firstName.value.trim();
+      const email = form.email.value.trim().toLowerCase();
+      const joinerType = form.joinerType.value;
+      const currentSituation = form.currentSituation.value;
+      const linkedInUrl = form.linkedInUrl.value.trim();
+
+      if (!firstName || !email || !joinerType || !currentSituation || !form.consentAccepted.checked) {
+        status.className = "status error";
+        status.textContent = "Please complete the required fields.";
+        return;
+      }
+
       const payload = {
         waitlistId: "WL-" + Date.now(),
-        firstName: form.firstName.value.trim(),
-        email: form.email.value.trim(),
-        joinerType: form.joinerType.value,
-        currentSituation: form.currentSituation.value,
-        linkedInUrl: form.linkedInUrl.value.trim(),
+        firstName: firstName,
+        email: email,
+        joinerType: joinerType,
+        currentSituation: currentSituation,
+        linkedInUrl: linkedInUrl,
         source: detectSource(),
         utmSource: getQueryParam("utm_source"),
         utmMedium: getQueryParam("utm_medium"),
         utmCampaign: getQueryParam("utm_campaign"),
         consentAccepted: form.consentAccepted.checked,
         consentTimestamp: new Date().toISOString(),
-        status: "New"
+        status: "New",
+        pageUrl: window.location.href,
+        userAgent: navigator.userAgent
       };
 
       status.className = "status";
@@ -1089,25 +1108,26 @@
         });
 
         if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Webhook error:", response.status, errorText);
           throw new Error("Submission failed");
         }
 
         status.className = "status success";
-status.textContent = "Thank you. You’re on the Ortheon Alpha waitlist.";
+        status.textContent = "Thank you. You’re on the Ortheon Alpha waitlist.";
 
-if (typeof gtag === "function") {
-  gtag("event", "waitlist_submit", {
-    joiner_type: payload.joinerType,
-    current_situation: payload.currentSituation,
-    source: payload.source,
-    utm_source: payload.utmSource,
-    utm_medium: payload.utmMedium,
-    utm_campaign: payload.utmCampaign
-  });
-}
+        if (typeof gtag === "function") {
+          gtag("event", "waitlist_submit", {
+            joiner_type: payload.joinerType,
+            current_situation: payload.currentSituation,
+            source: payload.source,
+            utm_source: payload.utmSource,
+            utm_medium: payload.utmMedium,
+            utm_campaign: payload.utmCampaign
+          });
+        }
 
-form.reset();
-
+        form.reset();
       } catch (error) {
         console.error(error);
         status.className = "status error";
