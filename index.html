@@ -76,7 +76,32 @@
       letter-spacing: 0.02em;
     }
 
-    .brand span {
+    .brand-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-img-wrap {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: #07111f;
+      border: 1px solid rgba(255,255,255,0.12);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .brand-img {
+      width: 34px;
+      height: 34px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .brand-dot {
       color: var(--accent);
     }
 
@@ -600,7 +625,12 @@
 <body>
   <header>
     <div class="container nav">
-      <div class="brand">Ortheon<span>.</span></div>
+      <div class="brand brand-logo">
+        <span class="brand-img-wrap">
+          <img src="assets/images/ortheon-logo.png" alt="Ortheon logo" class="brand-img">
+        </span>
+        <span>Ortheon<span class="brand-dot">.</span></span>
+      </div>
       <div class="nav-note">First cohort waitlist now open</div>
     </div>
   </header>
