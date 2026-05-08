@@ -1,4 +1,10 @@
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  doc,
+  serverTimestamp,
+  updateDoc,
+} from "firebase/firestore";
 import { db } from "../firebase";
 
 export async function createAssessmentDraft(formData) {
@@ -17,4 +23,24 @@ export async function createAssessmentDraft(formData) {
   const docRef = await addDoc(collection(db, "assessments"), payload);
 
   return docRef.id;
+}
+
+export async function updateAssessmentFinancialReality(assessmentId, formData) {
+  const assessmentRef = doc(db, "assessments", assessmentId);
+
+  const payload = {
+    financialReality: {
+      currentMonthlyIncome: Number(formData.currentMonthlyIncome),
+      minimumMonthlyIncome: Number(formData.minimumMonthlyIncome),
+      savingsRunwayMonths: Number(formData.savingsRunwayMonths),
+      incomeDropTolerance: formData.incomeDropTolerance,
+      stableIncomeNeed: formData.stableIncomeNeed,
+      bridgeRoleWillingness: formData.bridgeRoleWillingness,
+      retrainingInvestmentAbility: formData.retrainingInvestmentAbility,
+    },
+    status: "financial_reality_submitted",
+    updatedAt: serverTimestamp(),
+  };
+
+  await updateDoc(assessmentRef, payload);
 }
