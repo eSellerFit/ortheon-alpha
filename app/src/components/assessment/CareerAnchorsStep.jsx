@@ -3,15 +3,17 @@ import { anchorQuestions } from "../../data/anchorQuestions";
 import { updateAssessmentAnchors } from "../../services/assessmentService";
 
 const initialAnchors = {
-  technical: null,
-  management: null,
-  autonomy: null,
-  security: null,
-  impact: null,
-  challenge: null,
-  workModel: null,
-  craft: null,
+  technical: 5,
+  management: 5,
+  autonomy: 5,
+  security: 5,
+  impact: 5,
+  challenge: 5,
+  workModel: 5,
+  craft: 5,
 };
+
+const scoreOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 function CareerAnchorsStep({ assessmentId, onComplete }) {
   const [anchorIndex, setAnchorIndex] = useState(0);
@@ -21,10 +23,10 @@ function CareerAnchorsStep({ assessmentId, onComplete }) {
   const currentAnchor = anchorQuestions[anchorIndex];
   const currentScore = anchors[currentAnchor.id];
 
-  function handleAnchorChange(event) {
+  function handleScoreSelect(score) {
     setAnchors((previous) => ({
       ...previous,
-      [currentAnchor.id]: Number(event.target.value),
+      [currentAnchor.id]: score,
     }));
   }
 
@@ -37,11 +39,6 @@ function CareerAnchorsStep({ assessmentId, onComplete }) {
   }
 
   async function goNext() {
-    if (currentScore === null) {
-      setStatus("missing_anchor");
-      return;
-    }
-
     setStatus("idle");
 
     if (anchorIndex < anchorQuestions.length - 1) {
@@ -84,16 +81,30 @@ function CareerAnchorsStep({ assessmentId, onComplete }) {
         <strong>{currentAnchor.question}</strong>
       </p>
 
-      <label>
-        Score: {currentScore === null ? "Not selected yet" : currentScore}
-        <input
-          type="range"
-          min="1"
-          max="10"
-          value={currentScore ?? 5}
-          onChange={handleAnchorChange}
-        />
-      </label>
+      <p className="score-summary">
+        Selected score: <strong>{currentScore}</strong> / 10
+      </p>
+
+      <div className="anchor-score-scale" role="radiogroup" aria-label={currentAnchor.name}>
+        {scoreOptions.map((score) => (
+          <button
+            key={score}
+            type="button"
+            className={
+              score === currentScore
+                ? "anchor-score-option selected"
+                : "anchor-score-option"
+            }
+            onClick={() => handleScoreSelect(score)}
+            aria-pressed={score === currentScore}
+          >
+            <span className="score-circle">
+              {score === currentScore ? "●" : "○"}
+            </span>
+            <span className="score-number">{score}</span>
+          </button>
+        ))}
+      </div>
 
       <p>
         <strong>Low:</strong> {currentAnchor.low}
@@ -116,12 +127,6 @@ function CareerAnchorsStep({ assessmentId, onComplete }) {
               : "Next"}
         </button>
       </div>
-
-      {status === "missing_anchor" && (
-        <p className="status warning">
-          Please select a score before continuing.
-        </p>
-      )}
 
       {status === "error" && (
         <p className="status error">

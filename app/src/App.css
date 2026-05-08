@@ -182,3 +182,54 @@
     border-right-color: var(--border);
   }
 }
+
+/* Assessment sliders */
+.form input[type="range"] {
+  width: 100%;
+  max-width: 680px;
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+/* Career anchors score scale */
+.anchor-score-scale {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 18px auto 22px;
+  flex-wrap: wrap;
+}
+
+.anchor-score-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 6px 8px;
+}
+
+.anchor-score-option .score-circle {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.anchor-score-option .score-number {
+  font-size: 14px;
+}
+
+.anchor-score-option.selected {
+  font-weight: 700;
+}
+
+.anchor-score-option:hover .score-circle {
+  transform: scale(1.12);
+}
+
+.score-summary {
+  margin-top: 12px;
+  font-size: 18px;
+}
