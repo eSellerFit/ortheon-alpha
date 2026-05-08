@@ -1,8 +1,8 @@
-import IntakePage from "./pages/IntakePage";
+import AssessmentFlow from "./pages/AssessmentFlow";
 import "./App.css";
 
 function App() {
-  return <IntakePage />;
+  return <AssessmentFlow />;
 }
 
 export default App;

@@ -1,0 +1,58 @@
+export const anchorQuestions = [
+  {
+    id: "technical",
+    name: "Technical / Expertise",
+    question: "How important is being recognized as a deep expert in your specific field or craft?",
+    low: "You prefer breadth and general contribution over deep specialization",
+    high: "Being a true expert and going deep in your domain is essential to you",
+  },
+  {
+    id: "management",
+    name: "Management / Influence",
+    question: "How important is leading teams, managing people, and having organizational influence?",
+    low: "You prefer individual contribution over managing others",
+    high: "Leading people and having broad organizational impact is core to what drives you",
+  },
+  {
+    id: "autonomy",
+    name: "Autonomy / Independence",
+    question: "How important is having full independence and control over how and where you work?",
+    low: "You are comfortable operating within structure and direction",
+    high: "Independence and self-direction are close to non-negotiable for you",
+  },
+  {
+    id: "security",
+    name: "Security / Stability",
+    question: "How important is stability, predictability, and continuity in your career?",
+    low: "You can tolerate high uncertainty and instability for the right opportunity",
+    high: "Stability and predictable income are a baseline requirement for you",
+  },
+  {
+    id: "impact",
+    name: "Impact / Meaning",
+    question: "How important is building something meaningful, serving a mission, or creating measurable positive impact?",
+    low: "Work is primarily a means to an end for you",
+    high: "Meaning and purpose strongly define what career choices you are willing to make",
+  },
+  {
+    id: "challenge",
+    name: "Challenge / Complexity",
+    question: "How important is working on complex, difficult, or frontier problems that push your limits?",
+    low: "You prefer clear scope and predictable tasks over constant complexity",
+    high: "Boring or repetitive work becomes deeply demotivating for you",
+  },
+  {
+    id: "workModel",
+    name: "Work Model",
+    question: "How important is having a specific work structure — such as remote, flexible hours, or location freedom?",
+    low: "You can adapt to most work structures and environments",
+    high: "Your work model requirements are a hard constraint on what directions you will consider",
+  },
+  {
+    id: "craft",
+    name: "Craft / Hands-on Mastery",
+    question: "How important is mastering a physical craft, producing tangible results, or working with your hands?",
+    low: "You prefer knowledge work and abstract problem-solving over physical creation",
+    high: "Physical craft, tangible output, or hands-on mastery is central to your work identity",
+  },
+];

@@ -13,9 +13,9 @@ export async function createAssessmentDraft(formData) {
     email: formData.email.trim().toLowerCase(),
     currentRole: formData.currentRole.trim(),
     currentSituation: formData.currentSituation,
-    minimumMonthlyIncome: Number(formData.minimumMonthlyIncome),
     status: "intake_submitted",
     source: "ortheon-alpha-mvp",
+    roleLibraryVersion: "v1.0",
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   };
@@ -23,6 +23,27 @@ export async function createAssessmentDraft(formData) {
   const docRef = await addDoc(collection(db, "assessments"), payload);
 
   return docRef.id;
+}
+
+export async function updateAssessmentAnchors(assessmentId, anchorsData) {
+  const assessmentRef = doc(db, "assessments", assessmentId);
+
+  const payload = {
+    anchors: {
+      technical: Number(anchorsData.technical),
+      management: Number(anchorsData.management),
+      autonomy: Number(anchorsData.autonomy),
+      security: Number(anchorsData.security),
+      impact: Number(anchorsData.impact),
+      challenge: Number(anchorsData.challenge),
+      workModel: Number(anchorsData.workModel),
+      craft: Number(anchorsData.craft),
+    },
+    status: "anchors_submitted",
+    updatedAt: serverTimestamp(),
+  };
+
+  await updateDoc(assessmentRef, payload);
 }
 
 export async function updateAssessmentFinancialReality(assessmentId, formData) {
@@ -33,6 +54,7 @@ export async function updateAssessmentFinancialReality(assessmentId, formData) {
       currentMonthlyIncome: Number(formData.currentMonthlyIncome),
       minimumMonthlyIncome: Number(formData.minimumMonthlyIncome),
       savingsRunwayMonths: Number(formData.savingsRunwayMonths),
+      riskTolerance: formData.riskTolerance,
       incomeDropTolerance: formData.incomeDropTolerance,
       stableIncomeNeed: formData.stableIncomeNeed,
       bridgeRoleWillingness: formData.bridgeRoleWillingness,
