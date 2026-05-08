@@ -68,7 +68,7 @@ function IntakePage() {
               name="firstName"
               value={formData.firstName}
               onChange={handleChange}
-              placeholder="George"
+              placeholder="Name"
             />
           </label>
 
@@ -89,7 +89,7 @@ function IntakePage() {
               name="currentRole"
               value={formData.currentRole}
               onChange={handleChange}
-              placeholder="HR Director, Product Manager, Founder..."
+              placeholder="Role"
             />
           </label>
 
@@ -117,7 +117,7 @@ function IntakePage() {
               min="0"
               value={formData.minimumMonthlyIncome}
               onChange={handleChange}
-              placeholder="6000"
+              placeholder="5000"
             />
           </label>
 
