@@ -233,3 +233,34 @@
   margin-top: 12px;
   font-size: 18px;
 }
+
+/* CV upload */
+.pdf-upload-box {
+  max-width: 680px;
+  margin: 18px auto;
+  padding: 28px 24px;
+  border: 2px dashed #b8b8c8;
+  border-radius: 14px;
+  cursor: pointer;
+  background: #fafafa;
+}
+
+.pdf-upload-box.active {
+  border-color: #333;
+  background: #f4f4f4;
+}
+
+.pdf-upload-button {
+  display: inline-block;
+  margin: 10px 0;
+  padding: 8px 14px;
+  border: 1px solid #333;
+  border-radius: 8px;
+  background: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pdf-upload-button:hover {
+  background: #f2f2f2;
+}

@@ -3,6 +3,7 @@ import BasicContextStep from "../components/assessment/BasicContextStep";
 import CareerAnchorsStep from "../components/assessment/CareerAnchorsStep";
 import FinancialRealityStep from "../components/assessment/FinancialRealityStep";
 import TransitionConstraintsStep from "../components/assessment/TransitionConstraintsStep";
+import CVUploadStep from "../components/assessment/CVUploadStep";
 
 const TOTAL_STEPS = 7;
 
@@ -25,6 +26,10 @@ function AssessmentFlow() {
 
   function handleTransitionConstraintsComplete() {
     setCurrentStep(5);
+  }
+
+  function handleCVUploadComplete() {
+    setCurrentStep(6);
   }
 
   return (
@@ -70,15 +75,22 @@ function AssessmentFlow() {
         )}
 
         {currentStep === 5 && (
+          <CVUploadStep
+            assessmentId={assessmentId}
+            onComplete={handleCVUploadComplete}
+          />
+        )}
+
+        {currentStep === 6 && (
           <div className="form">
-            <h2>CV Upload</h2>
+            <h2>Priority Weights</h2>
             <p>
-              This step is not built yet. The next module will upload a PDF resume,
-              extract text, send it to a secure Vercel API route, and create a CV
-              profile for user review.
+              This step is not built yet. It will let the user set how much
+              competency fit, anchor fit, financial viability, and AI durability
+              should influence the final recommendation.
             </p>
             <p className="status success">
-              Transition Constraints have been saved. Assessment ID: {assessmentId}
+              CV step completed. Assessment ID: {assessmentId}
             </p>
           </div>
         )}

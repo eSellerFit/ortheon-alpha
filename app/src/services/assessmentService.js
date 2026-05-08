@@ -81,3 +81,103 @@ export async function updateAssessmentConstraints(assessmentId, formData) {
 
   await updateDoc(assessmentRef, payload);
 }
+
+export async function saveAssessmentRawCVText(
+  assessmentId,
+  reviewedText,
+  options = {}
+) {
+  const assessmentRef = doc(db, "assessments", assessmentId);
+  const cleanedText = reviewedText.trim();
+
+  const payload = {
+    cvProfile: {
+      cvSource: options.cvSource || "manual_paste",
+      rawTextLength: cleanedText.length,
+      reviewedText: cleanedText,
+      pdfMetadata: options.pdfMetadata || null,
+      reviewedAt: serverTimestamp(),
+      parsed: false,
+      skipped: false,
+      confidence: {
+        overall: "low",
+        competencies: "low",
+      },
+      competencySignals: [],
+      userCorrections: [],
+    },
+    status: "cv_text_reviewed",
+    updatedAt: serverTimestamp(),
+  };
+
+  await updateDoc(assessmentRef, payload);
+}
+
+export async function skipAssessmentCV(assessmentId, reason = "user_skipped") {
+  const assessmentRef = doc(db, "assessments", assessmentId);
+
+  const payload = {
+    cvProfile: {
+      cvSource: "skipped",
+      skipped: true,
+      skippedAt: serverTimestamp(),
+      reason,
+      parsed: false,
+      confidence: {
+        overall: "low",
+        competencies: "low",
+      },
+      competencySignals: [],
+      userCorrections: [],
+    },
+    status: "cv_skipped",
+    updatedAt: serverTimestamp(),
+  };
+
+  await updateDoc(assessmentRef, payload);
+}
+
+export async function updateAssessmentCVProfile(
+  assessmentId,
+  parsedData,
+  userCorrections = []
+) {
+  const assessmentRef = doc(db, "assessments", assessmentId);
+
+  const correctedSignals = parsedData.competencySignals.map((signal) => {
+    const correction = userCorrections.find(
+      (item) => item.competencyId === signal.competencyId
+    );
+
+    if (correction) {
+      return {
+        ...signal,
+        signalStrength: correction.correctedStrength,
+        userCorrected: true,
+      };
+    }
+
+    return signal;
+  });
+
+  const payload = {
+    cvProfile: {
+      cvSource: "claude_parsed",
+      parsedAt: serverTimestamp(),
+      careerSummary: parsedData.careerSummary,
+      domainSignals: parsedData.domainSignals,
+      senioritySignal: parsedData.senioritySignal,
+      entrepreneurialSignals: parsedData.entrepreneurialSignals,
+      tradeSignals: parsedData.tradeSignals,
+      tenurePattern: parsedData.tenurePattern,
+      leadershipScope: parsedData.leadershipScope,
+      confidence: parsedData.confidence,
+      competencySignals: correctedSignals,
+      userCorrections,
+    },
+    status: "cv_parsed",
+    updatedAt: serverTimestamp(),
+  };
+
+  await updateDoc(assessmentRef, payload);
+}
