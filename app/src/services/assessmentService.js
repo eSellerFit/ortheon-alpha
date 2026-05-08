@@ -54,13 +54,28 @@ export async function updateAssessmentFinancialReality(assessmentId, formData) {
       currentMonthlyIncome: Number(formData.currentMonthlyIncome),
       minimumMonthlyIncome: Number(formData.minimumMonthlyIncome),
       savingsRunwayMonths: Number(formData.savingsRunwayMonths),
-      riskTolerance: formData.riskTolerance,
-      incomeDropTolerance: formData.incomeDropTolerance,
-      stableIncomeNeed: formData.stableIncomeNeed,
       bridgeRoleWillingness: formData.bridgeRoleWillingness,
       retrainingInvestmentAbility: formData.retrainingInvestmentAbility,
     },
     status: "financial_reality_submitted",
+    updatedAt: serverTimestamp(),
+  };
+
+  await updateDoc(assessmentRef, payload);
+}
+
+export async function updateAssessmentConstraints(assessmentId, formData) {
+  const assessmentRef = doc(db, "assessments", assessmentId);
+
+  const payload = {
+    transitionConstraints: {
+      locationConstraint: formData.locationConstraint,
+      workAuthorizedUS: formData.workAuthorizedUS,
+      visaSponsorshipNeeded: formData.visaSponsorshipNeeded,
+      weeklyTimeAvailable: Number(formData.weeklyTimeAvailable),
+      retrainingWillingness: formData.retrainingWillingness,
+    },
+    status: "constraints_submitted",
     updatedAt: serverTimestamp(),
   };
 

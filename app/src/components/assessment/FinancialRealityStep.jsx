@@ -5,19 +5,12 @@ const initialFinancialData = {
   currentMonthlyIncome: "",
   minimumMonthlyIncome: "",
   savingsRunwayMonths: "",
-  riskTolerance: "",
-  incomeDropTolerance: "",
-  stableIncomeNeed: "",
   bridgeRoleWillingness: "",
   retrainingInvestmentAbility: "",
 };
 
-function FinancialRealityStep({ assessmentId, initialMinimumMonthlyIncome, onComplete }) {
-  const [financialData, setFinancialData] = useState({
-    ...initialFinancialData,
-    minimumMonthlyIncome: initialMinimumMonthlyIncome || "",
-  });
-
+function FinancialRealityStep({ assessmentId, onComplete }) {
+  const [financialData, setFinancialData] = useState(initialFinancialData);
   const [status, setStatus] = useState("idle");
 
   function handleChange(event) {
@@ -37,9 +30,6 @@ function FinancialRealityStep({ assessmentId, initialMinimumMonthlyIncome, onCom
       !financialData.currentMonthlyIncome ||
       !financialData.minimumMonthlyIncome ||
       !financialData.savingsRunwayMonths ||
-      !financialData.riskTolerance ||
-      !financialData.incomeDropTolerance ||
-      !financialData.stableIncomeNeed ||
       !financialData.bridgeRoleWillingness ||
       !financialData.retrainingInvestmentAbility
     ) {
@@ -74,6 +64,11 @@ function FinancialRealityStep({ assessmentId, initialMinimumMonthlyIncome, onCom
   return (
     <form onSubmit={handleSubmit} className="form">
       <h2>Financial Reality</h2>
+
+      <p>
+        This step helps Ortheon understand which career directions are financially realistic,
+        not just interesting.
+      </p>
 
       <p>
         Assessment ID: {assessmentId}
@@ -113,50 +108,6 @@ function FinancialRealityStep({ assessmentId, initialMinimumMonthlyIncome, onCom
           onChange={handleChange}
           placeholder="6"
         />
-      </label>
-
-      <label>
-        General risk tolerance
-        <select
-          name="riskTolerance"
-          value={financialData.riskTolerance}
-          onChange={handleChange}
-        >
-          <option value="">Select one</option>
-          <option value="low">Low</option>
-          <option value="medium">Medium</option>
-          <option value="high">High</option>
-        </select>
-      </label>
-
-      <label>
-        Tolerance for temporary income drop
-        <select
-          name="incomeDropTolerance"
-          value={financialData.incomeDropTolerance}
-          onChange={handleChange}
-        >
-          <option value="">Select one</option>
-          <option value="none">No income drop possible</option>
-          <option value="small">Small drop acceptable</option>
-          <option value="moderate">Moderate drop acceptable</option>
-          <option value="high">High drop acceptable if direction is right</option>
-        </select>
-      </label>
-
-      <label>
-        Need for stable income
-        <select
-          name="stableIncomeNeed"
-          value={financialData.stableIncomeNeed}
-          onChange={handleChange}
-        >
-          <option value="">Select one</option>
-          <option value="very_high">Very high</option>
-          <option value="high">High</option>
-          <option value="medium">Medium</option>
-          <option value="low">Low</option>
-        </select>
       </label>
 
       <label>

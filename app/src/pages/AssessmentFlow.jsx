@@ -2,6 +2,7 @@ import { useState } from "react";
 import BasicContextStep from "../components/assessment/BasicContextStep";
 import CareerAnchorsStep from "../components/assessment/CareerAnchorsStep";
 import FinancialRealityStep from "../components/assessment/FinancialRealityStep";
+import TransitionConstraintsStep from "../components/assessment/TransitionConstraintsStep";
 
 const TOTAL_STEPS = 7;
 
@@ -20,6 +21,10 @@ function AssessmentFlow() {
 
   function handleFinancialRealityComplete() {
     setCurrentStep(4);
+  }
+
+  function handleTransitionConstraintsComplete() {
+    setCurrentStep(5);
   }
 
   return (
@@ -58,15 +63,22 @@ function AssessmentFlow() {
         )}
 
         {currentStep === 4 && (
+          <TransitionConstraintsStep
+            assessmentId={assessmentId}
+            onComplete={handleTransitionConstraintsComplete}
+          />
+        )}
+
+        {currentStep === 5 && (
           <div className="form">
-            <h2>Transition Constraints</h2>
+            <h2>CV Upload</h2>
             <p>
-              This step is not built yet. The next module will capture practical
-              constraints such as location, work authorization, family constraints,
-              weekly time available, and retraining willingness.
+              This step is not built yet. The next module will upload a PDF resume,
+              extract text, send it to a secure Vercel API route, and create a CV
+              profile for user review.
             </p>
             <p className="status success">
-              Financial Reality has been saved. Assessment ID: {assessmentId}
+              Transition Constraints have been saved. Assessment ID: {assessmentId}
             </p>
           </div>
         )}
