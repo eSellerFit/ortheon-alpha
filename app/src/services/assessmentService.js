@@ -181,3 +181,29 @@ export async function updateAssessmentCVProfile(
 
   await updateDoc(assessmentRef, payload);
 }
+
+export async function updateAssessmentPriorityWeights(assessmentId, weightsData) {
+  const assessmentRef = doc(db, "assessments", assessmentId);
+
+  const priorityWeights = {
+    competencyFit: Number(weightsData.competencyFit),
+    anchorFit: Number(weightsData.anchorFit),
+    financialViability: Number(weightsData.financialViability),
+    roleDurability: Number(weightsData.roleDurability),
+  };
+
+  const priorityWeightsTotal =
+    priorityWeights.competencyFit +
+    priorityWeights.anchorFit +
+    priorityWeights.financialViability +
+    priorityWeights.roleDurability;
+
+  const payload = {
+    priorityWeights,
+    priorityWeightsTotal,
+    status: "priority_weights_submitted",
+    updatedAt: serverTimestamp(),
+  };
+
+  await updateDoc(assessmentRef, payload);
+}

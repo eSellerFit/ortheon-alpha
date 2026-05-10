@@ -4,6 +4,7 @@ import CareerAnchorsStep from "../components/assessment/CareerAnchorsStep";
 import FinancialRealityStep from "../components/assessment/FinancialRealityStep";
 import TransitionConstraintsStep from "../components/assessment/TransitionConstraintsStep";
 import CVUploadStep from "../components/assessment/CVUploadStep";
+import PriorityWeightsStep from "../components/assessment/PriorityWeightsStep";
 
 const TOTAL_STEPS = 7;
 
@@ -30,6 +31,10 @@ function AssessmentFlow() {
 
   function handleCVUploadComplete() {
     setCurrentStep(6);
+  }
+
+  function handlePriorityWeightsComplete() {
+    setCurrentStep(7);
   }
 
   return (
@@ -82,15 +87,21 @@ function AssessmentFlow() {
         )}
 
         {currentStep === 6 && (
+          <PriorityWeightsStep
+            assessmentId={assessmentId}
+            onComplete={handlePriorityWeightsComplete}
+          />
+        )}
+
+        {currentStep === 7 && (
           <div className="form">
-            <h2>Priority Weights</h2>
+            <h2>Results</h2>
             <p>
-              This step is not built yet. It will let the user set how much
-              competency fit, anchor fit, financial viability, and AI durability
-              should influence the final recommendation.
+              This step is not built yet. The next module will run the scoring engine
+              and generate career direction recommendations.
             </p>
             <p className="status success">
-              CV step completed. Assessment ID: {assessmentId}
+              Priority weights saved. Assessment ID: {assessmentId}
             </p>
           </div>
         )}
