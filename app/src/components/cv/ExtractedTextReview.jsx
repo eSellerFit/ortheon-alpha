@@ -1,7 +1,8 @@
 function ExtractedTextReview({
   cvText,
   onTextChange,
-  onConfirm,
+  onParse,
+  onSaveRawText,
   onBack,
   onSkip,
   disabled = false,
@@ -13,7 +14,7 @@ function ExtractedTextReview({
       <h2>Review extracted CV text</h2>
 
       <p>
-        We extracted text from your PDF. Please quickly review it before saving.
+        We extracted text from your CV. Please review it before analysis.
         You can edit the text if something looks wrong.
       </p>
 
@@ -22,18 +23,18 @@ function ExtractedTextReview({
       </p>
 
       <label>
-        Extracted CV text
+        CV text
         <textarea
           value={cvText}
           onChange={(event) => onTextChange(event.target.value)}
           rows={14}
-          placeholder="Extracted CV text will appear here..."
+          placeholder="Extracted or pasted CV text will appear here..."
         />
       </label>
 
       {characterCount < 100 && (
         <p className="status warning">
-          This text looks too short. You can paste your CV text manually, upload another PDF,
+          This text looks too short. You can paste more CV text, upload another PDF,
           or skip the CV step.
         </p>
       )}
@@ -45,10 +46,18 @@ function ExtractedTextReview({
 
         <button
           type="button"
-          onClick={onConfirm}
+          onClick={onParse}
           disabled={disabled || characterCount < 100}
         >
-          {disabled ? "Saving..." : "Save reviewed CV text"}
+          {disabled ? "Working..." : "Analyze CV with AI"}
+        </button>
+
+        <button
+          type="button"
+          onClick={onSaveRawText}
+          disabled={disabled || characterCount < 100}
+        >
+          Save without AI
         </button>
 
         <button type="button" onClick={onSkip} disabled={disabled}>

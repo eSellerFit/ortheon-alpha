@@ -1,10 +1,14 @@
 import { useState } from "react";
 import PdfUploadBox from "../cv/PdfUploadBox";
 import ExtractedTextReview from "../cv/ExtractedTextReview";
+import CVParseSummary from "../cv/CVParseSummary";
+import CompetencySignalReview from "../cv/CompetencySignalReview";
 import { extractTextFromPdf } from "../../utils/pdfTextExtractor";
+import { parseCvText } from "../../services/cvParsingService";
 import {
   saveAssessmentRawCVText,
   skipAssessmentCV,
+  updateAssessmentCVProfile,
 } from "../../services/assessmentService";
 
 function CVUploadStep({ assessmentId, onComplete }) {
@@ -12,11 +16,15 @@ function CVUploadStep({ assessmentId, onComplete }) {
   const [cvText, setCvText] = useState("");
   const [cvSource, setCvSource] = useState("manual_paste");
   const [pdfMetadata, setPdfMetadata] = useState(null);
+  const [parsedData, setParsedData] = useState(null);
+  const [userCorrections, setUserCorrections] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
 
   async function handleFileSelected(file) {
     try {
       setErrorMessage("");
+      setParsedData(null);
+      setUserCorrections([]);
       setStepState("extracting_text");
 
       const result = await extractTextFromPdf(file);
@@ -37,6 +45,8 @@ function CVUploadStep({ assessmentId, onComplete }) {
       setCvText("");
       setCvSource("manual_paste");
       setPdfMetadata(null);
+      setParsedData(null);
+      setUserCorrections([]);
       setStepState("error");
     }
   }
@@ -46,6 +56,8 @@ function CVUploadStep({ assessmentId, onComplete }) {
     setCvText("");
     setCvSource("manual_paste");
     setPdfMetadata(null);
+    setParsedData(null);
+    setUserCorrections([]);
     setStepState("reviewing_text");
   }
 
@@ -54,7 +66,34 @@ function CVUploadStep({ assessmentId, onComplete }) {
     setCvText("");
     setCvSource("manual_paste");
     setPdfMetadata(null);
+    setParsedData(null);
+    setUserCorrections([]);
     setStepState("idle");
+  }
+
+  function handleBackToTextReview() {
+    setErrorMessage("");
+    setStepState("reviewing_text");
+  }
+
+  async function handleParseCV() {
+    try {
+      setErrorMessage("");
+      setParsedData(null);
+      setUserCorrections([]);
+      setStepState("parsing_cv");
+
+      const parsed = await parseCvText(cvText);
+
+      setParsedData(parsed);
+      setStepState("reviewing_parsed_profile");
+    } catch (error) {
+      console.error("CV parsing failed:", error);
+      setErrorMessage(
+        error.message || "We couldn't analyze your CV right now."
+      );
+      setStepState("parse_error");
+    }
   }
 
   async function handleSaveReviewedText() {
@@ -73,6 +112,26 @@ function CVUploadStep({ assessmentId, onComplete }) {
       console.error("Saving reviewed CV text failed:", error);
       setErrorMessage("We couldn't save your CV text. Please try again.");
       setStepState("error");
+    }
+  }
+
+  async function handleSaveParsedProfile() {
+    try {
+      setErrorMessage("");
+      setStepState("saving");
+
+      await updateAssessmentCVProfile(
+        assessmentId,
+        parsedData,
+        userCorrections
+      );
+
+      setStepState("completed");
+      onComplete();
+    } catch (error) {
+      console.error("Saving parsed CV profile failed:", error);
+      setErrorMessage("We couldn't save the parsed CV profile. Please try again.");
+      setStepState("parse_error");
     }
   }
 
@@ -116,11 +175,85 @@ function CVUploadStep({ assessmentId, onComplete }) {
       <ExtractedTextReview
         cvText={cvText}
         onTextChange={setCvText}
-        onConfirm={handleSaveReviewedText}
+        onParse={handleParseCV}
+        onSaveRawText={handleSaveReviewedText}
         onBack={handleBackToUpload}
         onSkip={handleSkipCV}
         disabled={stepState === "saving"}
       />
+    );
+  }
+
+  if (stepState === "parsing_cv") {
+    return (
+      <div className="form">
+        <h2>Analyzing CV</h2>
+        <p>
+          Ortheon is analyzing the reviewed CV text and extracting structured career signals.
+        </p>
+      </div>
+    );
+  }
+
+  if (stepState === "reviewing_parsed_profile") {
+    return (
+      <div className="form">
+        <CVParseSummary parsedData={parsedData} />
+
+        <CompetencySignalReview
+          competencySignals={parsedData?.competencySignals || []}
+          userCorrections={userCorrections}
+          onCorrectionChange={setUserCorrections}
+        />
+
+        <div>
+          <button type="button" onClick={handleBackToTextReview}>
+            Back to CV text
+          </button>
+
+          <button type="button" onClick={handleSaveParsedProfile}>
+            Save parsed CV profile
+          </button>
+
+          <button type="button" onClick={handleSaveReviewedText}>
+            Save without AI
+          </button>
+
+          <button type="button" onClick={handleSkipCV}>
+            Skip CV step
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (stepState === "parse_error") {
+    return (
+      <div className="form">
+        <h2>CV Analysis Error</h2>
+
+        <p className="status error">
+          {errorMessage || "We couldn't analyze your CV right now."}
+        </p>
+
+        <div>
+          <button type="button" onClick={handleParseCV}>
+            Retry AI analysis
+          </button>
+
+          <button type="button" onClick={handleSaveReviewedText}>
+            Continue with raw CV text only
+          </button>
+
+          <button type="button" onClick={handleBackToTextReview}>
+            Back to CV text
+          </button>
+
+          <button type="button" onClick={handleSkipCV}>
+            Skip CV step
+          </button>
+        </div>
+      </div>
     );
   }
 
@@ -163,7 +296,7 @@ function CVUploadStep({ assessmentId, onComplete }) {
 
       <p>
         Upload your CV as a PDF. Ortheon will extract the text first, then you
-        will review it before anything is saved.
+        will review it before analysis or saving.
       </p>
 
       <PdfUploadBox onFileSelected={handleFileSelected} />
