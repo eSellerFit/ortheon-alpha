@@ -1,3 +1,82 @@
+const ALLOWED_SIGNAL_STRENGTHS = ["strong", "moderate", "weak", "absent"];
+const ALLOWED_SENIORITY = ["junior", "mid", "senior", "executive"];
+const ALLOWED_TENURE_PATTERNS = [
+  "stable",
+  "progressive",
+  "frequent_moves",
+  "career_gap",
+  "portfolio",
+];
+const ALLOWED_LEADERSHIP_SCOPE = [
+  "none",
+  "team",
+  "department",
+  "organization",
+  "cross_organization",
+];
+const ALLOWED_CONFIDENCE = ["high", "medium", "low"];
+
+function normalizeSignal(signal) {
+  const normalized = { ...signal };
+
+  if (!ALLOWED_SIGNAL_STRENGTHS.includes(normalized.signalStrength)) {
+    normalized.signalStrength = "absent";
+  }
+
+  if (
+    normalized.signalStrength === "weak" ||
+    normalized.signalStrength === "absent"
+  ) {
+    delete normalized.evidence;
+  }
+
+  if (
+    (normalized.signalStrength === "strong" ||
+      normalized.signalStrength === "moderate") &&
+    (!normalized.evidence || typeof normalized.evidence !== "string")
+  ) {
+    normalized.signalStrength = "weak";
+    delete normalized.evidence;
+  }
+
+  return normalized;
+}
+
+function normalizeParsedResponse(parsed) {
+  const normalized = { ...parsed };
+
+  normalized.competencySignals = parsed.competencySignals.map(normalizeSignal);
+
+  if (!ALLOWED_SENIORITY.includes(normalized.senioritySignal)) {
+    normalized.senioritySignal = "unknown";
+  }
+
+  if (!ALLOWED_TENURE_PATTERNS.includes(normalized.tenurePattern)) {
+    normalized.tenurePattern = "stable";
+  }
+
+  if (!ALLOWED_LEADERSHIP_SCOPE.includes(normalized.leadershipScope)) {
+    normalized.leadershipScope = "none";
+  }
+
+  if (!normalized.confidence || typeof normalized.confidence !== "object") {
+    normalized.confidence = {
+      overall: "low",
+      competencies: "low",
+    };
+  }
+
+  if (!ALLOWED_CONFIDENCE.includes(normalized.confidence.overall)) {
+    normalized.confidence.overall = "low";
+  }
+
+  if (!ALLOWED_CONFIDENCE.includes(normalized.confidence.competencies)) {
+    normalized.confidence.competencies = "low";
+  }
+
+  return normalized;
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -13,7 +92,8 @@ export default async function handler(req, res) {
 
   if (cleanedCvText.length < 100) {
     return res.status(400).json({
-      error: "CV text is too short. Please upload a more complete CV or paste more text.",
+      error:
+        "CV text is too short. Please upload a more complete CV or paste more text.",
     });
   }
 
@@ -29,6 +109,9 @@ export default async function handler(req, res) {
 
 Your task: extract structured career data from the CV text provided below.
 
+Claude's role is ONLY extraction and structuring.
+Claude never scores fit, never recommends roles, and never gives career advice.
+
 CRITICAL RULES:
 - Return ONLY valid JSON. Nothing else.
 - No prose, no markdown, no explanation, no preamble, no code blocks.
@@ -36,6 +119,105 @@ CRITICAL RULES:
 - Evidence must be actual words or phrases from the CV text.
 - Never fabricate evidence.
 - If uncertain, default to weak or absent.
+- Be conservative. Do not overstate signals.
+- A strong CV does NOT mean every competency should be strong.
+- Most real CVs should have a mix of strong, moderate, weak, and absent signals.
+
+SIGNAL STRENGTH RULES:
+
+strong:
+- Multiple direct examples in the CV.
+- Clear repeated pattern across roles or repeated responsibility.
+- Evidence must be directly quoted or closely excerpted from the CV text.
+- Do NOT assign strong based only on title, seniority, or general career level.
+
+moderate:
+- One clear direct example OR repeated indirect but credible evidence.
+- Evidence must be directly quoted or closely excerpted from the CV text.
+
+weak:
+- Implied signal only.
+- Suggested by role title, industry, seniority, or adjacent responsibility, but not directly demonstrated.
+- No evidence field should be included.
+
+absent:
+- No meaningful signal found.
+- No evidence field should be included.
+
+IMPORTANT EVIDENCE RULE:
+- Evidence is ONLY allowed for strong and moderate.
+- Evidence must be a phrase that appears in the CV text.
+- Evidence must be max 20 words.
+- For weak and absent, omit the evidence field entirely.
+
+TRADE / CRAFT COMPETENCY RULES:
+Competencies 16, 17, 18, and 19 are trade/craft/technical-system competencies.
+Be especially conservative with these.
+
+For competencies 16-19, assign strong or moderate ONLY if the CV clearly shows one of:
+- skilled trade work
+- physical craft mastery
+- hands-on technical system work
+- engineering, repair, installation, maintenance, diagnostics
+- manufacturing or construction
+- working from technical specifications, blueprints, schematics, or physical systems
+
+Do NOT assign strong or moderate to competencies 16-19 merely because the person built:
+- business models
+- analytics models
+- workforce models
+- dashboards
+- strategies
+- operating frameworks
+- HR systems
+- recruiting systems
+- planning processes
+
+For knowledge work, consulting, HR, workforce planning, or business operations CVs, competencies 16-19 are usually weak or absent unless direct technical/craft evidence exists.
+
+SENIORITY RULES:
+
+junior:
+- 0-3 years total experience
+- no management responsibility
+- entry or associate level titles
+
+mid:
+- 3-8 years total experience
+- may have project or small team leadership
+- manager, specialist, or senior individual contributor titles
+
+senior:
+- 8-15 years total experience
+- clear leadership, ownership, or domain authority
+- senior manager, director, principal, lead titles
+
+executive:
+- 15+ years of experience OR C-suite / VP / Partner / Founder / Owner titles
+- organizational scope or strategic responsibility
+- board, partner, founder, CEO, owner, or equivalent evidence
+
+If the CV shows 15+ years plus founder/CEO/director/organization-level leadership, classify as executive unless the evidence clearly points lower.
+
+DOMAIN SIGNAL RULES:
+- Return no more than 5 domains.
+- Use only domains clearly evidenced in the CV.
+- Prefer specific domains over generic ones.
+- Do not include a domain only because it appears once without meaningful context.
+
+CONFIDENCE RULES:
+high:
+- CV is detailed and structured.
+- Many signals have direct evidence.
+- The extraction is reliable.
+
+medium:
+- CV has useful detail but some gaps.
+- Some signals rely on indirect evidence.
+
+low:
+- CV is sparse, short, poorly structured, or ambiguous.
+- Most signals are weak or absent.
 
 EXTRACT THE FOLLOWING:
 
@@ -202,11 +384,14 @@ ${trimmedText}`;
 
     if (parsed.competencySignals.length !== 23) {
       return res.status(500).json({
-        error: "CV parsing returned the wrong number of competency signals. Please try again.",
+        error:
+          "CV parsing returned the wrong number of competency signals. Please try again.",
       });
     }
 
-    return res.status(200).json(parsed);
+    const normalizedParsed = normalizeParsedResponse(parsed);
+
+    return res.status(200).json(normalizedParsed);
   } catch (error) {
     console.error("CV parse function error:", error);
 
