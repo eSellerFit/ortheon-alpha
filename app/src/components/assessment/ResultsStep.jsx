@@ -270,6 +270,12 @@ function ResultsStep({ assessmentId }) {
                 {recommendation.salaryLastUpdated || "unknown"}.
               </p>
 
+              {recommendation.eligibilityWarning && (
+                <p className="status warning">
+                  Credential note: {recommendation.eligibilityWarning}
+                </p>
+              )}
+
               {recommendation.financialFlag === "financially_constrained" && (
                 <p className="status warning">
                   This direction may be financially constrained in the first 12
@@ -307,6 +313,23 @@ function ResultsStep({ assessmentId }) {
                 <summary>Why this direction appeared</summary>
 
                 <ScoreBreakdown breakdown={recommendation.scoreBreakdown} />
+
+                {recommendation.eligibility?.gateType &&
+                  recommendation.eligibility.gateType !== "none" && (
+                    <div>
+                      <p>
+                        <strong>Credential gate</strong>
+                      </p>
+
+                      <p>Gate type: {recommendation.eligibility.gateType}</p>
+
+                      <p>
+                        {recommendation.eligibility.matchedCredential
+                          ? `Matched credential: ${recommendation.eligibility.matchedCredential.type} (${recommendation.eligibility.matchedCredential.status}, ${recommendation.eligibility.matchedCredential.jurisdiction})`
+                          : recommendation.eligibility.reason}
+                      </p>
+                    </div>
+                  )}
 
                 <CompetencyList
                   title="Matched required competencies"

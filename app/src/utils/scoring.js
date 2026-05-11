@@ -56,6 +56,65 @@ function getFullDirection(directionId) {
   };
 }
 
+
+function evaluateEligibility(professionalCredentials, direction) {
+  const eligibility = direction.eligibility;
+
+  if (!eligibility) {
+    return {
+      gateType: "none",
+      passed: true,
+      warning: null,
+      reason: null,
+      matchedCredential: null,
+    };
+  }
+
+  const credentials = Array.isArray(professionalCredentials?.credentials)
+    ? professionalCredentials.credentials
+    : [];
+
+  const matchedCredential = credentials.find((credential) => {
+    const typeMatches = eligibility.acceptedCredentials.includes(
+      credential.type
+    );
+
+    const statusMatches = eligibility.acceptedStatuses.includes(
+      credential.status
+    );
+
+    return typeMatches && statusMatches;
+  });
+
+  if (matchedCredential) {
+    return {
+      gateType: eligibility.gateType,
+      passed: true,
+      warning: null,
+      reason: eligibility.reason,
+      matchedCredential,
+    };
+  }
+
+  if (eligibility.gateType === "hard") {
+    return {
+      gateType: "hard",
+      passed: false,
+      warning: null,
+      reason: eligibility.reason,
+      matchedCredential: null,
+    };
+  }
+
+  return {
+    gateType: "soft",
+    passed: true,
+    warning: eligibility.reason,
+    reason: eligibility.reason,
+    matchedCredential: null,
+  };
+}
+
 function normalizeWeights(weights) {
   const fallbackWeights = {
     competencyFit: 35,
@@ -346,6 +405,7 @@ export function generateRecommendations(assessment) {
   const competencySignals = assessment?.cvProfile?.competencySignals || [];
   const anchors = assessment?.anchors || {};
   const financialReality = assessment?.financialReality || {};
+  const professionalCredentials = assessment?.professionalCredentials || {};
 
   const cvAvailable =
     assessment?.cvProfile?.cvSource === "claude_parsed" &&
@@ -364,6 +424,15 @@ export function generateRecommendations(assessment) {
     }
 
     if (!direction.financialPathway) {
+      continue;
+    }
+
+    const eligibilityResult = evaluateEligibility(
+      professionalCredentials,
+      direction
+    );
+
+    if (!eligibilityResult.passed) {
       continue;
     }
 
@@ -446,6 +515,8 @@ export function generateRecommendations(assessment) {
       scoreBreakdown,
       fitBand,
       financialFlag: financialResult.flag,
+      eligibility: eligibilityResult,
+      eligibilityWarning: eligibilityResult.warning,
       financialExplanation: {
         explanation: financialResult.explanation,
         annualFloor: financialResult.annualFloor,

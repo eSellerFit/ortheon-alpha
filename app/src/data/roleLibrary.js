@@ -315,6 +315,12 @@ export const roleLibrary = [
     ],
     stretchabilityRequired: "high",
     transitionPathway: "bridge",
+    eligibility: {
+      gateType: "hard",
+      acceptedCredentials: ["healthcare_clinical"],
+      acceptedStatuses: ["active"],
+      reason: "This direction requires an active clinical or healthcare practice credential."
+    },
     d4EvolutionPath: "AI-augmented therapist using AI for admin and progress tracking while focusing entirely on therapeutic relationship"
   },
 
@@ -345,6 +351,12 @@ export const roleLibrary = [
     ],
     stretchabilityRequired: "high",
     transitionPathway: "bridge",
+    eligibility: {
+      gateType: "hard",
+      acceptedCredentials: ["legal_bar"],
+      acceptedStatuses: ["active"],
+      reason: "This direction requires active legal authorization."
+    },
     d4EvolutionPath: "AI-powered legal strategist using AI for research and drafting while focusing on strategic counsel and client relationships"
   },
 
@@ -405,6 +417,12 @@ export const roleLibrary = [
     ],
     stretchabilityRequired: "high",
     transitionPathway: "bridge",
+    eligibility: {
+      gateType: "soft",
+      acceptedCredentials: ["engineering_pe"],
+      acceptedStatuses: ["active", "in_progress"],
+      reason: "Some engineering consulting work may require a PE license depending on services offered and jurisdiction."
+    },
     d4EvolutionPath: "AI-powered engineering advisor using AI for analysis and modeling while focusing on strategic technical direction"
   },
 
@@ -435,6 +453,12 @@ export const roleLibrary = [
     ],
     stretchabilityRequired: "medium",
     transitionPathway: "bridge",
+    eligibility: {
+      gateType: "soft",
+      acceptedCredentials: ["trade_license"],
+      acceptedStatuses: ["active", "in_progress"],
+      reason: "Some trade businesses require state or local licensing depending on the service and jurisdiction."
+    },
     d4EvolutionPath: "AI-augmented trades business owner using AI for scheduling, quoting, and customer management while focusing on craft and service quality"
   }
 
