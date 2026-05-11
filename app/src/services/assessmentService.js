@@ -173,6 +173,7 @@ export async function updateAssessmentCVProfile(
       tenurePattern: parsedData.tenurePattern,
       leadershipScope: parsedData.leadershipScope,
       confidence: parsedData.confidence,
+      apiUsage: parsedData.apiUsage || null,
       competencySignals: correctedSignals,
       userCorrections,
     },

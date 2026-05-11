@@ -26,6 +26,20 @@ function getOrdinal(rank) {
   return `${rank}th`;
 }
 
+function formatUsd(value) {
+  const number = Number(value);
+
+  if (!number) {
+    return "Not available";
+  }
+
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(number);
+}
+
 function ResultsStep({ assessmentId }) {
   const [status, setStatus] = useState("loading");
   const [recommendations, setRecommendations] = useState([]);
@@ -176,8 +190,22 @@ function ResultsStep({ assessmentId }) {
                 {recommendation.d4EvolutionPath}
               </p>
 
+              <p>
+                <strong>Estimated first-year pathway income:</strong>{" "}
+                {formatUsd(recommendation.financialPathway?.avg12month)}
+              </p>
+
+              {recommendation.salarySources?.[0] && (
+                <p>
+                  <strong>BLS benchmark:</strong>{" "}
+                  {recommendation.salarySources[0].occupationTitle} —{" "}
+                  {formatUsd(recommendation.salarySources[0].medianAnnualWage)}{" "}
+                  median annual wage
+                </p>
+              )}
+
               <p className="helper-text">
-                Salary benchmark: {recommendation.salarySource}; updated{" "}
+                <strong>Source:</strong> {recommendation.salarySource}; updated{" "}
                 {recommendation.salaryLastUpdated || "unknown"}.
               </p>
             </section>

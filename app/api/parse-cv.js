@@ -350,6 +350,31 @@ ${trimmedText}`;
     }
 
     const data = await response.json();
+
+    const usage = data?.usage || {};
+    const inputTokens = Number(usage.input_tokens) || 0;
+    const outputTokens = Number(usage.output_tokens) || 0;
+
+    const inputCostPerMTok = Number(process.env.CLAUDE_INPUT_COST_PER_MTOK || 3);
+    const outputCostPerMTok = Number(process.env.CLAUDE_OUTPUT_COST_PER_MTOK || 15);
+
+    const estimatedCostUsd =
+      (inputTokens / 1_000_000) * inputCostPerMTok +
+      (outputTokens / 1_000_000) * outputCostPerMTok;
+
+    const apiUsage = {
+      provider: "anthropic",
+      model: process.env.CLAUDE_MODEL || "claude-sonnet-4-5-20250929",
+      inputTokens,
+      outputTokens,
+      inputCostPerMTok,
+      outputCostPerMTok,
+      estimatedCostUsd: Number(estimatedCostUsd.toFixed(6)),
+      calculatedAt: new Date().toISOString(),
+    };
+
+    console.log("Claude CV parse usage:", apiUsage);
+
     const rawText = data?.content?.[0]?.text;
 
     if (!rawText || typeof rawText !== "string") {
@@ -391,7 +416,10 @@ ${trimmedText}`;
 
     const normalizedParsed = normalizeParsedResponse(parsed);
 
-    return res.status(200).json(normalizedParsed);
+    return res.status(200).json({
+      ...normalizedParsed,
+      apiUsage,
+    });
   } catch (error) {
     console.error("CV parse function error:", error);
 
