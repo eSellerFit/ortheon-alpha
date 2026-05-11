@@ -40,6 +40,98 @@ function formatUsd(value) {
   }).format(number);
 }
 
+function formatSignal(signalStrength) {
+  if (!signalStrength) {
+    return "absent";
+  }
+
+  return signalStrength.charAt(0).toUpperCase() + signalStrength.slice(1);
+}
+
+function CompetencyList({ title, items }) {
+  if (!items || items.length === 0) {
+    return null;
+  }
+
+  return (
+    <div>
+      <p>
+        <strong>{title}</strong>
+      </p>
+
+      <ul>
+        {items.map((item) => (
+          <li key={`${title}-${item.competencyId}`}>
+            {item.competencyName} — {formatSignal(item.signalStrength)}
+            {item.evidence && (
+              <span className="helper-text"> · Evidence: “{item.evidence}”</span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function AnchorList({ title, items }) {
+  if (!items || items.length === 0) {
+    return null;
+  }
+
+  return (
+    <div>
+      <p>
+        <strong>{title}</strong>
+      </p>
+
+      <ul>
+        {items.map((item) => (
+          <li key={`${title}-${item.anchorId}`}>
+            {item.anchorId}: user score {item.userScore}, ideal range{" "}
+            {item.idealMin}–{item.idealMax}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function ScoreBreakdown({ breakdown }) {
+  if (!breakdown) {
+    return null;
+  }
+
+  return (
+    <div>
+      <p>
+        <strong>Score breakdown</strong>
+      </p>
+
+      <ul>
+        <li>
+          Competency: {breakdown.competency.score} ×{" "}
+          {breakdown.competency.weight}% ={" "}
+          {breakdown.competency.contribution}
+        </li>
+        <li>
+          Anchor: {breakdown.anchor.score} × {breakdown.anchor.weight}% ={" "}
+          {breakdown.anchor.contribution}
+        </li>
+        <li>
+          Financial: {breakdown.financial.score} ×{" "}
+          {breakdown.financial.weight}% ={" "}
+          {breakdown.financial.contribution}
+        </li>
+        <li>
+          AI durability: {breakdown.durability.score} ×{" "}
+          {breakdown.durability.weight}% ={" "}
+          {breakdown.durability.contribution}
+        </li>
+      </ul>
+    </div>
+  );
+}
+
 function ResultsStep({ assessmentId }) {
   const [status, setStatus] = useState("loading");
   const [recommendations, setRecommendations] = useState([]);
@@ -124,7 +216,9 @@ function ResultsStep({ assessmentId }) {
         <div className="results-list">
           {recommendations.map((recommendation) => (
             <section key={recommendation.directionId} className="result-card">
-              <p className="eyebrow">{getOrdinal(recommendation.rank)} direction</p>
+              <p className="eyebrow">
+                {getOrdinal(recommendation.rank)} direction
+              </p>
 
               <h3>{recommendation.directionLabel}</h3>
 
@@ -155,6 +249,25 @@ function ResultsStep({ assessmentId }) {
 
               <p>
                 <strong>Context:</strong> {recommendation.context}
+              </p>
+
+              <p>
+                <strong>Estimated first-year pathway income:</strong>{" "}
+                {formatUsd(recommendation.financialPathway?.avg12month)}
+              </p>
+
+              {recommendation.salarySources?.[0] && (
+                <p>
+                  <strong>BLS benchmark:</strong>{" "}
+                  {recommendation.salarySources[0].occupationTitle} —{" "}
+                  {formatUsd(recommendation.salarySources[0].medianAnnualWage)}{" "}
+                  median annual wage
+                </p>
+              )}
+
+              <p className="helper-text">
+                <strong>Source:</strong> {recommendation.salarySource}; updated{" "}
+                {recommendation.salaryLastUpdated || "unknown"}.
               </p>
 
               {recommendation.financialFlag === "financially_constrained" && (
@@ -190,24 +303,78 @@ function ResultsStep({ assessmentId }) {
                 {recommendation.d4EvolutionPath}
               </p>
 
-              <p>
-                <strong>Estimated first-year pathway income:</strong>{" "}
-                {formatUsd(recommendation.financialPathway?.avg12month)}
-              </p>
+              <details className="debug-details" open>
+                <summary>Why this direction appeared</summary>
 
-              {recommendation.salarySources?.[0] && (
-                <p>
-                  <strong>BLS benchmark:</strong>{" "}
-                  {recommendation.salarySources[0].occupationTitle} —{" "}
-                  {formatUsd(recommendation.salarySources[0].medianAnnualWage)}{" "}
-                  median annual wage
-                </p>
-              )}
+                <ScoreBreakdown breakdown={recommendation.scoreBreakdown} />
 
-              <p className="helper-text">
-                <strong>Source:</strong> {recommendation.salarySource}; updated{" "}
-                {recommendation.salaryLastUpdated || "unknown"}.
-              </p>
+                <CompetencyList
+                  title="Matched required competencies"
+                  items={recommendation.matchedRequiredCompetencies}
+                />
+
+                <CompetencyList
+                  title="Missing required competencies"
+                  items={recommendation.missingRequiredCompetencies}
+                />
+
+                <CompetencyList
+                  title="Matched preferred competencies"
+                  items={recommendation.matchedPreferredCompetencies}
+                />
+
+                <CompetencyList
+                  title="Missing preferred competencies"
+                  items={recommendation.missingPreferredCompetencies}
+                />
+
+                <AnchorList
+                  title="Anchor matches"
+                  items={recommendation.anchorMatches}
+                />
+
+                <AnchorList
+                  title="Anchor conflicts"
+                  items={recommendation.anchorConflicts}
+                />
+
+                {recommendation.financialExplanation && (
+                  <div>
+                    <p>
+                      <strong>Financial explanation</strong>
+                    </p>
+
+                    <p>{recommendation.financialExplanation.explanation}</p>
+
+                    <ul>
+                      <li>
+                        Income floor:{" "}
+                        {formatUsd(
+                          recommendation.financialExplanation.annualFloor
+                        )}
+                      </li>
+                      <li>
+                        Estimated first-year income:{" "}
+                        {formatUsd(
+                          recommendation.financialExplanation.avg12month
+                        )}
+                      </li>
+                      <li>
+                        Ratio: {recommendation.financialExplanation.ratio}
+                      </li>
+                      <li>
+                        Runway:{" "}
+                        {recommendation.financialExplanation.runwayMonths}{" "}
+                        months
+                      </li>
+                      <li>
+                        Runway adjustment:{" "}
+                        {recommendation.financialExplanation.runwayAdjustment}
+                      </li>
+                    </ul>
+                  </div>
+                )}
+              </details>
             </section>
           ))}
         </div>

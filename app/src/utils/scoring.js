@@ -1,6 +1,39 @@
 import { roleLibrary } from "../data/roleLibrary";
 import { salaryBenchmarks } from "../data/salaryBenchmarks";
 
+const competencyNames = {
+  1: "Understanding and managing competing interests",
+  2: "Being Resilient - bouncing back and adapting under pressure",
+  3: "Generating new ideas and turning them into reality",
+  4: "Seeing the bigger picture and positioning for long-term advantage",
+  5: "Picking up new skills and knowledge quickly under real conditions",
+  6: "Delivering outcomes fast with whatever is available",
+  7: "Making sure commitments are kept by self and others",
+  8: "Finding better, faster, smarter ways to get work done",
+  9: "Understanding how money flows and decisions affect financial outcomes",
+  10: "Aligning people through clear direction and meaningful purpose",
+  11: "Inspiring and persuading people to grow and take action",
+  12: "Navigating complexity to get things done within any structure",
+  13: "Adjusting approach to fit what each moment actually needs",
+  14: "Building and maintaining relationships that create future opportunities",
+  15: "Selling ideas, services or products without institutional backing",
+  16: "Mastering a specific craft, tool or physical system to a high standard",
+  17: "Maintaining precision, quality and safety standards consistently",
+  18: "Diagnosing and fixing problems in physical or technical systems",
+  19: "Reading and working from technical specifications or blueprints",
+  20: "Working effectively with AI tools to amplify personal output",
+  21: "Thinking critically about information, data and AI-generated content",
+  22: "Creating original content, ideas or solutions that AI cannot replicate",
+  23: "Orchestrating AI, automation and human workflows to deliver outcomes at scale",
+};
+
+const signalMap = {
+  strong: 100,
+  moderate: 70,
+  weak: 30,
+  absent: 0,
+};
+
 function getFullDirection(directionId) {
   const role = roleLibrary.find((item) => item.directionId === directionId);
   const salary = salaryBenchmarks.find(
@@ -65,30 +98,56 @@ function normalizeWeights(weights) {
   };
 }
 
-function calcCompetencyScore(competencySignals, direction) {
-  const signalMap = {
-    strong: 100,
-    moderate: 70,
-    weak: 30,
-    absent: 0,
-  };
-
+function getSignalDetail(competencySignals, competencyId) {
   const signals = Array.isArray(competencySignals) ? competencySignals : [];
 
-  function getStrength(competencyId) {
-    const found = signals.find(
-      (signal) => Number(signal.competencyId) === Number(competencyId)
-    );
+  const found = signals.find(
+    (signal) => Number(signal.competencyId) === Number(competencyId)
+  );
 
-    if (!found) {
-      return 0;
-    }
+  const signalStrength = found?.signalStrength || "absent";
+  const score = signalMap[signalStrength] || 0;
 
-    return signalMap[found.signalStrength] || 0;
-  }
+  return {
+    competencyId,
+    competencyName:
+      found?.competencyName ||
+      competencyNames[competencyId] ||
+      `Competency ${competencyId}`,
+    signalStrength,
+    score,
+    evidence: found?.evidence || null,
+    isMatched: signalStrength === "strong" || signalStrength === "moderate",
+  };
+}
 
-  const requiredScores = (direction.requiredCompetencies || []).map(getStrength);
-  const preferredScores = (direction.preferredCompetencies || []).map(getStrength);
+function buildCompetencyExplanation(competencySignals, direction) {
+  const required = (direction.requiredCompetencies || []).map((competencyId) =>
+    getSignalDetail(competencySignals, competencyId)
+  );
+
+  const preferred = (direction.preferredCompetencies || []).map((competencyId) =>
+    getSignalDetail(competencySignals, competencyId)
+  );
+
+  return {
+    matchedRequiredCompetencies: required.filter((item) => item.isMatched),
+    missingRequiredCompetencies: required.filter((item) => !item.isMatched),
+    matchedPreferredCompetencies: preferred.filter((item) => item.isMatched),
+    missingPreferredCompetencies: preferred.filter((item) => !item.isMatched),
+  };
+}
+
+function calcCompetencyScore(competencySignals, direction) {
+  const requiredScores = (direction.requiredCompetencies || []).map(
+    (competencyId) =>
+      getSignalDetail(competencySignals, competencyId).score
+  );
+
+  const preferredScores = (direction.preferredCompetencies || []).map(
+    (competencyId) =>
+      getSignalDetail(competencySignals, competencyId).score
+  );
 
   const requiredAverage =
     requiredScores.length > 0
@@ -105,35 +164,69 @@ function calcCompetencyScore(competencySignals, direction) {
   return Math.round(requiredAverage * 0.7 + preferredAverage * 0.3);
 }
 
+function evaluateAnchor(anchor, userScore, importance) {
+  const midpoint = (anchor.idealMin + anchor.idealMax) / 2;
+  const distance = Math.abs(userScore - midpoint);
+  const isInIdealRange =
+    userScore >= anchor.idealMin && userScore <= anchor.idealMax;
+  const isConflict = distance > 3;
+
+  return {
+    anchorId: anchor.anchorId,
+    userScore,
+    idealMin: anchor.idealMin,
+    idealMax: anchor.idealMax,
+    importance,
+    distance: Number(distance.toFixed(1)),
+    isInIdealRange,
+    isConflict,
+  };
+}
+
 function calcAnchorScore(anchors, direction) {
   let penalty = 0;
   const warnings = [];
+  const anchorMatches = [];
+  const anchorConflicts = [];
 
   const userAnchors = anchors || {};
 
   (direction.dominantAnchors || []).forEach((anchor) => {
     const userScore = Number(userAnchors[anchor.anchorId]) || 5;
-    const midpoint = (anchor.idealMin + anchor.idealMax) / 2;
-    const distance = Math.abs(userScore - midpoint);
+    const evaluation = evaluateAnchor(anchor, userScore, "dominant");
 
-    penalty += distance * 10;
+    penalty += evaluation.distance * 10;
 
-    if (distance > 3) {
+    if (evaluation.isInIdealRange) {
+      anchorMatches.push(evaluation);
+    }
+
+    if (evaluation.isConflict) {
       warnings.push(anchor.anchorId);
+      anchorConflicts.push(evaluation);
     }
   });
 
   (direction.significantAnchors || []).forEach((anchor) => {
     const userScore = Number(userAnchors[anchor.anchorId]) || 5;
-    const midpoint = (anchor.idealMin + anchor.idealMax) / 2;
-    const distance = Math.abs(userScore - midpoint);
+    const evaluation = evaluateAnchor(anchor, userScore, "significant");
 
-    penalty += distance * 5;
+    penalty += evaluation.distance * 5;
+
+    if (evaluation.isInIdealRange) {
+      anchorMatches.push(evaluation);
+    }
+
+    if (evaluation.isConflict) {
+      anchorConflicts.push(evaluation);
+    }
   });
 
   return {
     score: Math.max(0, Math.round(100 - penalty)),
     warnings,
+    anchorMatches,
+    anchorConflicts,
   };
 }
 
@@ -147,27 +240,35 @@ function calcFinancialScore(financialReality, direction) {
 
   let score;
   let flag = null;
+  let explanation;
 
   if (ratio >= 1.2) {
     score = 100;
+    explanation = "Estimated first-year income is comfortably above the stated income floor.";
   } else if (ratio >= 1.0) {
     score = 70;
+    explanation = "Estimated first-year income meets the stated income floor, but with limited buffer.";
   } else if (ratio >= 0.8) {
     score = 40;
     flag = "financially_constrained";
+    explanation = "Estimated first-year income is below the stated income floor, but may be manageable with runway or a bridge plan.";
   } else {
     score = 10;
     flag = "financially_risky";
+    explanation = "Estimated first-year income is materially below the stated income floor.";
   }
 
   const runway = Number(financialReality?.savingsRunwayMonths) || 0;
+  let runwayAdjustment = 0;
 
   if (runway >= 6) {
     score = Math.min(100, score + 10);
+    runwayAdjustment = 10;
   }
 
   if (runway < 3) {
     score = Math.max(0, score - 20);
+    runwayAdjustment = -20;
   }
 
   return {
@@ -175,6 +276,10 @@ function calcFinancialScore(financialReality, direction) {
     flag,
     annualFloor,
     avg12month,
+    ratio: Number(ratio.toFixed(2)),
+    runwayMonths: runway,
+    runwayAdjustment,
+    explanation,
   };
 }
 
@@ -210,6 +315,31 @@ function getFitBand(total, financialFlag) {
   return "Bridge Required";
 }
 
+function buildScoreBreakdown(scores, weights) {
+  return {
+    competency: {
+      score: scores.competency,
+      weight: Number((weights.competencyFit * 100).toFixed(1)),
+      contribution: Number((scores.competency * weights.competencyFit).toFixed(1)),
+    },
+    anchor: {
+      score: scores.anchor,
+      weight: Number((weights.anchorFit * 100).toFixed(1)),
+      contribution: Number((scores.anchor * weights.anchorFit).toFixed(1)),
+    },
+    financial: {
+      score: scores.financial,
+      weight: Number((weights.financialViability * 100).toFixed(1)),
+      contribution: Number((scores.financial * weights.financialViability).toFixed(1)),
+    },
+    durability: {
+      score: scores.durability,
+      weight: Number((weights.roleDurability * 100).toFixed(1)),
+      contribution: Number((scores.durability * weights.roleDurability).toFixed(1)),
+    },
+  };
+}
+
 export function generateRecommendations(assessment) {
   const weights = normalizeWeights(assessment?.priorityWeights);
 
@@ -242,26 +372,45 @@ export function generateRecommendations(assessment) {
       direction
     );
 
-    const { score: anchorScore, warnings: anchorWarnings } =
-      calcAnchorScore(anchors, direction);
+    const competencyExplanation = buildCompetencyExplanation(
+      competencySignals,
+      direction
+    );
 
     const {
-      score: financialScore,
-      flag: financialFlag,
-      annualFloor,
-      avg12month,
-    } = calcFinancialScore(financialReality, direction);
+      score: anchorScore,
+      warnings: anchorWarnings,
+      anchorMatches,
+      anchorConflicts,
+    } = calcAnchorScore(anchors, direction);
+
+    const financialResult = calcFinancialScore(financialReality, direction);
 
     const durabilityScore = calcDurabilityScore(direction);
 
+    const scores = {
+      competency: competencyScore,
+      anchor: anchorScore,
+      financial: financialResult.score,
+      durability: durabilityScore,
+    };
+
     const total = Math.round(
-      competencyScore * weights.competencyFit +
-        anchorScore * weights.anchorFit +
-        financialScore * weights.financialViability +
-        durabilityScore * weights.roleDurability
+      scores.competency * weights.competencyFit +
+        scores.anchor * weights.anchorFit +
+        scores.financial * weights.financialViability +
+        scores.durability * weights.roleDurability
     );
 
-    const fitBand = getFitBand(total, financialFlag);
+    const fitBand = getFitBand(total, financialResult.flag);
+
+    const scoreBreakdown = buildScoreBreakdown(
+      {
+        ...scores,
+        total,
+      },
+      weights
+    );
 
     results.push({
       rank: 0,
@@ -286,19 +435,29 @@ export function generateRecommendations(assessment) {
       salaryBenchmarkVersion: direction.salaryBenchmarkVersion,
       financialPathway: direction.financialPathway,
       financialComparison: {
-        annualFloor,
-        avg12month,
+        annualFloor: financialResult.annualFloor,
+        avg12month: financialResult.avg12month,
+        ratio: financialResult.ratio,
       },
       scores: {
-        competency: competencyScore,
-        anchor: anchorScore,
-        financial: financialScore,
-        durability: durabilityScore,
+        ...scores,
         total,
       },
+      scoreBreakdown,
       fitBand,
-      financialFlag,
+      financialFlag: financialResult.flag,
+      financialExplanation: {
+        explanation: financialResult.explanation,
+        annualFloor: financialResult.annualFloor,
+        avg12month: financialResult.avg12month,
+        ratio: financialResult.ratio,
+        runwayMonths: financialResult.runwayMonths,
+        runwayAdjustment: financialResult.runwayAdjustment,
+      },
       anchorWarnings,
+      anchorMatches,
+      anchorConflicts,
+      ...competencyExplanation,
       cvConfidence: cvAvailable ? "full" : "low",
       roleLibraryVersion: direction.version,
     });
