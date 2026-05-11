@@ -83,6 +83,24 @@ export async function updateAssessmentConstraints(assessmentId, formData) {
   await updateDoc(assessmentRef, payload);
 }
 
+export async function updateAssessmentProfessionalCredentials(
+  assessmentId,
+  formData
+) {
+  const assessmentRef = doc(db, "assessments", assessmentId);
+
+  const payload = {
+    professionalCredentials: {
+      hasRegulatedCredentials: formData.hasRegulatedCredentials,
+      credentials: formData.credentials || [],
+    },
+    status: "professional_credentials_submitted",
+    updatedAt: serverTimestamp(),
+  };
+
+  await updateDoc(assessmentRef, payload);
+}
+
 export async function saveAssessmentRawCVText(
   assessmentId,
   reviewedText,

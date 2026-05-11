@@ -3,11 +3,12 @@ import BasicContextStep from "../components/assessment/BasicContextStep";
 import CareerAnchorsStep from "../components/assessment/CareerAnchorsStep";
 import FinancialRealityStep from "../components/assessment/FinancialRealityStep";
 import TransitionConstraintsStep from "../components/assessment/TransitionConstraintsStep";
+import ProfessionalCredentialsStep from "../components/assessment/ProfessionalCredentialsStep";
 import CVUploadStep from "../components/assessment/CVUploadStep";
 import PriorityWeightsStep from "../components/assessment/PriorityWeightsStep";
 import ResultsStep from "../components/assessment/ResultsStep";
 
-const TOTAL_STEPS = 7;
+const TOTAL_STEPS = 8;
 
 function AssessmentFlow() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -30,12 +31,16 @@ function AssessmentFlow() {
     setCurrentStep(5);
   }
 
-  function handleCVUploadComplete() {
+  function handleProfessionalCredentialsComplete() {
     setCurrentStep(6);
   }
 
-  function handlePriorityWeightsComplete() {
+  function handleCVUploadComplete() {
     setCurrentStep(7);
+  }
+
+  function handlePriorityWeightsComplete() {
+    setCurrentStep(8);
   }
 
   return (
@@ -47,8 +52,8 @@ function AssessmentFlow() {
 
         <p className="intro">
           Ortheon captures your career context, anchors, financial reality,
-          practical constraints, CV signals, priority weights, and then generates
-          direction recommendations.
+          practical constraints, professional credentials, CV signals, priority
+          weights, and then generates direction recommendations.
         </p>
 
         <p>
@@ -81,22 +86,27 @@ function AssessmentFlow() {
         )}
 
         {currentStep === 5 && (
+          <ProfessionalCredentialsStep
+            assessmentId={assessmentId}
+            onComplete={handleProfessionalCredentialsComplete}
+          />
+        )}
+
+        {currentStep === 6 && (
           <CVUploadStep
             assessmentId={assessmentId}
             onComplete={handleCVUploadComplete}
           />
         )}
 
-        {currentStep === 6 && (
+        {currentStep === 7 && (
           <PriorityWeightsStep
             assessmentId={assessmentId}
             onComplete={handlePriorityWeightsComplete}
           />
         )}
 
-        {currentStep === 7 && (
-          <ResultsStep assessmentId={assessmentId} />
-        )}
+        {currentStep === 8 && <ResultsStep assessmentId={assessmentId} />}
       </section>
     </main>
   );
