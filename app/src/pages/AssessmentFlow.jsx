@@ -5,6 +5,7 @@ import FinancialRealityStep from "../components/assessment/FinancialRealityStep"
 import TransitionConstraintsStep from "../components/assessment/TransitionConstraintsStep";
 import CVUploadStep from "../components/assessment/CVUploadStep";
 import PriorityWeightsStep from "../components/assessment/PriorityWeightsStep";
+import ResultsStep from "../components/assessment/ResultsStep";
 
 const TOTAL_STEPS = 7;
 
@@ -94,16 +95,7 @@ function AssessmentFlow() {
         )}
 
         {currentStep === 7 && (
-          <div className="form">
-            <h2>Results</h2>
-            <p>
-              This step is not built yet. The next module will run the scoring engine
-              and generate career direction recommendations.
-            </p>
-            <p className="status success">
-              Priority weights saved. Assessment ID: {assessmentId}
-            </p>
-          </div>
+          <ResultsStep assessmentId={assessmentId} />
         )}
       </section>
     </main>

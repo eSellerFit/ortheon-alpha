@@ -2,6 +2,7 @@ import {
   addDoc,
   collection,
   doc,
+  getDoc,
   serverTimestamp,
   updateDoc,
 } from "firebase/firestore";
@@ -202,6 +203,33 @@ export async function updateAssessmentPriorityWeights(assessmentId, weightsData)
     priorityWeights,
     priorityWeightsTotal,
     status: "priority_weights_submitted",
+    updatedAt: serverTimestamp(),
+  };
+
+  await updateDoc(assessmentRef, payload);
+}
+
+
+export async function getAssessment(assessmentId) {
+  const assessmentRef = doc(db, "assessments", assessmentId);
+  const assessmentSnap = await getDoc(assessmentRef);
+
+  if (!assessmentSnap.exists()) {
+    throw new Error("Assessment not found");
+  }
+
+  return {
+    id: assessmentSnap.id,
+    ...assessmentSnap.data(),
+  };
+}
+
+export async function saveAssessmentResults(assessmentId, recommendations) {
+  const assessmentRef = doc(db, "assessments", assessmentId);
+
+  const payload = {
+    directionRecommendations: recommendations,
+    status: "results_generated",
     updatedAt: serverTimestamp(),
   };
 
