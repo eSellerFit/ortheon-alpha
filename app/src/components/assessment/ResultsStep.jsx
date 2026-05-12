@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { generateRecommendations } from "../../utils/scoring";
+import {
+  generateCareerMap,
+  generateRecommendations,
+} from "../../utils/scoring";
 import {
   getAssessment,
   saveAssessmentResults,
@@ -303,8 +306,16 @@ function ResultsStep({ assessmentId }) {
 
         const assessment = await getAssessment(assessmentId);
         const generatedRecommendations = generateRecommendations(assessment);
+        const generatedCareerMap = generateCareerMap(
+          assessment,
+          generatedRecommendations
+        );
 
-        await saveAssessmentResults(assessmentId, generatedRecommendations);
+        await saveAssessmentResults(
+          assessmentId,
+          generatedRecommendations,
+          generatedCareerMap
+        );
 
         setRecommendations(generatedRecommendations);
         setStatus("success");

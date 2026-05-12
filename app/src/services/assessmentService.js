@@ -11,6 +11,7 @@ import { db } from "../firebase";
 const ROLE_LIBRARY_VERSION = "v2.1";
 const SALARY_BENCHMARK_VERSION = "v2.0";
 const SCORING_VERSION = "transition-realism-v1.0";
+const CAREER_MAP_VERSION = "career-map-v1.0";
 const SOURCE = "ortheon-alpha-mvp";
 
 export async function createAssessmentDraft(formData) {
@@ -24,6 +25,7 @@ export async function createAssessmentDraft(formData) {
     roleLibraryVersion: ROLE_LIBRARY_VERSION,
     salaryBenchmarkVersion: SALARY_BENCHMARK_VERSION,
     scoringVersion: SCORING_VERSION,
+    careerMapVersion: CAREER_MAP_VERSION,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   };
@@ -249,14 +251,20 @@ export async function getAssessment(assessmentId) {
   };
 }
 
-export async function saveAssessmentResults(assessmentId, recommendations) {
+export async function saveAssessmentResults(
+  assessmentId,
+  recommendations,
+  careerMap = null
+) {
   const assessmentRef = doc(db, "assessments", assessmentId);
 
   const payload = {
     directionRecommendations: recommendations,
+    careerMap,
     roleLibraryVersion: ROLE_LIBRARY_VERSION,
     salaryBenchmarkVersion: SALARY_BENCHMARK_VERSION,
     scoringVersion: SCORING_VERSION,
+    careerMapVersion: careerMap?.version || CAREER_MAP_VERSION,
     resultsGeneratedAt: serverTimestamp(),
     status: "results_generated",
     updatedAt: serverTimestamp(),

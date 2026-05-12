@@ -1,5 +1,6 @@
 import { roleLibrary } from "../data/roleLibrary";
 import { salaryBenchmarks } from "../data/salaryBenchmarks";
+import { getCareerMapMetadata } from "../data/careerMapMetadata";
 
 const competencyNames = {
   1: "Understanding and managing competing interests",
@@ -123,7 +124,6 @@ function normalizeWeights(weights) {
   };
 
   const source = weights || fallbackWeights;
-
   const financial = Math.max(Number(source.financialViability) || 15, 10);
 
   const adjusted = {
@@ -198,13 +198,11 @@ function buildCompetencyExplanation(competencySignals, direction) {
 
 function calcCompetencyScore(competencySignals, direction) {
   const requiredScores = (direction.requiredCompetencies || []).map(
-    (competencyId) =>
-      getSignalDetail(competencySignals, competencyId).score
+    (competencyId) => getSignalDetail(competencySignals, competencyId).score
   );
 
   const preferredScores = (direction.preferredCompetencies || []).map(
-    (competencyId) =>
-      getSignalDetail(competencySignals, competencyId).score
+    (competencyId) => getSignalDetail(competencySignals, competencyId).score
   );
 
   const requiredAverage =
@@ -293,7 +291,6 @@ function calcFinancialScore(financialReality, direction) {
     (Number(financialReality?.minimumMonthlyIncome) || 0) * 12;
 
   const avg12month = Number(direction.financialPathway?.avg12month) || 0;
-
   const ratio = annualFloor > 0 ? avg12month / annualFloor : 1;
 
   let score;
@@ -539,6 +536,350 @@ function buildScoreBreakdown(scores, weights) {
   };
 }
 
+function getAiDurabilityTone(aiDurabilityRating) {
+  if (aiDurabilityRating === "D4") {
+    return "highly_durable";
+  }
+
+  if (aiDurabilityRating === "D3") {
+    return "durable";
+  }
+
+  if (aiDurabilityRating === "D2") {
+    return "transforming";
+  }
+
+  if (aiDurabilityRating === "D1") {
+    return "pressured";
+  }
+
+  return "avoid_or_declining";
+}
+
+function getPathType(recommendation) {
+  if (recommendation.transitionFlags?.includes("domain_credibility_gap")) {
+    return "credibility_gap";
+  }
+
+  if (recommendation.transitionCategory === "credentialed") {
+    return "credentialed";
+  }
+
+  if (recommendation.transitionPathway === "bridge") {
+    return "bridge";
+  }
+
+  if (recommendation.transitionPathway === "stretch") {
+    return "stretch";
+  }
+
+  return "direct";
+}
+
+function buildCurrentProfileNode(assessment) {
+  const domainSignals = assessment?.cvProfile?.domainSignals || [];
+  const senioritySignal = assessment?.cvProfile?.senioritySignal || null;
+  const leadershipScope = assessment?.cvProfile?.leadershipScope || null;
+
+  const labelParts = [];
+
+  if (domainSignals.includes("human_resources")) {
+    labelParts.push("People");
+  }
+
+  if (domainSignals.includes("operations")) {
+    labelParts.push("Operations");
+  }
+
+  if (domainSignals.includes("technology")) {
+    labelParts.push("Technology");
+  }
+
+  if (domainSignals.includes("entrepreneurship")) {
+    labelParts.push("Entrepreneurship");
+  }
+
+  if (domainSignals.includes("consulting")) {
+    labelParts.push("Advisory");
+  }
+
+  const label =
+    labelParts.length > 0
+      ? labelParts.slice(0, 3).join(" / ")
+      : assessment?.currentRole || "Current profile";
+
+  return {
+    type: "current_profile",
+    label,
+    mapQuadrant: "corporate_operational",
+    mapCluster: "business_operations",
+    description:
+      "Current profile position based on CV domain signals, seniority, and career history.",
+    domainSignals,
+    senioritySignal,
+    leadershipScope,
+  };
+}
+
+function buildPrimaryMapNode(recommendation) {
+  const mapMetadata = getCareerMapMetadata(recommendation);
+
+  return {
+    type: "primary_direction",
+    rank: recommendation.rank,
+    directionId: recommendation.directionId,
+    directionLabel: recommendation.directionLabel,
+    mapQuadrant: mapMetadata.mapQuadrant,
+    mapCluster: mapMetadata.mapCluster,
+    mapTags: mapMetadata.mapTags || [],
+    aiDurabilityRating: recommendation.aiDurabilityRating,
+    aiDurabilityTone: getAiDurabilityTone(recommendation.aiDurabilityRating),
+    transitionCategory: recommendation.transitionCategory,
+    transitionPathway: recommendation.transitionPathway,
+    transitionLabel: recommendation.transitionLabel,
+    pathType: getPathType(recommendation),
+    fitBand: recommendation.fitBand,
+    totalScore: recommendation.scores?.total,
+    financialPathway: recommendation.financialPathway,
+    context: recommendation.context,
+  };
+}
+
+function hasMapRelevance(direction, assessment, primaryClusterSet) {
+  const mapMetadata = getCareerMapMetadata(direction);
+  const domainSignals = assessment?.cvProfile?.domainSignals || [];
+  const careerSummary = assessment?.cvProfile?.careerSummary?.toLowerCase() || "";
+  const tags = mapMetadata.mapTags || [];
+
+  const tagMatchesDomain = tags.some((tag) =>
+    domainSignals.some((domain) =>
+      String(tag).toLowerCase().includes(String(domain).toLowerCase())
+    )
+  );
+
+  const tagMatchesSummary = tags.some((tag) =>
+    careerSummary.includes(String(tag).toLowerCase())
+  );
+
+  const clusterMatchesPrimary = primaryClusterSet.has(mapMetadata.mapCluster);
+
+  const strategicallyRelevantClusters = new Set([
+    "marketplace_platforms",
+    "workforce_intelligence",
+    "people_analytics_hr_tech",
+    "ai_transformation",
+    "business_operations",
+    "independent_advisory",
+  ]);
+
+  const strategicallyRelevant =
+    strategicallyRelevantClusters.has(mapMetadata.mapCluster) &&
+    (
+      domainSignals.includes("operations") ||
+      domainSignals.includes("human_resources") ||
+      domainSignals.includes("technology") ||
+      domainSignals.includes("consulting") ||
+      domainSignals.includes("entrepreneurship")
+    );
+
+  return (
+    tagMatchesDomain ||
+    tagMatchesSummary ||
+    clusterMatchesPrimary ||
+    strategicallyRelevant
+  );
+}
+
+function buildAdjacentMapNodes(assessment, primaryRecommendations, limit = 5) {
+  const primaryIds = new Set(
+    primaryRecommendations.map((recommendation) => recommendation.directionId)
+  );
+
+  const primaryClusterSet = new Set(
+    primaryRecommendations.map(
+      (recommendation) => getCareerMapMetadata(recommendation).mapCluster
+    )
+  );
+
+  const adjacentCandidates = roleLibrary
+    .filter((direction) => !primaryIds.has(direction.directionId))
+    .filter((direction) => direction.aiDurabilityRating !== "D0")
+    .filter((direction) =>
+      hasMapRelevance(direction, assessment, primaryClusterSet)
+    )
+    .map((direction) => {
+      const mapMetadata = getCareerMapMetadata(direction);
+
+      let relevanceScore = 0;
+
+      if (primaryClusterSet.has(mapMetadata.mapCluster)) {
+        relevanceScore += 30;
+      }
+
+      if (
+        [
+          "marketplace_platforms",
+          "workforce_intelligence",
+          "people_analytics_hr_tech",
+          "ai_transformation",
+        ].includes(mapMetadata.mapCluster)
+      ) {
+        relevanceScore += 25;
+      }
+
+      if (direction.aiDurabilityRating === "D4") {
+        relevanceScore += 20;
+      } else if (direction.aiDurabilityRating === "D3") {
+        relevanceScore += 15;
+      }
+
+      if (
+        direction.transitionCategory === "bridge_friendly" ||
+        direction.transitionPathway === "bridge"
+      ) {
+        relevanceScore += 10;
+      }
+
+      return {
+        type: "adjacent_trajectory",
+        directionId: direction.directionId,
+        directionLabel: direction.directionLabel,
+        mapQuadrant: mapMetadata.mapQuadrant,
+        mapCluster: mapMetadata.mapCluster,
+        mapTags: mapMetadata.mapTags || [],
+        aiDurabilityRating: direction.aiDurabilityRating,
+        aiDurabilityTone: getAiDurabilityTone(direction.aiDurabilityRating),
+        transitionCategory: direction.transitionCategory,
+        transitionPathway: direction.transitionPathway,
+        pathType: direction.transitionPathway || "adjacent",
+        relevanceScore,
+        reason: getAdjacentRouteReason(mapMetadata.mapCluster),
+      };
+    })
+    .sort((a, b) => b.relevanceScore - a.relevanceScore)
+    .slice(0, limit);
+
+  return adjacentCandidates;
+}
+
+function getAdjacentRouteReason(mapCluster) {
+  const reasons = {
+    marketplace_platforms:
+      "Nearby route supported by marketplace, platform, and ecosystem operating experience.",
+    workforce_intelligence:
+      "Nearby route supported by workforce planning, talent systems, and people operations signals.",
+    people_analytics_hr_tech:
+      "Nearby route supported by HR, analytics, AI tools, and workforce systems experience.",
+    ai_transformation:
+      "Nearby route supported by AI workflow, automation, and operating model experience.",
+    business_operations:
+      "Nearby route supported by business operations, execution, and cross-functional leadership.",
+    independent_advisory:
+      "Nearby route supported by consulting, advisory, and client-facing experience.",
+  };
+
+  return reasons[mapCluster] || "Nearby trajectory supported by the profile signals.";
+}
+
+function buildLongerPathNodes(primaryRecommendations) {
+  const primaryIds = new Set(
+    primaryRecommendations.map((recommendation) => recommendation.directionId)
+  );
+
+  const longerPathMap = new Map();
+
+  primaryRecommendations.forEach((recommendation) => {
+    const longerPathOptions = recommendation.longerPathOptions || [];
+
+    longerPathOptions.forEach((option) => {
+      if (primaryIds.has(option.directionId)) {
+        return;
+      }
+
+      const fullDirection = roleLibrary.find(
+        (direction) => direction.directionId === option.directionId
+      );
+
+      if (!fullDirection) {
+        return;
+      }
+
+      const mapMetadata = getCareerMapMetadata(fullDirection);
+
+      longerPathMap.set(option.directionId, {
+        type: "longer_path",
+        directionId: option.directionId,
+        directionLabel: option.directionLabel,
+        connectedFrom: recommendation.directionId,
+        connectedFromLabel: recommendation.directionLabel,
+        mapQuadrant: mapMetadata.mapQuadrant,
+        mapCluster: mapMetadata.mapCluster,
+        mapTags: mapMetadata.mapTags || [],
+        aiDurabilityRating: fullDirection.aiDurabilityRating,
+        aiDurabilityTone: getAiDurabilityTone(fullDirection.aiDurabilityRating),
+        pathType: "longer_path",
+        reason: `May become more realistic after building credibility through ${recommendation.directionLabel}.`,
+      });
+    });
+  });
+
+  return Array.from(longerPathMap.values());
+}
+
+function buildCareerMapSummary(primaryNodes, adjacentNodes, longerPathNodes) {
+  const primaryClusters = [
+    ...new Set(primaryNodes.map((node) => node.mapCluster)),
+  ];
+
+  const allVisibleNodes = [
+    ...primaryNodes,
+    ...adjacentNodes,
+    ...longerPathNodes,
+  ];
+
+  const hasMarketplace = allVisibleNodes.some(
+    (node) => node.mapCluster === "marketplace_platforms"
+  );
+
+  const hasWorkforce = allVisibleNodes.some(
+    (node) =>
+      node.mapCluster === "workforce_intelligence" ||
+      node.mapCluster === "people_analytics_hr_tech"
+  );
+
+  const hasIndependent = allVisibleNodes.some(
+    (node) =>
+      node.mapQuadrant === "autonomous_operational" ||
+      node.mapQuadrant === "autonomous_human"
+  );
+
+  let mainPattern = "Business operations and leadership";
+
+  if (hasMarketplace && hasWorkforce) {
+    mainPattern =
+      "Marketplace operations, workforce systems, and business leadership";
+  } else if (hasMarketplace) {
+    mainPattern = "Marketplace operations and business systems";
+  } else if (hasWorkforce) {
+    mainPattern = "Workforce intelligence and people systems";
+  } else if (primaryClusters.includes("enterprise_leadership")) {
+    mainPattern = "Enterprise leadership and business operations";
+  }
+
+  const transitionStyle = hasIndependent
+    ? "Direct enterprise paths with adjacent independent trajectories"
+    : "Mostly direct enterprise paths";
+
+  return {
+    mainPattern,
+    transitionStyle,
+    bridgeGoal:
+      "Use the strongest current directions to strengthen credibility for adjacent trajectories.",
+    mainCaution:
+      "Adjacent routes are not final recommendations; they are nearby paths worth validating.",
+  };
+}
+
 export function generateRecommendations(assessment) {
   const weights = normalizeWeights(assessment?.priorityWeights);
 
@@ -605,7 +946,6 @@ export function generateRecommendations(assessment) {
     } = calcAnchorScore(anchors, direction);
 
     const financialResult = calcFinancialScore(financialReality, direction);
-
     const durabilityScore = calcDurabilityScore(direction);
 
     const scores = {
@@ -705,4 +1045,28 @@ export function generateRecommendations(assessment) {
       ...result,
       rank: index + 1,
     }));
+}
+
+export function generateCareerMap(assessment, recommendations) {
+  const primaryRecommendations = Array.isArray(recommendations)
+    ? recommendations
+    : [];
+
+  const currentProfileNode = buildCurrentProfileNode(assessment);
+  const primaryNodes = primaryRecommendations.map(buildPrimaryMapNode);
+  const adjacentNodes = buildAdjacentMapNodes(assessment, primaryRecommendations);
+  const longerPathNodes = buildLongerPathNodes(primaryRecommendations);
+
+  return {
+    version: "career-map-v1.0",
+    currentProfileNode,
+    primaryNodes,
+    adjacentNodes,
+    longerPathNodes,
+    summary: buildCareerMapSummary(
+      primaryNodes,
+      adjacentNodes,
+      longerPathNodes
+    ),
+  };
 }
