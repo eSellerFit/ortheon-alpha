@@ -8,6 +8,11 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase";
 
+const ROLE_LIBRARY_VERSION = "v2.1";
+const SALARY_BENCHMARK_VERSION = "v2.0";
+const SCORING_VERSION = "transition-realism-v1.0";
+const SOURCE = "ortheon-alpha-mvp";
+
 export async function createAssessmentDraft(formData) {
   const payload = {
     firstName: formData.firstName.trim(),
@@ -15,8 +20,10 @@ export async function createAssessmentDraft(formData) {
     currentRole: formData.currentRole.trim(),
     currentSituation: formData.currentSituation,
     status: "intake_submitted",
-    source: "ortheon-alpha-mvp",
-    roleLibraryVersion: "v2.0",
+    source: SOURCE,
+    roleLibraryVersion: ROLE_LIBRARY_VERSION,
+    salaryBenchmarkVersion: SALARY_BENCHMARK_VERSION,
+    scoringVersion: SCORING_VERSION,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   };
@@ -228,7 +235,6 @@ export async function updateAssessmentPriorityWeights(assessmentId, weightsData)
   await updateDoc(assessmentRef, payload);
 }
 
-
 export async function getAssessment(assessmentId) {
   const assessmentRef = doc(db, "assessments", assessmentId);
   const assessmentSnap = await getDoc(assessmentRef);
@@ -248,6 +254,10 @@ export async function saveAssessmentResults(assessmentId, recommendations) {
 
   const payload = {
     directionRecommendations: recommendations,
+    roleLibraryVersion: ROLE_LIBRARY_VERSION,
+    salaryBenchmarkVersion: SALARY_BENCHMARK_VERSION,
+    scoringVersion: SCORING_VERSION,
+    resultsGeneratedAt: serverTimestamp(),
     status: "results_generated",
     updatedAt: serverTimestamp(),
   };
