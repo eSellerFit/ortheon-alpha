@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import CareerDirectionMap from "./CareerDirectionMap";
 import {
   generateCareerMap,
   generateRecommendations,
@@ -289,6 +290,7 @@ function BridgePathSuggestions({ bridgeDirections, longerPathOptions }) {
 function ResultsStep({ assessmentId }) {
   const [status, setStatus] = useState("loading");
   const [recommendations, setRecommendations] = useState([]);
+  const [careerMap, setCareerMap] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const hasGeneratedRef = useRef(false);
 
@@ -318,6 +320,7 @@ function ResultsStep({ assessmentId }) {
         );
 
         setRecommendations(generatedRecommendations);
+        setCareerMap(generatedCareerMap);
         setStatus("success");
       } catch (error) {
         console.error("Results generation failed:", error);
@@ -369,6 +372,8 @@ function ResultsStep({ assessmentId }) {
         constraints, CV signals, and priority weights against the current
         direction library.
       </p>
+
+      <CareerDirectionMap careerMap={careerMap} />
 
       {recommendations.length === 0 ? (
         <p className="status warning">
