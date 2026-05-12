@@ -374,6 +374,124 @@ function getFitBand(total, financialFlag) {
   return "Bridge Required";
 }
 
+function hasDomainMatch(direction, assessment) {
+  if (!direction.relevantDomains || direction.relevantDomains.length === 0) {
+    return true;
+  }
+
+  if (direction.domainSpecificityRequired === "low") {
+    return true;
+  }
+
+  const domainSignals = assessment?.cvProfile?.domainSignals || [];
+
+  const competencyEvidence =
+    assessment?.cvProfile?.competencySignals
+      ?.filter(
+        (signal) =>
+          signal.signalStrength === "strong" ||
+          signal.signalStrength === "moderate"
+      )
+      ?.map((signal) => signal.evidence || "") || [];
+
+  const userDomainText = [...domainSignals, ...competencyEvidence]
+    .join(" ")
+    .toLowerCase();
+
+  if (!userDomainText || userDomainText.trim() === "") {
+    return false;
+  }
+
+  return direction.relevantDomains.some((domain) =>
+    userDomainText.includes(String(domain).toLowerCase())
+  );
+}
+
+function getTransitionLabel(direction, flags) {
+  const isHighFinancialRisk = direction.financialRiskLevel === "high";
+
+  if (flags.includes("domain_credibility_gap")) {
+    return {
+      label: "Credibility gap",
+      sublabel: "Domain-specific experience not detected",
+      treatment: "secondary",
+      showBridges: true,
+    };
+  }
+
+  if (direction.transitionCategory === "credentialed") {
+    return {
+      label: "Requires credential",
+      sublabel: "Regulated license or certification needed",
+      treatment: "flagged",
+      showBridges: direction.bridgeDirections?.length > 0,
+    };
+  }
+
+  if (direction.transitionCategory === "bridge_friendly") {
+    if (direction.transitionPathway === "stretch") {
+      return {
+        label: isHighFinancialRisk
+          ? "Stretch path — high financial risk"
+          : "Stretch path",
+        sublabel:
+          "Significant gap in autonomy, ambiguity tolerance, or execution pressure",
+        treatment: "secondary",
+        showBridges: direction.bridgeDirections?.length > 0,
+      };
+    }
+
+    return {
+      label: "Bridge path",
+      sublabel:
+        direction.bridgeDirections?.length > 0
+          ? "Credible via intermediate step"
+          : "Repositioning of existing experience needed",
+      treatment: "main",
+      showBridges: direction.bridgeDirections?.length > 0,
+    };
+  }
+
+  if (direction.transitionCategory === "domain_heavy") {
+    return {
+      label: "Credible now",
+      sublabel: "Strong domain background confirmed",
+      treatment: "main",
+      showBridges: false,
+    };
+  }
+
+  return {
+    label: isHighFinancialRisk
+      ? "Credible now — high financial risk"
+      : "Credible now",
+    sublabel: "Direct transition with existing background",
+    treatment: "main",
+    showBridges: false,
+  };
+}
+
+function resolveBridgeDirections(directionIds, library) {
+  if (!directionIds || directionIds.length === 0) {
+    return [];
+  }
+
+  return directionIds
+    .map((id) => {
+      const found = library.find((role) => role.directionId === id);
+
+      if (!found) {
+        return null;
+      }
+
+      return {
+        directionId: id,
+        directionLabel: found.directionLabel,
+      };
+    })
+    .filter(Boolean);
+}
+
 function buildScoreBreakdown(scores, weights) {
   return {
     competency: {
@@ -436,10 +554,21 @@ export function generateRecommendations(assessment) {
       continue;
     }
 
-    const competencyScore = calcCompetencyScore(
+    const flags = [];
+
+    let competencyScore = calcCompetencyScore(
       competencySignals,
       direction
     );
+
+    if (
+      direction.transitionCategory === "domain_heavy" &&
+      direction.domainSpecificityRequired === "high" &&
+      !hasDomainMatch(direction, assessment)
+    ) {
+      competencyScore = Math.round(competencyScore * 0.45);
+      flags.push("domain_credibility_gap");
+    }
 
     const competencyExplanation = buildCompetencyExplanation(
       competencySignals,
@@ -493,8 +622,21 @@ export function generateRecommendations(assessment) {
       onetTitles: direction.onetTitles,
       aiDurabilityRating: direction.aiDurabilityRating,
       aiExposureSource: direction.aiExposureSource,
+      transitionCategory: direction.transitionCategory,
       transitionPathway: direction.transitionPathway,
       stretchabilityRequired: direction.stretchabilityRequired,
+      domainSpecificityRequired: direction.domainSpecificityRequired,
+      financialRiskLevel: direction.financialRiskLevel,
+      transitionFlags: flags,
+      transitionLabel: getTransitionLabel(direction, flags),
+      bridgeDirections: resolveBridgeDirections(
+        direction.bridgeDirections || [],
+        roleLibrary
+      ),
+      longerPathOptions: resolveBridgeDirections(
+        direction.longerPathOptions || [],
+        roleLibrary
+      ),
       d4EvolutionPath: direction.d4EvolutionPath,
       salarySource: direction.salarySource,
       salarySources: direction.salarySources,

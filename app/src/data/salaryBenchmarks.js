@@ -1,6 +1,6 @@
 // src/data/salaryBenchmarks.js
 // Ortheon Salary Benchmarks v2.0 — Complete Master
-// 46 entries matching roleLibrary.js v2.0
+// 44 entries matching roleLibrary.js v2.0
 // Primary source: BLS OEWS May 2024 (released April 2, 2025)
 // All figures USD annual. BLS covers employed workers only.
 // Fractional/Own Venture = estimated 12-month average including ramp-up.
@@ -9,7 +9,7 @@
 export const salaryBenchmarks = [
 
   // ============================================================
-  // BUSINESS & FINANCE — 11 entries
+  // BUSINESS & FINANCE — 10 entries
   // ============================================================
 
   {
@@ -243,7 +243,7 @@ export const salaryBenchmarks = [
   },
 
   // ============================================================
-  // MANAGEMENT — 13 entries
+  // MANAGEMENT — 12 entries
   // ============================================================
 
   {

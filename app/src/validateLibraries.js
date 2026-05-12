@@ -1,4 +1,4 @@
-// validateLibraries.js
+// validateLibraries.js v1.1
 // Run before any commit that touches roleLibrary.js or salaryBenchmarks.js
 // Usage: node validateLibraries.js
 // Pass: all checks green, safe to commit
@@ -7,20 +7,24 @@
 import { roleLibrary } from './data/roleLibrary.js';
 import { salaryBenchmarks } from './data/salaryBenchmarks.js';
 
+// ─── VALID VALUE SETS ────────────────────────────────────────────────────────
+
 const VALID_ANCHOR_IDS = [
   'technical', 'management', 'autonomy', 'security',
   'impact', 'challenge', 'workModel', 'craft'
 ];
-
 const VALID_D_RATINGS = ['D0', 'D1', 'D2', 'D3', 'D4'];
 const VALID_CONTEXT_CODES = ['E', 'SME', 'ST', 'NP', 'IF', 'OV'];
 const VALID_TRANSITION_PATHWAYS = ['direct', 'bridge', 'stretch'];
 const VALID_STRETCHABILITY = ['low', 'medium', 'high'];
 const VALID_GATE_TYPES = ['hard', 'soft'];
+const VALID_TRANSITION_CATEGORIES = ['open_transition', 'bridge_friendly', 'domain_heavy', 'credentialed'];
+const VALID_DOMAIN_SPECIFICITY = ['low', 'medium', 'high'];
+const VALID_RISK_LEVELS = ['low', 'medium', 'high'];
+const VALID_DATA_QUALITY = ['bls_validated', 'estimated', 'market_validated'];
+
 const MIN_COMPETENCY_ID = 1;
 const MAX_COMPETENCY_ID = 23;
-
-const VALID_DATA_QUALITY = ['bls_validated', 'estimated', 'market_validated'];
 
 let errors = [];
 let warnings = [];
@@ -28,7 +32,7 @@ let warnings = [];
 function error(msg) { errors.push(`  ✗ ${msg}`); }
 function warn(msg)  { warnings.push(`  ⚠ ${msg}`); }
 
-// ─── RULE SET 1: roleLibrary checks ───────────────────────────────────────
+// ─── RULE SET 1: roleLibrary checks ──────────────────────────────────────────
 
 console.log('\n─── Validating roleLibrary.js ───');
 
@@ -131,7 +135,7 @@ for (const role of roleLibrary) {
     error(`[${id}] dominantAnchors is empty — every direction needs at least 1`);
   }
 
-  // 1.12 directionId format check: XX-N-XX
+  // 1.12 directionId format check
   if (!/^[A-Z]{2,4}-\d{1,2}-[A-Z]{1,3}$/.test(role.directionId || '')) {
     warn(`[${id}] directionId format unexpected — expected pattern like BF-1-E or MG-10-IF`);
   }
@@ -161,11 +165,64 @@ for (const role of roleLibrary) {
   if (role.aiDurabilityRating === 'D0') {
     warn(`[${id}] D0 rating — this direction will NEVER be recommended by the engine. Intentional?`);
   }
+
+  // ─── TRANSITION REALISM LAYER CHECKS (v1.1) ──────────────────────────────
+
+  // 1.16 transitionCategory must be valid
+  if (!VALID_TRANSITION_CATEGORIES.includes(role.transitionCategory)) {
+    error(`[${id}] Invalid or missing transitionCategory: '${role.transitionCategory}' — must be one of ${VALID_TRANSITION_CATEGORIES.join(', ')}`);
+  }
+
+  // 1.17 domainSpecificityRequired must be valid
+  if (!VALID_DOMAIN_SPECIFICITY.includes(role.domainSpecificityRequired)) {
+    error(`[${id}] Invalid or missing domainSpecificityRequired: '${role.domainSpecificityRequired}'`);
+  }
+
+  // 1.18 financialRiskLevel must be valid
+  if (!VALID_RISK_LEVELS.includes(role.financialRiskLevel)) {
+    error(`[${id}] Invalid or missing financialRiskLevel: '${role.financialRiskLevel}'`);
+  }
+
+  // 1.19 bridgeDirections and longerPathOptions must be arrays
+  if (!Array.isArray(role.bridgeDirections)) {
+    error(`[${id}] bridgeDirections must be an array (use [] if empty)`);
+  }
+  if (!Array.isArray(role.longerPathOptions)) {
+    error(`[${id}] longerPathOptions must be an array (use [] if empty)`);
+  }
+
+  // 1.20 domain_heavy directions must have relevantDomains populated
+  if (
+    role.transitionCategory === 'domain_heavy' &&
+    (!role.relevantDomains || role.relevantDomains.length === 0)
+  ) {
+    warn(`[${id}] domain_heavy direction has empty relevantDomains — domain penalty will never fire`);
+  }
+
+  // 1.21 bridgeDirections IDs must exist in roleLibrary and not self-reference
+  for (const bridgeId of (role.bridgeDirections || [])) {
+    if (!roleIds.includes(bridgeId)) {
+      error(`[${id}] bridgeDirections references unknown directionId: '${bridgeId}'`);
+    }
+    if (bridgeId === id) {
+      error(`[${id}] bridgeDirections must not reference itself`);
+    }
+  }
+
+  // 1.22 longerPathOptions IDs must exist in roleLibrary and not self-reference
+  for (const longerPathId of (role.longerPathOptions || [])) {
+    if (!roleIds.includes(longerPathId)) {
+      error(`[${id}] longerPathOptions references unknown directionId: '${longerPathId}'`);
+    }
+    if (longerPathId === id) {
+      error(`[${id}] longerPathOptions must not reference itself`);
+    }
+  }
 }
 
 console.log(`  Checked ${roleLibrary.length} directions`);
 
-// ─── RULE SET 2: salaryBenchmarks checks ─────────────────────────────────
+// ─── RULE SET 2: salaryBenchmarks checks ─────────────────────────────────────
 
 console.log('\n─── Validating salaryBenchmarks.js ───');
 
@@ -198,7 +255,7 @@ for (const bench of salaryBenchmarks) {
     error(`[${id}] Invalid dataQuality: '${bench.dataQuality}'`);
   }
 
-  // 2.4 financialPathway structure
+  // 2.4 financialPathway all positive numbers
   const fp = bench.financialPathway || {};
   for (const key of ['months1to3', 'months4to6', 'months7to12', 'avg12month']) {
     if (typeof fp[key] !== 'number' || fp[key] <= 0) {
@@ -206,7 +263,7 @@ for (const bench of salaryBenchmarks) {
     }
   }
 
-  // 2.5 avg12month sanity check — should roughly equal weighted average of monthly phases
+  // 2.5 avg12month sanity check — within 25% of weighted phase average
   if (fp.months1to3 && fp.months4to6 && fp.months7to12 && fp.avg12month) {
     const weightedAvg = (fp.months1to3 * 3 + fp.months4to6 * 3 + fp.months7to12 * 6) / 12;
     const delta = Math.abs(weightedAvg - fp.avg12month) / fp.avg12month;
@@ -222,7 +279,7 @@ for (const bench of salaryBenchmarks) {
 
   // 2.7 Source structure
   for (const source of (bench.sources || [])) {
-    if (!source.name) error(`[${id}] source missing 'name'`);
+    if (!source.name)          error(`[${id}] source missing 'name'`);
     if (!source.occupationCode) error(`[${id}] source missing 'occupationCode'`);
     if (!source.occupationTitle) error(`[${id}] source missing 'occupationTitle'`);
     if (typeof source.medianAnnualWage !== 'number' || source.medianAnnualWage <= 0) {
@@ -242,7 +299,7 @@ for (const bench of salaryBenchmarks) {
 
 console.log(`  Checked ${salaryBenchmarks.length} salary entries`);
 
-// ─── RULE SET 3: Cross-library consistency ────────────────────────────────
+// ─── RULE SET 3: Cross-library consistency ────────────────────────────────────
 
 console.log('\n─── Cross-library consistency ───');
 
@@ -269,7 +326,7 @@ if (roleLibrary.length !== salaryBenchmarks.length) {
   console.log(`  ✓ Library counts match (${roleLibrary.length} directions)`);
 }
 
-// ─── SUMMARY ─────────────────────────────────────────────────────────────
+// ─── SUMMARY ─────────────────────────────────────────────────────────────────
 
 console.log('\n─── Validation Summary ───');
 

@@ -132,6 +132,157 @@ function ScoreBreakdown({ breakdown }) {
   );
 }
 
+function TransitionBadge({ transitionLabel }) {
+  if (!transitionLabel) {
+    return null;
+  }
+
+  const styleMap = {
+    main: {
+      background: "#E8F5E9",
+      color: "#2E7D32",
+      border: "1px solid #A5D6A7",
+    },
+    secondary: {
+      background: "#FFF8E1",
+      color: "#F57F17",
+      border: "1px solid #FFE082",
+    },
+    flagged: {
+      background: "#FFF3E0",
+      color: "#E65100",
+      border: "1px solid #FFCC80",
+    },
+  };
+
+  const style = styleMap[transitionLabel.treatment] || styleMap.main;
+
+  return (
+    <div
+      style={{
+        display: "inline-flex",
+        flexDirection: "column",
+        padding: "4px 10px",
+        borderRadius: "6px",
+        marginBottom: "8px",
+        ...style,
+      }}
+    >
+      <span style={{ fontSize: "12px", fontWeight: 600 }}>
+        {transitionLabel.label}
+      </span>
+
+      {transitionLabel.sublabel && (
+        <span style={{ fontSize: "11px", opacity: 0.8, marginTop: "1px" }}>
+          {transitionLabel.sublabel}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function BridgePathSuggestions({ bridgeDirections, longerPathOptions }) {
+  const hasBridges = bridgeDirections?.length > 0;
+  const hasLonger = longerPathOptions?.length > 0;
+
+  if (!hasBridges && !hasLonger) {
+    return null;
+  }
+
+  return (
+    <div
+      style={{
+        marginTop: "10px",
+        marginBottom: "12px",
+        padding: "8px 12px",
+        background: "#F8F9FA",
+        borderRadius: "6px",
+        borderLeft: "3px solid #90A4AE",
+      }}
+    >
+      {hasBridges && (
+        <div style={{ marginBottom: hasLonger ? "6px" : 0 }}>
+          <span
+            style={{
+              fontSize: "11px",
+              fontWeight: 600,
+              color: "#546E7A",
+              textTransform: "uppercase",
+              letterSpacing: "0.5px",
+            }}
+          >
+            Consider first:
+          </span>
+
+          <div
+            style={{
+              marginTop: "4px",
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "6px",
+            }}
+          >
+            {bridgeDirections.map((bridge) => (
+              <span
+                key={bridge.directionId}
+                style={{
+                  fontSize: "12px",
+                  background: "#ECEFF1",
+                  color: "#37474F",
+                  padding: "2px 8px",
+                  borderRadius: "4px",
+                }}
+              >
+                {bridge.directionLabel}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {hasLonger && (
+        <div>
+          <span
+            style={{
+              fontSize: "11px",
+              fontWeight: 600,
+              color: "#546E7A",
+              textTransform: "uppercase",
+              letterSpacing: "0.5px",
+            }}
+          >
+            Longer path option:
+          </span>
+
+          <div
+            style={{
+              marginTop: "4px",
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "6px",
+            }}
+          >
+            {longerPathOptions.map((option) => (
+              <span
+                key={option.directionId}
+                style={{
+                  fontSize: "12px",
+                  background: "#ECEFF1",
+                  color: "#37474F",
+                  padding: "2px 8px",
+                  borderRadius: "4px",
+                }}
+              >
+                {option.directionLabel}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ResultsStep({ assessmentId }) {
   const [status, setStatus] = useState("loading");
   const [recommendations, setRecommendations] = useState([]);
@@ -221,6 +372,15 @@ function ResultsStep({ assessmentId }) {
               </p>
 
               <h3>{recommendation.directionLabel}</h3>
+
+              <TransitionBadge transitionLabel={recommendation.transitionLabel} />
+
+              {recommendation.transitionLabel?.showBridges && (
+                <BridgePathSuggestions
+                  bridgeDirections={recommendation.bridgeDirections}
+                  longerPathOptions={recommendation.longerPathOptions}
+                />
+              )}
 
               <p>
                 <strong>Fit band:</strong> {recommendation.fitBand}
