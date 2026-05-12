@@ -56,7 +56,6 @@ function getFullDirection(directionId) {
   };
 }
 
-
 function evaluateEligibility(professionalCredentials, direction) {
   const eligibility = direction.eligibility;
 
@@ -383,7 +382,26 @@ function hasDomainMatch(direction, assessment) {
     return true;
   }
 
-  const domainSignals = assessment?.cvProfile?.domainSignals || [];
+  const relevantDomains = direction.relevantDomains.map((domain) =>
+    String(domain).toLowerCase()
+  );
+
+  const domainSignals =
+    assessment?.cvProfile?.domainSignals?.map((domain) =>
+      String(domain).toLowerCase()
+    ) || [];
+
+  const domainSignalMatch = relevantDomains.some((domain) =>
+    domainSignals.includes(domain)
+  );
+
+  if (domainSignalMatch) {
+    return true;
+  }
+
+  if (direction.domainSpecificityRequired === "high") {
+    return false;
+  }
 
   const competencyEvidence =
     assessment?.cvProfile?.competencySignals
@@ -394,21 +412,14 @@ function hasDomainMatch(direction, assessment) {
       )
       ?.map((signal) => signal.evidence || "") || [];
 
-  const userDomainText = [...domainSignals, ...competencyEvidence]
-    .join(" ")
-    .toLowerCase();
+  const userEvidenceText = competencyEvidence.join(" ").toLowerCase();
 
-  if (!userDomainText || userDomainText.trim() === "") {
-    return false;
-  }
-
-  return direction.relevantDomains.some((domain) =>
-    userDomainText.includes(String(domain).toLowerCase())
-  );
+  return relevantDomains.some((domain) => userEvidenceText.includes(domain));
 }
 
 function getTransitionLabel(direction, flags, totalScore, fitBand) {
   const isHighFinancialRisk = direction.financialRiskLevel === "high";
+
   if (
     fitBand === "Bridge Required" &&
     direction.transitionCategory === "open_transition"
@@ -420,6 +431,7 @@ function getTransitionLabel(direction, flags, totalScore, fitBand) {
       showBridges: false,
     };
   }
+
   if (flags.includes("domain_credibility_gap")) {
     return {
       label: "Credibility gap",
