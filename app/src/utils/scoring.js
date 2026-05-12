@@ -407,9 +407,19 @@ function hasDomainMatch(direction, assessment) {
   );
 }
 
-function getTransitionLabel(direction, flags) {
+function getTransitionLabel(direction, flags, totalScore, fitBand) {
   const isHighFinancialRisk = direction.financialRiskLevel === "high";
-
+  if (
+    fitBand === "Bridge Required" &&
+    direction.transitionCategory === "open_transition"
+  ) {
+    return {
+      label: "Market-credible path",
+      sublabel: "Structurally accessible but low overall fit",
+      treatment: "secondary",
+      showBridges: false,
+    };
+  }
   if (flags.includes("domain_credibility_gap")) {
     return {
       label: "Credibility gap",
@@ -628,7 +638,7 @@ export function generateRecommendations(assessment) {
       domainSpecificityRequired: direction.domainSpecificityRequired,
       financialRiskLevel: direction.financialRiskLevel,
       transitionFlags: flags,
-      transitionLabel: getTransitionLabel(direction, flags),
+      transitionLabel: getTransitionLabel(direction, flags, total, fitBand),
       bridgeDirections: resolveBridgeDirections(
         direction.bridgeDirections || [],
         roleLibrary
