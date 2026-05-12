@@ -776,7 +776,7 @@ export const roleLibrary = [
     version: "v2.0",
     onetCodes: ["15-1299.09", "13-1111.00"],
     onetTitles: ["AI/ML Specialists", "Management Analysts"],
-    category: "Computer & Mathematical",
+    category: "Management",
     metaDirection: "Operations Consulting & Supply Chain Advisory",
     context: "Independent / Fractional",
     contextCode: "IF",

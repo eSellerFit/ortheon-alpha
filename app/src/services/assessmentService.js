@@ -16,7 +16,7 @@ export async function createAssessmentDraft(formData) {
     currentSituation: formData.currentSituation,
     status: "intake_submitted",
     source: "ortheon-alpha-mvp",
-    roleLibraryVersion: "v1.0",
+    roleLibraryVersion: "v2.0",
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   };
