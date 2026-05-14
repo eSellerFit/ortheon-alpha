@@ -335,18 +335,22 @@ function calcFinancialScore(financialReality, direction) {
 
   if (ratio >= 1.2) {
     score = 100;
-    explanation = "Estimated first-year income is comfortably above the stated income floor.";
+    explanation =
+      "Estimated first-year income is comfortably above the stated income floor.";
   } else if (ratio >= 1.0) {
     score = 70;
-    explanation = "Estimated first-year income meets the stated income floor, but with limited buffer.";
+    explanation =
+      "Estimated first-year income meets the stated income floor, but with limited buffer.";
   } else if (ratio >= 0.8) {
     score = 40;
     flag = "financially_constrained";
-    explanation = "Estimated first-year income is below the stated income floor, but may be manageable with runway or a bridge plan.";
+    explanation =
+      "Estimated first-year income is below the stated income floor, but may be manageable with runway or a bridge plan.";
   } else {
     score = 10;
     flag = "financially_risky";
-    explanation = "Estimated first-year income is materially below the stated income floor.";
+    explanation =
+      "Estimated first-year income is materially below the stated income floor.";
   }
 
   const runway = Number(financialReality?.savingsRunwayMonths) || 0;
@@ -552,7 +556,9 @@ function buildScoreBreakdown(scores, weights) {
     competency: {
       score: scores.competency,
       weight: Number((weights.competencyFit * 100).toFixed(1)),
-      contribution: Number((scores.competency * weights.competencyFit).toFixed(1)),
+      contribution: Number(
+        (scores.competency * weights.competencyFit).toFixed(1)
+      ),
     },
     anchor: {
       score: scores.anchor,
@@ -562,12 +568,16 @@ function buildScoreBreakdown(scores, weights) {
     financial: {
       score: scores.financial,
       weight: Number((weights.financialViability * 100).toFixed(1)),
-      contribution: Number((scores.financial * weights.financialViability).toFixed(1)),
+      contribution: Number(
+        (scores.financial * weights.financialViability).toFixed(1)
+      ),
     },
     durability: {
       score: scores.durability,
       weight: Number((weights.roleDurability * 100).toFixed(1)),
-      contribution: Number((scores.durability * weights.roleDurability).toFixed(1)),
+      contribution: Number(
+        (scores.durability * weights.roleDurability).toFixed(1)
+      ),
     },
   };
 }
@@ -705,13 +715,8 @@ function buildTransitionInputFactors(assessment) {
       assessment?.financialReality?.bridgeRoleWillingness ||
       null,
     networkingComfort:
-      constraints.networkingComfort ||
-      constraints.salesComfort ||
-      null,
-    riskTolerance:
-      constraints.riskTolerance ||
-      assessment?.riskTolerance ||
-      null,
+      constraints.networkingComfort || constraints.salesComfort || null,
+    riskTolerance: constraints.riskTolerance || assessment?.riskTolerance || null,
   };
 }
 
@@ -873,10 +878,98 @@ function buildPrimaryMapNode(recommendation) {
   };
 }
 
+function directionLooksCredentialedOrLicensed(direction) {
+  if (!direction) {
+    return false;
+  }
+
+  if (direction.eligibility) {
+    return true;
+  }
+
+  if (direction.transitionCategory === "credentialed") {
+    return true;
+  }
+
+  const text = [
+    direction.directionLabel,
+    direction.category,
+    direction.metaDirection,
+    direction.context,
+    direction.transitionCategory,
+    direction.transitionPathway,
+    ...(direction.onetTitles || []),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  const licensedKeywords = [
+    "therapy",
+    "therapist",
+    "counseling",
+    "counselor",
+    "clinical",
+    "psychology",
+    "psychologist",
+    "social worker",
+    "financial planning",
+    "financial planner",
+    "wealth management",
+    "investment advisor",
+    "registered investment",
+    "legal",
+    "lawyer",
+    "attorney",
+    "medical",
+    "physician",
+    "nursing",
+    "nurse",
+    "accounting",
+    "cpa",
+    "tax practice",
+  ];
+
+  return licensedKeywords.some((keyword) => text.includes(keyword));
+}
+
+function hasMatchingCredentialForDirection(assessment, direction) {
+  const professionalCredentials = assessment?.professionalCredentials || {};
+  const credentials = Array.isArray(professionalCredentials?.credentials)
+    ? professionalCredentials.credentials
+    : [];
+
+  if (credentials.length === 0) {
+    return false;
+  }
+
+  if (direction.eligibility) {
+    const eligibilityResult = evaluateEligibility(
+      professionalCredentials,
+      direction
+    );
+
+    return Boolean(eligibilityResult.matchedCredential);
+  }
+
+  return false;
+}
+
+function canShowAsAdjacentDirection(assessment, direction) {
+  const requiresCredential = directionLooksCredentialedOrLicensed(direction);
+
+  if (!requiresCredential) {
+    return true;
+  }
+
+  return hasMatchingCredentialForDirection(assessment, direction);
+}
+
 function hasMapRelevance(direction, assessment, primaryClusterSet) {
   const mapMetadata = getCareerMapMetadata(direction);
   const domainSignals = assessment?.cvProfile?.domainSignals || [];
-  const careerSummary = assessment?.cvProfile?.careerSummary?.toLowerCase() || "";
+  const careerSummary =
+    assessment?.cvProfile?.careerSummary?.toLowerCase() || "";
   const tags = mapMetadata.mapTags || [];
 
   const tagMatchesDomain = tags.some((tag) =>
@@ -930,6 +1023,7 @@ function buildAdjacentMapNodes(assessment, primaryRecommendations, limit = 5) {
   const adjacentCandidates = roleLibrary
     .filter((direction) => !primaryIds.has(direction.directionId))
     .filter((direction) => direction.aiDurabilityRating !== "D0")
+    .filter((direction) => canShowAsAdjacentDirection(assessment, direction))
     .filter((direction) =>
       hasMapRelevance(direction, assessment, primaryClusterSet)
     )
@@ -1007,7 +1101,7 @@ function getAdjacentRouteReason(mapCluster) {
   return reasons[mapCluster] || "Nearby trajectory supported by the profile signals.";
 }
 
-function buildLongerPathNodes(primaryRecommendations) {
+function buildLongerPathNodes(primaryRecommendations, assessment) {
   const primaryIds = new Set(
     primaryRecommendations.map((recommendation) => recommendation.directionId)
   );
@@ -1027,6 +1121,10 @@ function buildLongerPathNodes(primaryRecommendations) {
       );
 
       if (!fullDirection) {
+        return;
+      }
+
+      if (!canShowAsAdjacentDirection(assessment, fullDirection)) {
         return;
       }
 
@@ -1278,7 +1376,10 @@ export function generateCareerMap(assessment, recommendations) {
   const currentProfileNode = buildCurrentProfileNode(assessment);
   const primaryNodes = primaryRecommendations.map(buildPrimaryMapNode);
   const adjacentNodes = buildAdjacentMapNodes(assessment, primaryRecommendations);
-  const longerPathNodes = buildLongerPathNodes(primaryRecommendations);
+  const longerPathNodes = buildLongerPathNodes(
+    primaryRecommendations,
+    assessment
+  );
   const inputFactors = buildAssessmentInputFactors(assessment);
 
   return {
