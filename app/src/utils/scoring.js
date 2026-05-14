@@ -166,7 +166,8 @@ function normalizeWeights(weights) {
     competencyFit: Number(source.competencyFit) || fallbackWeights.competencyFit,
     anchorFit: Number(source.anchorFit) || fallbackWeights.anchorFit,
     financialViability: financial,
-    roleDurability: Number(source.roleDurability) || fallbackWeights.roleDurability,
+    roleDurability:
+      Number(source.roleDurability) || fallbackWeights.roleDurability,
   };
 
   const total =
@@ -693,9 +694,7 @@ function buildTransitionInputFactors(assessment) {
       assessment?.locationConstraints ||
       null,
     workAuthorization:
-      constraints.workAuthorization ||
-      assessment?.workAuthorization ||
-      null,
+      constraints.workAuthorization || assessment?.workAuthorization || null,
     timeAvailablePerWeek:
       constraints.timeAvailablePerWeek ||
       constraints.weeklyTimeAvailable ||
@@ -965,6 +964,58 @@ function canShowAsAdjacentDirection(assessment, direction) {
   return hasMatchingCredentialForDirection(assessment, direction);
 }
 
+function isBroadEntrepreneurialAdjacent(direction) {
+  if (!direction) {
+    return false;
+  }
+
+  const text = [
+    direction.directionLabel,
+    direction.category,
+    direction.metaDirection,
+    direction.context,
+    direction.transitionCategory,
+    direction.transitionPathway,
+    ...(direction.onetTitles || []),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  const broadEntrepreneurialKeywords = [
+    "startup leadership",
+    "founder",
+    "early operator",
+    "own venture",
+    "service business",
+    "local business",
+  ];
+
+  return broadEntrepreneurialKeywords.some((keyword) => text.includes(keyword));
+}
+
+function canShowAsNearbyTrajectory(direction) {
+  if (!direction) {
+    return false;
+  }
+
+  if (isBroadEntrepreneurialAdjacent(direction)) {
+    return false;
+  }
+
+  const mapMetadata = getCareerMapMetadata(direction);
+
+  const preferredNearbyClusters = new Set([
+    "marketplace_platforms",
+    "workforce_intelligence",
+    "people_analytics_hr_tech",
+    "ai_transformation",
+    "business_operations",
+  ]);
+
+  return preferredNearbyClusters.has(mapMetadata.mapCluster);
+}
+
 function hasMapRelevance(direction, assessment, primaryClusterSet) {
   const mapMetadata = getCareerMapMetadata(direction);
   const domainSignals = assessment?.cvProfile?.domainSignals || [];
@@ -1024,6 +1075,7 @@ function buildAdjacentMapNodes(assessment, primaryRecommendations, limit = 5) {
     .filter((direction) => !primaryIds.has(direction.directionId))
     .filter((direction) => direction.aiDurabilityRating !== "D0")
     .filter((direction) => canShowAsAdjacentDirection(assessment, direction))
+    .filter((direction) => canShowAsNearbyTrajectory(direction))
     .filter((direction) =>
       hasMapRelevance(direction, assessment, primaryClusterSet)
     )
@@ -1098,7 +1150,9 @@ function getAdjacentRouteReason(mapCluster) {
       "Nearby route supported by consulting, advisory, and client-facing experience.",
   };
 
-  return reasons[mapCluster] || "Nearby trajectory supported by the profile signals.";
+  return (
+    reasons[mapCluster] || "Nearby trajectory supported by the profile signals."
+  );
 }
 
 function buildLongerPathNodes(primaryRecommendations, assessment) {
@@ -1125,6 +1179,10 @@ function buildLongerPathNodes(primaryRecommendations, assessment) {
       }
 
       if (!canShowAsAdjacentDirection(assessment, fullDirection)) {
+        return;
+      }
+
+      if (!canShowAsNearbyTrajectory(fullDirection)) {
         return;
       }
 
