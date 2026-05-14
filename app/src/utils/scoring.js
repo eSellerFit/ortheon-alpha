@@ -216,6 +216,24 @@ const nonprofitFundraisingKeywords = [
   "philanthropy",
 ];
 
+const trainingLndKeywords = [
+  "training",
+  "trainer",
+  "learning and development",
+  "l&d",
+  "learning development",
+  "corporate training",
+  "curriculum",
+  "instructional design",
+  "facilitation",
+  "workshop",
+  "teaching",
+  "education",
+  "coach",
+  "coaching",
+  "leadership development",
+];
+
 const aiTransformationKeywords = [
   "ai",
   "automation",
@@ -388,6 +406,13 @@ function hasNonprofitFundraisingEvidence(assessment) {
   );
 }
 
+function hasTrainingLndEvidence(assessment) {
+  return textIncludesAny(
+    buildAssessmentSearchText(assessment),
+    trainingLndKeywords
+  );
+}
+
 function hasAiTransformationEvidence(assessment) {
   return textIncludesAny(
     buildAssessmentSearchText(assessment),
@@ -474,12 +499,33 @@ function isNonprofitFundraisingDirection(direction) {
   ]);
 }
 
+function isCorporateTrainingDirection(direction) {
+  return textIncludesAny(directionSearchText(direction), [
+    "corporate training",
+    "training",
+    "l&d",
+    "learning development",
+    "learning and development",
+    "instructional design",
+    "education",
+  ]);
+}
+
 function isAiTransformationDirection(direction) {
   return textIncludesAny(directionSearchText(direction), [
     "ai transformation",
     "ai",
     "automation",
     "digital transformation",
+  ]);
+}
+
+function isAiStartupDirection(direction) {
+  return textIncludesAny(directionSearchText(direction), [
+    "ai & emerging tech",
+    "ai product operations",
+    "emerging tech",
+    "startup",
   ]);
 }
 
@@ -1427,27 +1473,43 @@ function canShowAsNearbyTrajectory(direction, assessment) {
     return false;
   }
 
-  if (hasTalentAcquisitionProfile(assessment)) {
-    if (
-      isSmallBusinessAdvisorDirection(direction) &&
-      !hasSmallBusinessAdvisorEvidence(assessment)
-    ) {
-      return false;
-    }
+  if (!hasTalentAcquisitionProfile(assessment) && isTalentDirection(direction)) {
+    return false;
+  }
 
-    if (
-      isNonprofitFundraisingDirection(direction) &&
-      !hasNonprofitFundraisingEvidence(assessment)
-    ) {
-      return false;
-    }
+  if (
+    isSmallBusinessAdvisorDirection(direction) &&
+    !hasSmallBusinessAdvisorEvidence(assessment)
+  ) {
+    return false;
+  }
 
-    if (
-      isAiTransformationDirection(direction) &&
-      !hasAiTransformationEvidence(assessment)
-    ) {
-      return false;
-    }
+  if (
+    isNonprofitFundraisingDirection(direction) &&
+    !hasNonprofitFundraisingEvidence(assessment)
+  ) {
+    return false;
+  }
+
+  if (
+    isCorporateTrainingDirection(direction) &&
+    !hasTrainingLndEvidence(assessment)
+  ) {
+    return false;
+  }
+
+  if (
+    isAiTransformationDirection(direction) &&
+    !hasAiTransformationEvidence(assessment)
+  ) {
+    return false;
+  }
+
+  if (
+    isAiStartupDirection(direction) &&
+    !hasAiTransformationEvidence(assessment)
+  ) {
+    return false;
   }
 
   const mapMetadata = getCareerMapMetadata(direction);
@@ -1458,6 +1520,7 @@ function canShowAsNearbyTrajectory(direction, assessment) {
     "people_analytics_hr_tech",
     "ai_transformation",
     "business_operations",
+    "independent_advisory",
   ]);
 
   return preferredNearbyClusters.has(mapMetadata.mapCluster);
@@ -1469,6 +1532,10 @@ function hasMapRelevance(direction, assessment, primaryClusterSet) {
   const profileText = buildAssessmentSearchText(assessment);
   const tags = mapMetadata.mapTags || [];
   const isTalentProfile = hasTalentAcquisitionProfile(assessment);
+
+  if (!isTalentProfile && isTalentDirection(direction)) {
+    return false;
+  }
 
   const tagMatchesDomain = tags.some((tag) =>
     domainSignals.some((domain) =>
@@ -1691,21 +1758,15 @@ function buildCareerMapSummary(primaryNodes, adjacentNodes, longerPathNodes) {
     ...new Set(primaryNodes.map((node) => node.mapCluster)),
   ];
 
+  const primaryLabels = primaryNodes
+    .map((node) => normalizeText(node.directionLabel))
+    .join(" ");
+
   const allVisibleNodes = [
     ...primaryNodes,
     ...adjacentNodes,
     ...longerPathNodes,
   ];
-
-  const hasMarketplace = allVisibleNodes.some(
-    (node) => node.mapCluster === "marketplace_platforms"
-  );
-
-  const hasWorkforce = allVisibleNodes.some(
-    (node) =>
-      node.mapCluster === "workforce_intelligence" ||
-      node.mapCluster === "people_analytics_hr_tech"
-  );
 
   const hasIndependent = allVisibleNodes.some(
     (node) =>
@@ -1713,17 +1774,53 @@ function buildCareerMapSummary(primaryNodes, adjacentNodes, longerPathNodes) {
       node.mapQuadrant === "autonomous_human"
   );
 
+  const hasPrimaryAi = primaryClusters.includes("ai_transformation");
+
+  const hasPrimaryWorkforce =
+    primaryClusters.includes("workforce_intelligence") ||
+    primaryClusters.includes("people_analytics_hr_tech") ||
+    textIncludesAny(primaryLabels, [
+      "talent acquisition",
+      "people operations",
+      "workforce planning",
+      "talent intelligence",
+      "people analytics",
+      "hr tech",
+    ]);
+
+  const hasPrimaryMarketplace =
+    primaryClusters.includes("marketplace_platforms") ||
+    textIncludesAny(primaryLabels, ["marketplace", "platform", "seller"]);
+
+  const hasPrimaryAdvisory =
+    primaryClusters.includes("independent_advisory") ||
+    textIncludesAny(primaryLabels, ["consultant", "fractional", "advisor"]);
+
+  const hasPrimaryStartup =
+    primaryClusters.includes("enterprise_leadership") ||
+    textIncludesAny(primaryLabels, ["startup", "founder", "emerging tech"]);
+
   let mainPattern = "Business operations and leadership";
 
-  if (hasMarketplace && hasWorkforce) {
+  if (hasPrimaryWorkforce && hasPrimaryAi) {
     mainPattern =
-      "Marketplace operations, workforce systems, and business leadership";
-  } else if (hasMarketplace) {
+      "Talent systems, workforce intelligence, and AI-enabled people operations";
+  } else if (hasPrimaryWorkforce) {
+    mainPattern =
+      "Talent acquisition, workforce intelligence, and people systems";
+  } else if (hasPrimaryAi && hasPrimaryStartup) {
+    mainPattern =
+      "AI startup, product operations, and technology entrepreneurship";
+  } else if (hasPrimaryAi && hasPrimaryAdvisory) {
+    mainPattern = "AI transformation, product strategy, and advisory paths";
+  } else if (hasPrimaryAi) {
+    mainPattern = "AI transformation, product operations, and emerging technology";
+  } else if (hasPrimaryMarketplace) {
     mainPattern = "Marketplace operations and business systems";
-  } else if (hasWorkforce) {
-    mainPattern = "Workforce intelligence and people systems";
-  } else if (primaryClusters.includes("enterprise_leadership")) {
-    mainPattern = "Enterprise leadership and business operations";
+  } else if (hasPrimaryAdvisory) {
+    mainPattern = "Independent advisory, strategy, and client-facing expertise";
+  } else if (hasPrimaryStartup) {
+    mainPattern = "Startup leadership and entrepreneurial execution";
   }
 
   const transitionStyle = hasIndependent
