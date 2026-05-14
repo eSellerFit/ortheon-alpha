@@ -28,6 +28,42 @@ const competencyNames = {
   23: "Orchestrating AI, automation and human workflows to deliver outcomes at scale",
 };
 
+const anchorNames = {
+  technicalFunctional: "Technical / Functional",
+  technical_functional: "Technical / Functional",
+  technical: "Technical / Functional",
+
+  generalManagerial: "General Managerial",
+  general_managerial: "General Managerial",
+  managerial: "General Managerial",
+  management: "General Managerial",
+
+  autonomyIndependence: "Autonomy / Independence",
+  autonomy_independence: "Autonomy / Independence",
+  autonomy: "Autonomy / Independence",
+
+  securityStability: "Security / Stability",
+  security_stability: "Security / Stability",
+  security: "Security / Stability",
+  stability: "Security / Stability",
+
+  entrepreneurialCreativity: "Entrepreneurial Creativity",
+  entrepreneurial_creativity: "Entrepreneurial Creativity",
+  entrepreneurship: "Entrepreneurial Creativity",
+  entrepreneurial: "Entrepreneurial Creativity",
+
+  serviceDedication: "Service / Dedication",
+  service_dedication: "Service / Dedication",
+  service: "Service / Dedication",
+  impact: "Service / Dedication",
+
+  pureChallenge: "Pure Challenge",
+  pure_challenge: "Pure Challenge",
+  challenge: "Pure Challenge",
+
+  lifestyle: "Lifestyle",
+};
+
 const signalMap = {
   strong: 100,
   moderate: 70,
@@ -576,6 +612,198 @@ function getPathType(recommendation) {
   return "direct";
 }
 
+function normalizeLabelFromKey(key) {
+  return String(key)
+    .replace(/_/g, " ")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function getAnchorName(anchorId) {
+  return anchorNames[anchorId] || normalizeLabelFromKey(anchorId);
+}
+
+function buildAnchorInputFactors(anchors) {
+  const entries = Object.entries(anchors || {})
+    .map(([anchorId, value]) => ({
+      anchorId,
+      label: getAnchorName(anchorId),
+      score: Number(value) || 0,
+    }))
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score);
+
+  return {
+    dominant: entries.slice(0, 3),
+    secondary: entries.slice(3, 5),
+    all: entries,
+  };
+}
+
+function buildFinancialInputFactors(financialReality) {
+  const monthlyIncomeFloor =
+    Number(financialReality?.minimumMonthlyIncome) || 0;
+
+  return {
+    monthlyIncomeFloor,
+    annualIncomeFloor: monthlyIncomeFloor * 12,
+    runwayMonths: Number(financialReality?.savingsRunwayMonths) || 0,
+    incomeDropTolerance:
+      financialReality?.incomeDropTolerance ||
+      financialReality?.toleranceForIncomeDrop ||
+      null,
+    stableIncomeNeed:
+      financialReality?.stableIncomeNeed ||
+      financialReality?.needForStableIncome ||
+      null,
+    bridgeRoleWillingness:
+      financialReality?.bridgeRoleWillingness ||
+      financialReality?.willingnessToUseBridgeRole ||
+      null,
+    retrainingInvestmentCapacity:
+      financialReality?.retrainingInvestmentCapacity ||
+      financialReality?.abilityToInvestInRetraining ||
+      null,
+  };
+}
+
+function buildTransitionInputFactors(assessment) {
+  const constraints =
+    assessment?.transitionConstraints ||
+    assessment?.constraints ||
+    assessment?.practicalConstraints ||
+    {};
+
+  return {
+    locationConstraints:
+      constraints.locationConstraints ||
+      constraints.location ||
+      assessment?.locationConstraints ||
+      null,
+    workAuthorization:
+      constraints.workAuthorization ||
+      assessment?.workAuthorization ||
+      null,
+    timeAvailablePerWeek:
+      constraints.timeAvailablePerWeek ||
+      constraints.weeklyTimeAvailable ||
+      null,
+    workModePreference:
+      constraints.workModePreference ||
+      constraints.remoteHybridOnsitePreference ||
+      constraints.remotePreference ||
+      null,
+    retrainingWillingness:
+      constraints.retrainingWillingness ||
+      constraints.willingnessToRetrain ||
+      null,
+    bridgeRoleWillingness:
+      constraints.bridgeRoleWillingness ||
+      constraints.willingnessToUseBridgeRole ||
+      assessment?.financialReality?.bridgeRoleWillingness ||
+      null,
+    networkingComfort:
+      constraints.networkingComfort ||
+      constraints.salesComfort ||
+      null,
+    riskTolerance:
+      constraints.riskTolerance ||
+      assessment?.riskTolerance ||
+      null,
+  };
+}
+
+function buildCvInputFactors(assessment) {
+  const cvProfile = assessment?.cvProfile || {};
+  const competencySignals = Array.isArray(cvProfile.competencySignals)
+    ? cvProfile.competencySignals
+    : [];
+
+  const topCompetencySignals = competencySignals
+    .filter(
+      (signal) =>
+        signal.signalStrength === "strong" ||
+        signal.signalStrength === "moderate"
+    )
+    .slice(0, 6)
+    .map((signal) => ({
+      competencyId: signal.competencyId,
+      competencyName:
+        signal.competencyName ||
+        competencyNames[signal.competencyId] ||
+        `Competency ${signal.competencyId}`,
+      signalStrength: signal.signalStrength,
+      evidence: signal.evidence || null,
+    }));
+
+  return {
+    cvSource: cvProfile.cvSource || null,
+    confidence: cvProfile.confidence || null,
+    careerSummary: cvProfile.careerSummary || null,
+    domainSignals: cvProfile.domainSignals || [],
+    senioritySignal: cvProfile.senioritySignal || null,
+    leadershipScope: cvProfile.leadershipScope || null,
+    entrepreneurialSignals: cvProfile.entrepreneurialSignals || [],
+    tradeSignals: cvProfile.tradeSignals || [],
+    tenurePattern: cvProfile.tenurePattern || null,
+    topCompetencySignals,
+  };
+}
+
+function buildCredentialInputFactors(professionalCredentials) {
+  const credentials = Array.isArray(professionalCredentials?.credentials)
+    ? professionalCredentials.credentials
+    : [];
+
+  return {
+    hasCredentials:
+      professionalCredentials?.hasCredentials ||
+      professionalCredentials?.hasProfessionalCredentials ||
+      credentials.length > 0 ||
+      false,
+    credentials: credentials.map((credential) => ({
+      type: credential.type || null,
+      status: credential.status || null,
+      jurisdiction: credential.jurisdiction || null,
+    })),
+  };
+}
+
+function buildPriorityWeightInputFactors(priorityWeights) {
+  const normalized = normalizeWeights(priorityWeights);
+
+  return {
+    raw: priorityWeights || null,
+    normalizedPercentages: {
+      competencyFit: Number((normalized.competencyFit * 100).toFixed(1)),
+      anchorFit: Number((normalized.anchorFit * 100).toFixed(1)),
+      financialViability: Number(
+        (normalized.financialViability * 100).toFixed(1)
+      ),
+      roleDurability: Number((normalized.roleDurability * 100).toFixed(1)),
+    },
+  };
+}
+
+function buildAssessmentInputFactors(assessment) {
+  return {
+    careerAnchors: buildAnchorInputFactors(assessment?.anchors || {}),
+    financialReality: buildFinancialInputFactors(
+      assessment?.financialReality || {}
+    ),
+    transitionConstraints: buildTransitionInputFactors(assessment),
+    cvSignals: buildCvInputFactors(assessment),
+    professionalCredentials: buildCredentialInputFactors(
+      assessment?.professionalCredentials || {}
+    ),
+    priorityWeights: buildPriorityWeightInputFactors(
+      assessment?.priorityWeights || null
+    ),
+  };
+}
+
 function buildCurrentProfileNode(assessment) {
   const domainSignals = assessment?.cvProfile?.domainSignals || [];
   const senioritySignal = assessment?.cvProfile?.senioritySignal || null;
@@ -674,13 +902,11 @@ function hasMapRelevance(direction, assessment, primaryClusterSet) {
 
   const strategicallyRelevant =
     strategicallyRelevantClusters.has(mapMetadata.mapCluster) &&
-    (
-      domainSignals.includes("operations") ||
+    (domainSignals.includes("operations") ||
       domainSignals.includes("human_resources") ||
       domainSignals.includes("technology") ||
       domainSignals.includes("consulting") ||
-      domainSignals.includes("entrepreneurship")
-    );
+      domainSignals.includes("entrepreneurship"));
 
   return (
     tagMatchesDomain ||
@@ -919,10 +1145,7 @@ export function generateRecommendations(assessment) {
 
     const flags = [];
 
-    let competencyScore = calcCompetencyScore(
-      competencySignals,
-      direction
-    );
+    let competencyScore = calcCompetencyScore(competencySignals, direction);
 
     if (
       direction.transitionCategory === "domain_heavy" &&
@@ -1056,6 +1279,7 @@ export function generateCareerMap(assessment, recommendations) {
   const primaryNodes = primaryRecommendations.map(buildPrimaryMapNode);
   const adjacentNodes = buildAdjacentMapNodes(assessment, primaryRecommendations);
   const longerPathNodes = buildLongerPathNodes(primaryRecommendations);
+  const inputFactors = buildAssessmentInputFactors(assessment);
 
   return {
     version: "career-map-v1.0",
@@ -1063,6 +1287,7 @@ export function generateCareerMap(assessment, recommendations) {
     primaryNodes,
     adjacentNodes,
     longerPathNodes,
+    inputFactors,
     summary: buildCareerMapSummary(
       primaryNodes,
       adjacentNodes,

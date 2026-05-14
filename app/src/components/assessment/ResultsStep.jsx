@@ -58,7 +58,7 @@ function CompetencyList({ title, items }) {
   }
 
   return (
-    <div>
+    <div className="result-detail-block">
       <p>
         <strong>{title}</strong>
       </p>
@@ -83,7 +83,7 @@ function AnchorList({ title, items }) {
   }
 
   return (
-    <div>
+    <div className="result-detail-block">
       <p>
         <strong>{title}</strong>
       </p>
@@ -106,32 +106,30 @@ function ScoreBreakdown({ breakdown }) {
   }
 
   return (
-    <div>
-      <p>
-        <strong>Score breakdown</strong>
-      </p>
+    <div className="score-breakdown-grid">
+      <div>
+        <span>Competency</span>
+        <strong>{breakdown.competency.score}</strong>
+        <small>{breakdown.competency.weight}% weight</small>
+      </div>
 
-      <ul>
-        <li>
-          Competency: {breakdown.competency.score} ×{" "}
-          {breakdown.competency.weight}% ={" "}
-          {breakdown.competency.contribution}
-        </li>
-        <li>
-          Anchor: {breakdown.anchor.score} × {breakdown.anchor.weight}% ={" "}
-          {breakdown.anchor.contribution}
-        </li>
-        <li>
-          Financial: {breakdown.financial.score} ×{" "}
-          {breakdown.financial.weight}% ={" "}
-          {breakdown.financial.contribution}
-        </li>
-        <li>
-          AI durability: {breakdown.durability.score} ×{" "}
-          {breakdown.durability.weight}% ={" "}
-          {breakdown.durability.contribution}
-        </li>
-      </ul>
+      <div>
+        <span>Anchor</span>
+        <strong>{breakdown.anchor.score}</strong>
+        <small>{breakdown.anchor.weight}% weight</small>
+      </div>
+
+      <div>
+        <span>Financial</span>
+        <strong>{breakdown.financial.score}</strong>
+        <small>{breakdown.financial.weight}% weight</small>
+      </div>
+
+      <div>
+        <span>AI durability</span>
+        <strong>{breakdown.durability.score}</strong>
+        <small>{breakdown.durability.weight}% weight</small>
+      </div>
     </div>
   );
 }
@@ -141,46 +139,19 @@ function TransitionBadge({ transitionLabel }) {
     return null;
   }
 
-  const styleMap = {
-    main: {
-      background: "#E8F5E9",
-      color: "#2E7D32",
-      border: "1px solid #A5D6A7",
-    },
-    secondary: {
-      background: "#FFF8E1",
-      color: "#F57F17",
-      border: "1px solid #FFE082",
-    },
-    flagged: {
-      background: "#FFF3E0",
-      color: "#E65100",
-      border: "1px solid #FFCC80",
-    },
+  const classMap = {
+    main: "transition-badge-main",
+    secondary: "transition-badge-secondary",
+    flagged: "transition-badge-flagged",
   };
 
-  const style = styleMap[transitionLabel.treatment] || styleMap.main;
+  const className = classMap[transitionLabel.treatment] || classMap.main;
 
   return (
-    <div
-      style={{
-        display: "inline-flex",
-        flexDirection: "column",
-        padding: "4px 10px",
-        borderRadius: "6px",
-        marginBottom: "8px",
-        ...style,
-      }}
-    >
-      <span style={{ fontSize: "12px", fontWeight: 600 }}>
-        {transitionLabel.label}
-      </span>
+    <div className={`transition-badge ${className}`}>
+      <span>{transitionLabel.label}</span>
 
-      {transitionLabel.sublabel && (
-        <span style={{ fontSize: "11px", opacity: 0.8, marginTop: "1px" }}>
-          {transitionLabel.sublabel}
-        </span>
-      )}
+      {transitionLabel.sublabel && <small>{transitionLabel.sublabel}</small>}
     </div>
   );
 }
@@ -194,49 +165,14 @@ function BridgePathSuggestions({ bridgeDirections, longerPathOptions }) {
   }
 
   return (
-    <div
-      style={{
-        marginTop: "10px",
-        marginBottom: "12px",
-        padding: "8px 12px",
-        background: "#F8F9FA",
-        borderRadius: "6px",
-        borderLeft: "3px solid #90A4AE",
-      }}
-    >
+    <div className="bridge-suggestions">
       {hasBridges && (
-        <div style={{ marginBottom: hasLonger ? "6px" : 0 }}>
-          <span
-            style={{
-              fontSize: "11px",
-              fontWeight: 600,
-              color: "#546E7A",
-              textTransform: "uppercase",
-              letterSpacing: "0.5px",
-            }}
-          >
-            Consider first:
-          </span>
+        <div>
+          <span className="bridge-label">Consider first</span>
 
-          <div
-            style={{
-              marginTop: "4px",
-              display: "flex",
-              flexWrap: "wrap",
-              gap: "6px",
-            }}
-          >
+          <div className="bridge-chip-row">
             {bridgeDirections.map((bridge) => (
-              <span
-                key={bridge.directionId}
-                style={{
-                  fontSize: "12px",
-                  background: "#ECEFF1",
-                  color: "#37474F",
-                  padding: "2px 8px",
-                  borderRadius: "4px",
-                }}
-              >
+              <span key={bridge.directionId} className="bridge-chip">
                 {bridge.directionLabel}
               </span>
             ))}
@@ -246,37 +182,11 @@ function BridgePathSuggestions({ bridgeDirections, longerPathOptions }) {
 
       {hasLonger && (
         <div>
-          <span
-            style={{
-              fontSize: "11px",
-              fontWeight: 600,
-              color: "#546E7A",
-              textTransform: "uppercase",
-              letterSpacing: "0.5px",
-            }}
-          >
-            Longer path option:
-          </span>
+          <span className="bridge-label">Longer path option</span>
 
-          <div
-            style={{
-              marginTop: "4px",
-              display: "flex",
-              flexWrap: "wrap",
-              gap: "6px",
-            }}
-          >
+          <div className="bridge-chip-row">
             {longerPathOptions.map((option) => (
-              <span
-                key={option.directionId}
-                style={{
-                  fontSize: "12px",
-                  background: "#ECEFF1",
-                  color: "#37474F",
-                  padding: "2px 8px",
-                  borderRadius: "4px",
-                }}
-              >
+              <span key={option.directionId} className="bridge-chip">
                 {option.directionLabel}
               </span>
             ))}
@@ -284,6 +194,203 @@ function BridgePathSuggestions({ bridgeDirections, longerPathOptions }) {
         </div>
       )}
     </div>
+  );
+}
+
+function ResultCard({ recommendation }) {
+  return (
+    <section className="result-card">
+      <div className="result-card-header">
+        <div>
+          <p className="eyebrow">{getOrdinal(recommendation.rank)} direction</p>
+          <h3>{recommendation.directionLabel}</h3>
+        </div>
+
+        <div className="result-score">
+          <span>Total score</span>
+          <strong>{recommendation.scores.total}</strong>
+        </div>
+      </div>
+
+      <TransitionBadge transitionLabel={recommendation.transitionLabel} />
+
+      {recommendation.transitionLabel?.showBridges && (
+        <BridgePathSuggestions
+          bridgeDirections={recommendation.bridgeDirections}
+          longerPathOptions={recommendation.longerPathOptions}
+        />
+      )}
+
+      <div className="result-facts-grid">
+        <div>
+          <span>Fit band</span>
+          <strong>{recommendation.fitBand}</strong>
+        </div>
+
+        <div>
+          <span>AI durability</span>
+          <strong>
+            {recommendation.aiDurabilityRating} —{" "}
+            {durabilityLabels[recommendation.aiDurabilityRating] ||
+              "Not classified"}
+          </strong>
+        </div>
+
+        <div>
+          <span>Transition pathway</span>
+          <strong>
+            {transitionLabels[recommendation.transitionPathway] ||
+              recommendation.transitionPathway}
+          </strong>
+        </div>
+
+        <div>
+          <span>Estimated first-year income</span>
+          <strong>{formatUsd(recommendation.financialPathway?.avg12month)}</strong>
+        </div>
+
+        <div>
+          <span>Category</span>
+          <strong>{recommendation.category}</strong>
+        </div>
+
+        <div>
+          <span>Context</span>
+          <strong>{recommendation.context}</strong>
+        </div>
+      </div>
+
+      {recommendation.salarySources?.[0] && (
+        <p className="helper-text">
+          BLS benchmark: {recommendation.salarySources[0].occupationTitle} —{" "}
+          {formatUsd(recommendation.salarySources[0].medianAnnualWage)} median
+          annual wage. Source: {recommendation.salarySource}; updated{" "}
+          {recommendation.salaryLastUpdated || "unknown"}.
+        </p>
+      )}
+
+      {recommendation.eligibilityWarning && (
+        <p className="status warning">
+          Credential note: {recommendation.eligibilityWarning}
+        </p>
+      )}
+
+      {recommendation.financialFlag === "financially_constrained" && (
+        <p className="status warning">
+          This direction may be financially constrained in the first 12 months.
+        </p>
+      )}
+
+      {recommendation.financialFlag === "financially_risky" && (
+        <p className="status warning">
+          This direction may be financially risky based on your stated income
+          floor.
+        </p>
+      )}
+
+      {recommendation.anchorWarnings?.length > 0 && (
+        <p className="status warning">
+          Anchor note: this direction may conflict with your{" "}
+          {recommendation.anchorWarnings.join(", ")} preference.
+        </p>
+      )}
+
+      {recommendation.cvConfidence === "low" && (
+        <p className="status warning">
+          Recommendation confidence is lower because no parsed CV data was
+          available.
+        </p>
+      )}
+
+      {recommendation.d4EvolutionPath && (
+        <p className="ai-evolution">
+          <strong>AI evolution path:</strong> {recommendation.d4EvolutionPath}
+        </p>
+      )}
+
+      <details className="debug-details">
+        <summary>Why this direction appeared</summary>
+
+        <ScoreBreakdown breakdown={recommendation.scoreBreakdown} />
+
+        {recommendation.eligibility?.gateType &&
+          recommendation.eligibility.gateType !== "none" && (
+            <div className="result-detail-block">
+              <p>
+                <strong>Credential gate</strong>
+              </p>
+
+              <p>Gate type: {recommendation.eligibility.gateType}</p>
+
+              <p>
+                {recommendation.eligibility.matchedCredential
+                  ? `Matched credential: ${recommendation.eligibility.matchedCredential.type} (${recommendation.eligibility.matchedCredential.status}, ${recommendation.eligibility.matchedCredential.jurisdiction})`
+                  : recommendation.eligibility.reason}
+              </p>
+            </div>
+          )}
+
+        <CompetencyList
+          title="Matched required competencies"
+          items={recommendation.matchedRequiredCompetencies}
+        />
+
+        <CompetencyList
+          title="Missing required competencies"
+          items={recommendation.missingRequiredCompetencies}
+        />
+
+        <CompetencyList
+          title="Matched preferred competencies"
+          items={recommendation.matchedPreferredCompetencies}
+        />
+
+        <CompetencyList
+          title="Missing preferred competencies"
+          items={recommendation.missingPreferredCompetencies}
+        />
+
+        <AnchorList
+          title="Anchor matches"
+          items={recommendation.anchorMatches}
+        />
+
+        <AnchorList
+          title="Anchor conflicts"
+          items={recommendation.anchorConflicts}
+        />
+
+        {recommendation.financialExplanation && (
+          <div className="result-detail-block">
+            <p>
+              <strong>Financial explanation</strong>
+            </p>
+
+            <p>{recommendation.financialExplanation.explanation}</p>
+
+            <ul>
+              <li>
+                Income floor:{" "}
+                {formatUsd(recommendation.financialExplanation.annualFloor)}
+              </li>
+              <li>
+                Estimated first-year income:{" "}
+                {formatUsd(recommendation.financialExplanation.avg12month)}
+              </li>
+              <li>Ratio: {recommendation.financialExplanation.ratio}</li>
+              <li>
+                Runway: {recommendation.financialExplanation.runwayMonths}{" "}
+                months
+              </li>
+              <li>
+                Runway adjustment:{" "}
+                {recommendation.financialExplanation.runwayAdjustment}
+              </li>
+            </ul>
+          </div>
+        )}
+      </details>
+    </section>
   );
 }
 
@@ -336,7 +443,7 @@ function ResultsStep({ assessmentId }) {
 
   if (!assessmentId) {
     return (
-      <div className="form">
+      <div className="results-page">
         <h2>Results</h2>
         <p className="status error">
           Missing assessment ID. Please complete the assessment first.
@@ -347,7 +454,7 @@ function ResultsStep({ assessmentId }) {
 
   if (status === "loading") {
     return (
-      <div className="form">
+      <div className="results-page">
         <h2>Results</h2>
         <p>Generating your career direction recommendations...</p>
       </div>
@@ -356,7 +463,7 @@ function ResultsStep({ assessmentId }) {
 
   if (status === "error") {
     return (
-      <div className="form">
+      <div className="results-page">
         <h2>Results</h2>
         <p className="status error">{errorMessage}</p>
       </div>
@@ -364,14 +471,16 @@ function ResultsStep({ assessmentId }) {
   }
 
   return (
-    <div className="form">
-      <h2>Your Career Direction Results</h2>
-
-      <p>
-        Ortheon compared your career anchors, financial reality, practical
-        constraints, CV signals, and priority weights against the current
-        direction library.
-      </p>
+    <div className="results-page">
+      <div className="results-hero">
+        <p className="eyebrow">Step 8 of 8</p>
+        <h2>Your Career Direction Results</h2>
+        <p>
+          Ortheon compared your career anchors, financial reality, practical
+          constraints, CV signals, and priority weights against the current
+          direction library.
+        </p>
+      </div>
 
       <CareerDirectionMap careerMap={careerMap} />
 
@@ -382,199 +491,10 @@ function ResultsStep({ assessmentId }) {
       ) : (
         <div className="results-list">
           {recommendations.map((recommendation) => (
-            <section key={recommendation.directionId} className="result-card">
-              <p className="eyebrow">
-                {getOrdinal(recommendation.rank)} direction
-              </p>
-
-              <h3>{recommendation.directionLabel}</h3>
-
-              <TransitionBadge transitionLabel={recommendation.transitionLabel} />
-
-              {recommendation.transitionLabel?.showBridges && (
-                <BridgePathSuggestions
-                  bridgeDirections={recommendation.bridgeDirections}
-                  longerPathOptions={recommendation.longerPathOptions}
-                />
-              )}
-
-              <p>
-                <strong>Fit band:</strong> {recommendation.fitBand}
-              </p>
-
-              <p>
-                <strong>Total score:</strong> {recommendation.scores.total}
-              </p>
-
-              <p>
-                <strong>AI durability:</strong>{" "}
-                {recommendation.aiDurabilityRating} —{" "}
-                {durabilityLabels[recommendation.aiDurabilityRating] ||
-                  "Not classified"}
-              </p>
-
-              <p>
-                <strong>Transition pathway:</strong>{" "}
-                {transitionLabels[recommendation.transitionPathway] ||
-                  recommendation.transitionPathway}
-              </p>
-
-              <p>
-                <strong>Category:</strong> {recommendation.category}
-              </p>
-
-              <p>
-                <strong>Context:</strong> {recommendation.context}
-              </p>
-
-              <p>
-                <strong>Estimated first-year pathway income:</strong>{" "}
-                {formatUsd(recommendation.financialPathway?.avg12month)}
-              </p>
-
-              {recommendation.salarySources?.[0] && (
-                <p>
-                  <strong>BLS benchmark:</strong>{" "}
-                  {recommendation.salarySources[0].occupationTitle} —{" "}
-                  {formatUsd(recommendation.salarySources[0].medianAnnualWage)}{" "}
-                  median annual wage
-                </p>
-              )}
-
-              <p className="helper-text">
-                <strong>Source:</strong> {recommendation.salarySource}; updated{" "}
-                {recommendation.salaryLastUpdated || "unknown"}.
-              </p>
-
-              {recommendation.eligibilityWarning && (
-                <p className="status warning">
-                  Credential note: {recommendation.eligibilityWarning}
-                </p>
-              )}
-
-              {recommendation.financialFlag === "financially_constrained" && (
-                <p className="status warning">
-                  This direction may be financially constrained in the first 12
-                  months.
-                </p>
-              )}
-
-              {recommendation.financialFlag === "financially_risky" && (
-                <p className="status warning">
-                  This direction may be financially risky based on your stated
-                  income floor.
-                </p>
-              )}
-
-              {recommendation.anchorWarnings?.length > 0 && (
-                <p className="status warning">
-                  Anchor note: this direction may conflict with your{" "}
-                  {recommendation.anchorWarnings.join(", ")} preference.
-                </p>
-              )}
-
-              {recommendation.cvConfidence === "low" && (
-                <p className="status warning">
-                  Recommendation confidence is lower because no parsed CV data was
-                  available.
-                </p>
-              )}
-
-              <p>
-                <strong>AI evolution path:</strong>{" "}
-                {recommendation.d4EvolutionPath}
-              </p>
-
-              <details className="debug-details" open>
-                <summary>Why this direction appeared</summary>
-
-                <ScoreBreakdown breakdown={recommendation.scoreBreakdown} />
-
-                {recommendation.eligibility?.gateType &&
-                  recommendation.eligibility.gateType !== "none" && (
-                    <div>
-                      <p>
-                        <strong>Credential gate</strong>
-                      </p>
-
-                      <p>Gate type: {recommendation.eligibility.gateType}</p>
-
-                      <p>
-                        {recommendation.eligibility.matchedCredential
-                          ? `Matched credential: ${recommendation.eligibility.matchedCredential.type} (${recommendation.eligibility.matchedCredential.status}, ${recommendation.eligibility.matchedCredential.jurisdiction})`
-                          : recommendation.eligibility.reason}
-                      </p>
-                    </div>
-                  )}
-
-                <CompetencyList
-                  title="Matched required competencies"
-                  items={recommendation.matchedRequiredCompetencies}
-                />
-
-                <CompetencyList
-                  title="Missing required competencies"
-                  items={recommendation.missingRequiredCompetencies}
-                />
-
-                <CompetencyList
-                  title="Matched preferred competencies"
-                  items={recommendation.matchedPreferredCompetencies}
-                />
-
-                <CompetencyList
-                  title="Missing preferred competencies"
-                  items={recommendation.missingPreferredCompetencies}
-                />
-
-                <AnchorList
-                  title="Anchor matches"
-                  items={recommendation.anchorMatches}
-                />
-
-                <AnchorList
-                  title="Anchor conflicts"
-                  items={recommendation.anchorConflicts}
-                />
-
-                {recommendation.financialExplanation && (
-                  <div>
-                    <p>
-                      <strong>Financial explanation</strong>
-                    </p>
-
-                    <p>{recommendation.financialExplanation.explanation}</p>
-
-                    <ul>
-                      <li>
-                        Income floor:{" "}
-                        {formatUsd(
-                          recommendation.financialExplanation.annualFloor
-                        )}
-                      </li>
-                      <li>
-                        Estimated first-year income:{" "}
-                        {formatUsd(
-                          recommendation.financialExplanation.avg12month
-                        )}
-                      </li>
-                      <li>
-                        Ratio: {recommendation.financialExplanation.ratio}
-                      </li>
-                      <li>
-                        Runway:{" "}
-                        {recommendation.financialExplanation.runwayMonths}{" "}
-                        months
-                      </li>
-                      <li>
-                        Runway adjustment:{" "}
-                        {recommendation.financialExplanation.runwayAdjustment}
-                      </li>
-                    </ul>
-                  </div>
-                )}
-              </details>
-            </section>
+            <ResultCard
+              key={recommendation.directionId}
+              recommendation={recommendation}
+            />
           ))}
         </div>
       )}
