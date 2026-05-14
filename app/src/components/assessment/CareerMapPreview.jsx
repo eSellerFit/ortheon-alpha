@@ -2,17 +2,17 @@ import { useState } from "react";
 import CareerDirectionMap from "./CareerDirectionMap";
 import { getAssessment } from "../../services/assessmentService";
 import {
-  generateRecommendations,
   generateCareerMap,
+  generateRecommendations,
 } from "../../utils/scoring";
 
 function CareerMapPreview() {
   const [assessmentId, setAssessmentId] = useState("");
   const [careerMap, setCareerMap] = useState(null);
   const [assessment, setAssessment] = useState(null);
+  const [recommendations, setRecommendations] = useState([]);
   const [status, setStatus] = useState("idle");
   const [errorMessage, setErrorMessage] = useState("");
-  const [mapSource, setMapSource] = useState("");
 
   async function handleLoadMap(event) {
     event.preventDefault();
@@ -30,41 +30,30 @@ function CareerMapPreview() {
       setErrorMessage("");
       setCareerMap(null);
       setAssessment(null);
-      setMapSource("");
+      setRecommendations([]);
 
       const loadedAssessment = await getAssessment(cleanedId);
 
-      let recommendationsToUse = [];
+      /*
+        IMPORTANT:
+        For preview/testing we intentionally ignore:
+        - loadedAssessment.careerMap
+        - loadedAssessment.directionRecommendations
 
-      if (
-        Array.isArray(loadedAssessment.directionRecommendations) &&
-        loadedAssessment.directionRecommendations.length > 0
-      ) {
-        recommendationsToUse = loadedAssessment.directionRecommendations;
-      } else {
-        recommendationsToUse = generateRecommendations(loadedAssessment);
-      }
+        Otherwise map-preview keeps showing old Firebase-saved results
+        and new scoring.js changes will not be visible.
+      */
+      const regeneratedRecommendations =
+        generateRecommendations(loadedAssessment);
 
-      let mapToRender = null;
-
-      if (recommendationsToUse.length > 0) {
-        mapToRender = generateCareerMap(loadedAssessment, recommendationsToUse);
-        setMapSource("Generated locally from assessment data");
-      }
-
-      if (!mapToRender && loadedAssessment.careerMap) {
-        mapToRender = loadedAssessment.careerMap;
-        setMapSource("Loaded saved careerMap from Firebase");
-      }
-
-      if (!mapToRender) {
-        throw new Error(
-          "No careerMap could be generated or loaded for this assessment."
-        );
-      }
+      const regeneratedCareerMap = generateCareerMap(
+        loadedAssessment,
+        regeneratedRecommendations
+      );
 
       setAssessment(loadedAssessment);
-      setCareerMap(mapToRender);
+      setRecommendations(regeneratedRecommendations);
+      setCareerMap(regeneratedCareerMap);
       setStatus("success");
     } catch (error) {
       console.error("Career map preview failed:", error);
@@ -81,8 +70,9 @@ function CareerMapPreview() {
         <p className="eyebrow">Internal preview</p>
         <h2>Career Map Preview</h2>
         <p>
-          Load an existing Firebase assessment and preview the career map without
-          running the full assessment flow or CV parsing again.
+          Load an existing Firebase assessment and regenerate the career map
+          locally from the current scoring logic, without running the full
+          assessment flow again.
         </p>
       </div>
 
@@ -99,7 +89,7 @@ function CareerMapPreview() {
         </label>
 
         <button type="submit" disabled={status === "loading"}>
-          {status === "loading" ? "Loading..." : "Load map"}
+          {status === "loading" ? "Regenerating..." : "Regenerate map"}
         </button>
       </form>
 
@@ -120,23 +110,49 @@ function CareerMapPreview() {
           </div>
 
           <div>
-            <span>Role library</span>
-            <strong>{assessment.roleLibraryVersion || "unknown"}</strong>
+            <span>Preview source</span>
+            <strong>Regenerated locally</strong>
           </div>
 
           <div>
             <span>Career map</span>
             <strong>{careerMap?.version || "unknown"}</strong>
           </div>
+        </div>
+      )}
 
-          <div>
-            <span>Map source</span>
-            <strong>{mapSource || "unknown"}</strong>
-          </div>
+      {status === "success" && recommendations.length > 0 && (
+        <div
+          style={{
+            marginTop: 18,
+            padding: 16,
+            border: "1px solid #d8e0e8",
+            borderRadius: 16,
+            background: "#ffffff",
+          }}
+        >
+          <h4 style={{ margin: "0 0 10px" }}>Debug: regenerated primary</h4>
 
-          <div>
-            <span>Input factors</span>
-            <strong>{careerMap?.inputFactors ? "available" : "missing"}</strong>
+          <div style={{ display: "grid", gap: 8 }}>
+            {recommendations.map((recommendation) => (
+              <div
+                key={recommendation.directionId}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "90px 1fr 90px 120px",
+                  gap: 10,
+                  alignItems: "center",
+                  fontSize: 13,
+                }}
+              >
+                <strong>{recommendation.directionId}</strong>
+                <span>{recommendation.directionLabel}</span>
+                <span>Score: {recommendation.scores?.total}</span>
+                <span>
+                  {recommendation.transitionFlags?.join(", ") || "no flags"}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       )}
