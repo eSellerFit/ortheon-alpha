@@ -438,6 +438,13 @@ function MapLegend() {
   );
 }
 
+const SUMMARY_CARD_ICONS = {
+  "Main pattern":     "◈",
+  "Transition style": "▶",
+  "Bridge goal":      "◎",
+  "Main caution":     "△",
+};
+
 function SummaryGrid({ summary }) {
   const items = [
     ["Main pattern", summary.mainPattern],
@@ -450,6 +457,9 @@ function SummaryGrid({ summary }) {
     <div className="career-map-summary-grid" style={{ marginTop: 18 }}>
       {items.map(([label, value]) => (
         <div key={label} className="career-map-summary-card">
+          <span className="career-map-summary-icon" aria-hidden="true">
+            {SUMMARY_CARD_ICONS[label]}
+          </span>
           <span>{label}</span>
           <strong>{value || "Not available"}</strong>
         </div>

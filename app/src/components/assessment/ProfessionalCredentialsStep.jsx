@@ -5,9 +5,9 @@ import {
 } from "../../data/professionalCredentialsConfig";
 import { updateAssessmentProfessionalCredentials } from "../../services/assessmentService";
 
-function ProfessionalCredentialsStep({ assessmentId, onComplete }) {
-  const [hasRegulatedCredentials, setHasRegulatedCredentials] = useState("no");
-  const [selectedCredentials, setSelectedCredentials] = useState({});
+function ProfessionalCredentialsStep({ assessmentId, onComplete, onBack, values, onValuesChange }) {
+  const [hasRegulatedCredentials, setHasRegulatedCredentials] = useState(values?.hasRegulatedCredentials ?? "no");
+  const [selectedCredentials, setSelectedCredentials] = useState(values?.selectedCredentials ?? {});
   const [status, setStatus] = useState("idle");
 
   const shouldShowCredentialList =
@@ -30,45 +30,43 @@ function ProfessionalCredentialsStep({ assessmentId, onComplete }) {
     setStatus("idle");
     setHasRegulatedCredentials(value);
 
+    const newSelected = value === "no" || value === "not_sure" ? {} : selectedCredentials;
     if (value === "no" || value === "not_sure") {
-      setSelectedCredentials({});
+      setSelectedCredentials(newSelected);
     }
+    onValuesChange?.({ hasRegulatedCredentials: value, selectedCredentials: newSelected });
   }
 
   function toggleCredential(typeId) {
     setStatus("idle");
 
-    setSelectedCredentials((previous) => {
-      if (previous[typeId]) {
-        const updated = { ...previous };
-        delete updated[typeId];
-        return updated;
-      }
-
-      return {
-        ...previous,
+    let newSelected;
+    if (selectedCredentials[typeId]) {
+      newSelected = { ...selectedCredentials };
+      delete newSelected[typeId];
+    } else {
+      newSelected = {
+        ...selectedCredentials,
         [typeId]: {
           type: typeId,
-          status:
-            hasRegulatedCredentials === "in_progress"
-              ? "in_progress"
-              : "active",
+          status: hasRegulatedCredentials === "in_progress" ? "in_progress" : "active",
           jurisdiction: "",
         },
       };
-    });
+    }
+    setSelectedCredentials(newSelected);
+    onValuesChange?.({ hasRegulatedCredentials, selectedCredentials: newSelected });
   }
 
   function updateCredential(typeId, field, value) {
     setStatus("idle");
 
-    setSelectedCredentials((previous) => ({
-      ...previous,
-      [typeId]: {
-        ...previous[typeId],
-        [field]: value,
-      },
-    }));
+    const newSelected = {
+      ...selectedCredentials,
+      [typeId]: { ...selectedCredentials[typeId], [field]: value },
+    };
+    setSelectedCredentials(newSelected);
+    onValuesChange?.({ hasRegulatedCredentials, selectedCredentials: newSelected });
   }
 
   async function handleSubmit(event) {
@@ -102,6 +100,12 @@ function ProfessionalCredentialsStep({ assessmentId, onComplete }) {
 
   return (
     <form onSubmit={handleSubmit} className="form">
+      {onBack && (
+        <button type="button" className="step-back-button" onClick={onBack}>
+          ← Back
+        </button>
+      )}
+
       <h2>Professional Credentials</h2>
 
       <p>
@@ -110,25 +114,27 @@ function ProfessionalCredentialsStep({ assessmentId, onComplete }) {
         realistically accessible right now.
       </p>
 
-      <label>
-        Do you currently hold, or are you actively working toward, any regulated
-        professional license, certification, or credential?
+      <div className="form-group">
+        <label className="form-label" htmlFor="credentialStatus">
+          Do you currently hold, or are you actively working toward, any regulated
+          professional license, certification, or credential?
+        </label>
         <select
+          id="credentialStatus"
+          className="form-select"
           value={hasRegulatedCredentials}
-          onChange={(event) =>
-            handleCredentialStatusChange(event.target.value)
-          }
+          onChange={(event) => handleCredentialStatusChange(event.target.value)}
         >
           <option value="no">No</option>
           <option value="yes">Yes</option>
           <option value="in_progress">In progress</option>
           <option value="not_sure">Not sure</option>
         </select>
-      </label>
+      </div>
 
       {shouldShowCredentialList && (
-        <div>
-          <p>
+        <div className="form-group">
+          <p className="form-hint">
             Select any credentials that apply. Add the jurisdiction where each
             credential is active or being pursued.
           </p>
@@ -150,10 +156,11 @@ function ProfessionalCredentialsStep({ assessmentId, onComplete }) {
                 <p className="helper-text">{credentialType.description}</p>
 
                 {selected && (
-                  <div>
-                    <label>
-                      Status
+                  <div className="form-grid">
+                    <div className="form-group">
+                      <label className="form-label">Status</label>
                       <select
+                        className="form-select"
                         value={selected.status}
                         onChange={(event) =>
                           updateCredential(
@@ -169,11 +176,12 @@ function ProfessionalCredentialsStep({ assessmentId, onComplete }) {
                           </option>
                         ))}
                       </select>
-                    </label>
+                    </div>
 
-                    <label>
-                      Jurisdiction
+                    <div className="form-group">
+                      <label className="form-label">Jurisdiction</label>
                       <input
+                        className="form-input"
                         type="text"
                         value={selected.jurisdiction}
                         placeholder="Example: NY, CA, United States, Georgia"
@@ -185,7 +193,7 @@ function ProfessionalCredentialsStep({ assessmentId, onComplete }) {
                           )
                         }
                       />
-                    </label>
+                    </div>
                   </div>
                 )}
               </div>
@@ -213,9 +221,15 @@ function ProfessionalCredentialsStep({ assessmentId, onComplete }) {
         </p>
       )}
 
-      <button type="submit" disabled={status === "saving" || !canContinue}>
-        {status === "saving" ? "Saving..." : "Save professional credentials"}
-      </button>
+      <div className="action-row">
+        <button
+          type="submit"
+          className="btn btn-primary"
+          disabled={status === "saving" || !canContinue}
+        >
+          {status === "saving" ? "Saving..." : "Save professional credentials"}
+        </button>
+      </div>
     </form>
   );
 }

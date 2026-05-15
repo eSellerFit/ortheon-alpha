@@ -15,26 +15,29 @@ const initialAnchors = {
 
 const scoreOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-function CareerAnchorsStep({ assessmentId, onComplete }) {
-  const [anchorIndex, setAnchorIndex] = useState(0);
-  const [anchors, setAnchors] = useState(initialAnchors);
+function CareerAnchorsStep({ assessmentId, onComplete, onBack, values, onValuesChange }) {
+  const [anchorIndex, setAnchorIndex] = useState(values?.anchorIndex ?? 0);
+  const [anchors, setAnchors] = useState(values?.anchors ?? initialAnchors);
   const [status, setStatus] = useState("idle");
 
   const currentAnchor = anchorQuestions[anchorIndex];
   const currentScore = anchors[currentAnchor.id];
 
   function handleScoreSelect(score) {
-    setAnchors((previous) => ({
-      ...previous,
-      [currentAnchor.id]: score,
-    }));
+    const updated = { ...anchors, [currentAnchor.id]: score };
+    setAnchors(updated);
+    onValuesChange?.({ anchors: updated, anchorIndex });
   }
 
   function goPrevious() {
     setStatus("idle");
 
     if (anchorIndex > 0) {
-      setAnchorIndex((previous) => previous - 1);
+      const newIndex = anchorIndex - 1;
+      setAnchorIndex(newIndex);
+      onValuesChange?.({ anchors, anchorIndex: newIndex });
+    } else if (onBack) {
+      onBack();
     }
   }
 
@@ -42,7 +45,9 @@ function CareerAnchorsStep({ assessmentId, onComplete }) {
     setStatus("idle");
 
     if (anchorIndex < anchorQuestions.length - 1) {
-      setAnchorIndex((previous) => previous + 1);
+      const newIndex = anchorIndex + 1;
+      setAnchorIndex(newIndex);
+      onValuesChange?.({ anchors, anchorIndex: newIndex });
       return;
     }
 
@@ -68,18 +73,20 @@ function CareerAnchorsStep({ assessmentId, onComplete }) {
   }
 
   return (
-    <div className="form">
-      <h2>Career Anchors</h2>
+    <div className="anchor-step">
+      <div className="anchor-step-meta">
+        <h2>Career Anchors</h2>
+        <span className="form-hint">
+          {anchorIndex + 1} / {anchorQuestions.length}
+        </span>
+      </div>
 
-      <p>
-        Anchor {anchorIndex + 1} of {anchorQuestions.length}
-      </p>
-
-      <h3>{currentAnchor.name}</h3>
-
-      <p>
-        <strong>{currentAnchor.question}</strong>
-      </p>
+      <div>
+        <h3>{currentAnchor.name}</h3>
+        <p style={{ marginTop: "var(--space-2)" }}>
+          <strong>{currentAnchor.question}</strong>
+        </p>
+      </div>
 
       <p className="score-summary">
         Selected score: <strong>{currentScore}</strong> / 10
@@ -106,20 +113,31 @@ function CareerAnchorsStep({ assessmentId, onComplete }) {
         ))}
       </div>
 
-      <p>
-        <strong>Low:</strong> {currentAnchor.low}
-      </p>
+      <div className="anchor-lowhigh">
+        <div className="anchor-lowhigh-item">
+          <strong>Low — </strong>{currentAnchor.low}
+        </div>
+        <div className="anchor-lowhigh-item">
+          <strong>High — </strong>{currentAnchor.high}
+        </div>
+      </div>
 
-      <p>
-        <strong>High:</strong> {currentAnchor.high}
-      </p>
-
-      <div>
-        <button type="button" onClick={goPrevious} disabled={anchorIndex === 0}>
+      <div className="action-row">
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={goPrevious}
+          disabled={anchorIndex === 0 && !onBack}
+        >
           Previous
         </button>
 
-        <button type="button" onClick={goNext} disabled={status === "saving"}>
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={goNext}
+          disabled={status === "saving"}
+        >
           {status === "saving"
             ? "Saving..."
             : anchorIndex === anchorQuestions.length - 1

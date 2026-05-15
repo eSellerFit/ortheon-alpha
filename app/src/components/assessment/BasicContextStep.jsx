@@ -8,17 +8,15 @@ const initialBasicData = {
   currentSituation: "",
 };
 
-function BasicContextStep({ onComplete }) {
-  const [basicData, setBasicData] = useState(initialBasicData);
+function BasicContextStep({ onComplete, values, onValuesChange }) {
+  const [basicData, setBasicData] = useState(values ?? initialBasicData);
   const [status, setStatus] = useState("idle");
 
   function handleChange(event) {
     const { name, value } = event.target;
-
-    setBasicData((previous) => ({
-      ...previous,
-      [name]: value,
-    }));
+    const updated = { ...basicData, [name]: value };
+    setBasicData(updated);
+    onValuesChange?.(updated);
   }
 
   async function handleSubmit(event) {
@@ -55,40 +53,48 @@ function BasicContextStep({ onComplete }) {
     <form onSubmit={handleSubmit} className="form">
       <h2>Basic Context</h2>
 
-      <label>
-        First name
+      <div className="form-group">
+        <label className="form-label" htmlFor="firstName">First name</label>
         <input
+          id="firstName"
+          className="form-input"
           name="firstName"
           value={basicData.firstName}
           onChange={handleChange}
           placeholder="Name"
         />
-      </label>
+      </div>
 
-      <label>
-        Email
+      <div className="form-group">
+        <label className="form-label" htmlFor="email">Email</label>
         <input
+          id="email"
+          className="form-input"
           name="email"
           type="email"
           value={basicData.email}
           onChange={handleChange}
           placeholder="you@example.com"
         />
-      </label>
+      </div>
 
-      <label>
-        Current or most recent role
+      <div className="form-group">
+        <label className="form-label" htmlFor="currentRole">Current or most recent role</label>
         <input
+          id="currentRole"
+          className="form-input"
           name="currentRole"
           value={basicData.currentRole}
           onChange={handleChange}
           placeholder="Role"
         />
-      </label>
+      </div>
 
-      <label>
-        Current situation
+      <div className="form-group">
+        <label className="form-label" htmlFor="currentSituation">Current situation</label>
         <select
+          id="currentSituation"
+          className="form-select"
           name="currentSituation"
           value={basicData.currentSituation}
           onChange={handleChange}
@@ -100,11 +106,13 @@ function BasicContextStep({ onComplete }) {
           <option value="returning_to_work">Returning to work</option>
           <option value="building_portfolio">Building portfolio / independent path</option>
         </select>
-      </label>
+      </div>
 
-      <button type="submit" disabled={status === "saving"}>
-        {status === "saving" ? "Saving..." : "Continue to career anchors"}
-      </button>
+      <div className="action-row">
+        <button type="submit" className="btn btn-primary" disabled={status === "saving"}>
+          {status === "saving" ? "Saving..." : "Continue to career anchors"}
+        </button>
+      </div>
 
       {status === "missing_fields" && (
         <p className="status warning">Please complete all fields.</p>

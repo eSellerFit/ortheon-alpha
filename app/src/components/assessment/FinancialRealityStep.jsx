@@ -9,17 +9,15 @@ const initialFinancialData = {
   retrainingInvestmentAbility: "",
 };
 
-function FinancialRealityStep({ assessmentId, onComplete }) {
-  const [financialData, setFinancialData] = useState(initialFinancialData);
+function FinancialRealityStep({ assessmentId, onComplete, onBack, values, onValuesChange }) {
+  const [financialData, setFinancialData] = useState(values ?? initialFinancialData);
   const [status, setStatus] = useState("idle");
 
   function handleChange(event) {
     const { name, value } = event.target;
-
-    setFinancialData((previous) => ({
-      ...previous,
-      [name]: value,
-    }));
+    const updated = { ...financialData, [name]: value };
+    setFinancialData(updated);
+    onValuesChange?.(updated);
   }
 
   async function handleSubmit(event) {
@@ -63,6 +61,12 @@ function FinancialRealityStep({ assessmentId, onComplete }) {
 
   return (
     <form onSubmit={handleSubmit} className="form">
+      {onBack && (
+        <button type="button" className="step-back-button" onClick={onBack}>
+          ← Back
+        </button>
+      )}
+
       <h2>Financial Reality</h2>
 
       <p>
@@ -70,78 +74,98 @@ function FinancialRealityStep({ assessmentId, onComplete }) {
         not just interesting.
       </p>
 
-      <p>
-        Assessment ID: {assessmentId}
-      </p>
+      <div className="form-grid">
+        <div className="form-group">
+          <label className="form-label" htmlFor="currentMonthlyIncome">
+            Current or recent monthly income
+          </label>
+          <input
+            id="currentMonthlyIncome"
+            className="form-input"
+            name="currentMonthlyIncome"
+            type="number"
+            min="0"
+            value={financialData.currentMonthlyIncome}
+            onChange={handleChange}
+            placeholder="7000"
+          />
+        </div>
 
-      <label>
-        Current or recent monthly income
-        <input
-          name="currentMonthlyIncome"
-          type="number"
-          min="0"
-          value={financialData.currentMonthlyIncome}
-          onChange={handleChange}
-          placeholder="7000"
-        />
-      </label>
+        <div className="form-group">
+          <label className="form-label" htmlFor="minimumMonthlyIncome">
+            Minimum monthly income needed
+          </label>
+          <input
+            id="minimumMonthlyIncome"
+            className="form-input"
+            name="minimumMonthlyIncome"
+            type="number"
+            min="0"
+            value={financialData.minimumMonthlyIncome}
+            onChange={handleChange}
+            placeholder="5000"
+          />
+        </div>
 
-      <label>
-        Minimum monthly income needed
-        <input
-          name="minimumMonthlyIncome"
-          type="number"
-          min="0"
-          value={financialData.minimumMonthlyIncome}
-          onChange={handleChange}
-          placeholder="5000"
-        />
-      </label>
+        <div className="form-group">
+          <label className="form-label" htmlFor="savingsRunwayMonths">
+            Savings runway, in months
+          </label>
+          <input
+            id="savingsRunwayMonths"
+            className="form-input"
+            name="savingsRunwayMonths"
+            type="number"
+            min="0"
+            value={financialData.savingsRunwayMonths}
+            onChange={handleChange}
+            placeholder="6"
+          />
+        </div>
 
-      <label>
-        Savings runway, in months
-        <input
-          name="savingsRunwayMonths"
-          type="number"
-          min="0"
-          value={financialData.savingsRunwayMonths}
-          onChange={handleChange}
-          placeholder="6"
-        />
-      </label>
+        <div className="form-group">
+          <label className="form-label" htmlFor="bridgeRoleWillingness">
+            Willingness to use a bridge role
+          </label>
+          <select
+            id="bridgeRoleWillingness"
+            className="form-select"
+            name="bridgeRoleWillingness"
+            value={financialData.bridgeRoleWillingness}
+            onChange={handleChange}
+          >
+            <option value="">Select one</option>
+            <option value="yes">Yes</option>
+            <option value="maybe">Maybe, if it is clearly temporary</option>
+            <option value="no">No</option>
+          </select>
+        </div>
 
-      <label>
-        Willingness to use a bridge role
-        <select
-          name="bridgeRoleWillingness"
-          value={financialData.bridgeRoleWillingness}
-          onChange={handleChange}
-        >
-          <option value="">Select one</option>
-          <option value="yes">Yes</option>
-          <option value="maybe">Maybe, if it is clearly temporary</option>
-          <option value="no">No</option>
-        </select>
-      </label>
+        <div className="form-group full-width">
+          <label className="form-label" htmlFor="retrainingInvestmentAbility">
+            Ability to invest in retraining or certification
+          </label>
+          <select
+            id="retrainingInvestmentAbility"
+            className="form-select"
+            name="retrainingInvestmentAbility"
+            value={financialData.retrainingInvestmentAbility}
+            onChange={handleChange}
+          >
+            <option value="">Select one</option>
+            <option value="none">No budget now</option>
+            <option value="limited">Limited budget</option>
+            <option value="moderate">Moderate budget</option>
+            <option value="strong">Strong ability to invest</option>
+          </select>
+        </div>
+      </div>
 
-      <label>
-        Ability to invest in retraining or certification
-        <select
-          name="retrainingInvestmentAbility"
-          value={financialData.retrainingInvestmentAbility}
-          onChange={handleChange}
-        >
-          <option value="">Select one</option>
-          <option value="none">No budget now</option>
-          <option value="limited">Limited budget</option>
-          <option value="moderate">Moderate budget</option>
-          <option value="strong">Strong ability to invest</option>
-        </select>
-      </label>
-
-      <button type="submit" disabled={status === "saving"}>
-        {status === "saving" ? "Saving..." : "Save financial reality"}
-      </button>
+      <div className="action-row">
+        <button type="submit" className="btn btn-primary" disabled={status === "saving"}>
+          {status === "saving" ? "Saving..." : "Save financial reality"}
+        </button>
+      </div>
 
       {status === "missing_fields" && (
         <p className="status warning">Please complete all financial fields.</p>

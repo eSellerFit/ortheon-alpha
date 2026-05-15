@@ -22,15 +22,17 @@ function ExtractedTextReview({
         <strong>Character count:</strong> {characterCount}
       </p>
 
-      <label>
-        CV text
+      <div className="form-group">
+        <label className="form-label" htmlFor="cvTextArea">CV text</label>
         <textarea
+          id="cvTextArea"
+          className="form-textarea"
           value={cvText}
           onChange={(event) => onTextChange(event.target.value)}
-          rows={14}
+          rows={18}
           placeholder="Extracted or pasted CV text will appear here..."
         />
-      </label>
+      </div>
 
       {characterCount < 100 && (
         <p className="status warning">
@@ -39,13 +41,19 @@ function ExtractedTextReview({
         </p>
       )}
 
-      <div>
-        <button type="button" onClick={onBack} disabled={disabled}>
+      <div className="action-row">
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={onBack}
+          disabled={disabled}
+        >
           Upload another PDF
         </button>
 
         <button
           type="button"
+          className="btn btn-primary"
           onClick={onParse}
           disabled={disabled || characterCount < 100}
         >
@@ -54,13 +62,19 @@ function ExtractedTextReview({
 
         <button
           type="button"
+          className="btn btn-secondary"
           onClick={onSaveRawText}
           disabled={disabled || characterCount < 100}
         >
           Save without AI
         </button>
 
-        <button type="button" onClick={onSkip} disabled={disabled}>
+        <button
+          type="button"
+          className="btn btn-ghost"
+          onClick={onSkip}
+          disabled={disabled}
+        >
           Skip CV step
         </button>
       </div>

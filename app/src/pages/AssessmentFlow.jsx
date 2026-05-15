@@ -14,6 +14,19 @@ function AssessmentFlow() {
   const [currentStep, setCurrentStep] = useState(1);
   const [assessmentId, setAssessmentId] = useState("");
 
+  // Draft state — persists across Back/Next so forms don't reset
+  const [basicDraft, setBasicDraft] = useState(null);
+  const [anchorsDraft, setAnchorsDraft] = useState(null);
+  const [financialDraft, setFinancialDraft] = useState(null);
+  const [constraintsDraft, setConstraintsDraft] = useState(null);
+  const [credentialsDraft, setCredentialsDraft] = useState(null);
+  const [weightsDraft, setWeightsDraft] = useState(null);
+  // CVUploadStep (step 6) draft not lifted — main Back only shows in idle state
+
+  function goBack() {
+    setCurrentStep((prev) => Math.max(1, prev - 1));
+  }
+
   function handleBasicContextComplete({ assessmentId: newAssessmentId }) {
     setAssessmentId(newAssessmentId);
     setCurrentStep(2);
@@ -61,34 +74,50 @@ function AssessmentFlow() {
         </p>
 
         {currentStep === 1 && (
-          <BasicContextStep onComplete={handleBasicContextComplete} />
+          <BasicContextStep
+            values={basicDraft}
+            onValuesChange={setBasicDraft}
+            onComplete={handleBasicContextComplete}
+          />
         )}
 
         {currentStep === 2 && (
           <CareerAnchorsStep
             assessmentId={assessmentId}
+            values={anchorsDraft}
+            onValuesChange={setAnchorsDraft}
             onComplete={handleCareerAnchorsComplete}
+            onBack={goBack}
           />
         )}
 
         {currentStep === 3 && (
           <FinancialRealityStep
             assessmentId={assessmentId}
+            values={financialDraft}
+            onValuesChange={setFinancialDraft}
             onComplete={handleFinancialRealityComplete}
+            onBack={goBack}
           />
         )}
 
         {currentStep === 4 && (
           <TransitionConstraintsStep
             assessmentId={assessmentId}
+            values={constraintsDraft}
+            onValuesChange={setConstraintsDraft}
             onComplete={handleTransitionConstraintsComplete}
+            onBack={goBack}
           />
         )}
 
         {currentStep === 5 && (
           <ProfessionalCredentialsStep
             assessmentId={assessmentId}
+            values={credentialsDraft}
+            onValuesChange={setCredentialsDraft}
             onComplete={handleProfessionalCredentialsComplete}
+            onBack={goBack}
           />
         )}
 
@@ -96,13 +125,17 @@ function AssessmentFlow() {
           <CVUploadStep
             assessmentId={assessmentId}
             onComplete={handleCVUploadComplete}
+            onBack={goBack}
           />
         )}
 
         {currentStep === 7 && (
           <PriorityWeightsStep
             assessmentId={assessmentId}
+            values={weightsDraft}
+            onValuesChange={setWeightsDraft}
             onComplete={handlePriorityWeightsComplete}
+            onBack={goBack}
           />
         )}
 

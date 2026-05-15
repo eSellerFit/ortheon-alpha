@@ -72,9 +72,10 @@ function CompetencySignalReview({
               </p>
             )}
 
-            <label>
-              Correction
+            <div className="form-group">
+              <label className="form-label">Correction</label>
               <select
+                className="form-select"
                 value={correction?.correctedStrength || ""}
                 onChange={(event) =>
                   handleCorrectionChange(signal, event.target.value)
@@ -86,7 +87,7 @@ function CompetencySignalReview({
                 <option value="weak">Weak</option>
                 <option value="absent">Absent</option>
               </select>
-            </label>
+            </div>
           </div>
         );
       })}

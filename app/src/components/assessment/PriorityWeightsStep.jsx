@@ -7,8 +7,8 @@ const initialWeights = priorityWeightsConfig.reduce((accumulator, item) => {
   return accumulator;
 }, {});
 
-function PriorityWeightsStep({ assessmentId, onComplete }) {
-  const [weights, setWeights] = useState(initialWeights);
+function PriorityWeightsStep({ assessmentId, onComplete, onBack, values, onValuesChange }) {
+  const [weights, setWeights] = useState(values ?? initialWeights);
   const [status, setStatus] = useState("idle");
 
   const totalWeight = Object.values(weights).reduce(
@@ -24,10 +24,9 @@ function PriorityWeightsStep({ assessmentId, onComplete }) {
   function handleWeightChange(weightId, value) {
     setStatus("idle");
 
-    setWeights((previous) => ({
-      ...previous,
-      [weightId]: Number(value),
-    }));
+    const updated = { ...weights, [weightId]: Number(value) };
+    setWeights(updated);
+    onValuesChange?.(updated);
   }
 
   async function handleSubmit(event) {
@@ -72,46 +71,52 @@ function PriorityWeightsStep({ assessmentId, onComplete }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="form">
+    <form onSubmit={handleSubmit} className="weights-step">
+      {onBack && (
+        <button type="button" className="step-back-button" onClick={onBack}>
+          ← Back
+        </button>
+      )}
+
       <h2>Priority Weights</h2>
 
-      <p>
-        You have now reviewed your career anchors, financial reality, practical
-        constraints, and CV signals. Set how much each dimension should influence
-        your final career direction recommendation.
+      <p className="helper-text">
+        Set how much each dimension should influence your career direction
+        recommendation. Total must equal 100.
       </p>
 
       <p className={isTotalValid ? "status success" : "status warning"}>
         Total: <strong>{totalWeight}</strong> / 100
       </p>
 
-      {priorityWeightsConfig.map((item) => (
-        <div key={item.id} className="weight-control">
-          <label>
-            <strong>{item.label}</strong>: {weights[item.id]}%
-            <input
-              type="range"
-              min="0"
-              max="100"
-              step="5"
-              value={weights[item.id]}
-              onChange={(event) =>
-                handleWeightChange(item.id, event.target.value)
-              }
-            />
-          </label>
+      <div className="weights-grid">
+        {priorityWeightsConfig.map((item) => (
+          <div key={item.id} className="weight-control">
+            <label>
+              <strong>{item.label}</strong>: {weights[item.id]}%
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value={weights[item.id]}
+                onChange={(event) =>
+                  handleWeightChange(item.id, event.target.value)
+                }
+              />
+            </label>
 
-          <p className="helper-text">{item.description}</p>
+            <p className="helper-text">{item.description}</p>
 
-          {item.id === "financialViability" &&
-            isFinancialBelowRecommended && (
-              <p className="status warning">
-                Financial Viability should be at least 10%. Ortheon should not
-                ignore the user's financial floor.
-              </p>
-            )}
-        </div>
-      ))}
+            {item.id === "financialViability" &&
+              isFinancialBelowRecommended && (
+                <p className="status warning">
+                  Financial Viability should be at least 10%.
+                </p>
+              )}
+          </div>
+        ))}
+      </div>
 
       {!isTotalValid && (
         <p className="status warning">
@@ -143,9 +148,15 @@ function PriorityWeightsStep({ assessmentId, onComplete }) {
         </p>
       )}
 
-      <button type="submit" disabled={status === "saving" || !canContinue}>
-        {status === "saving" ? "Saving..." : "Save priority weights"}
-      </button>
+      <div className="action-row">
+        <button
+          type="submit"
+          className="btn btn-primary"
+          disabled={status === "saving" || !canContinue}
+        >
+          {status === "saving" ? "Saving..." : "Save priority weights"}
+        </button>
+      </div>
     </form>
   );
 }

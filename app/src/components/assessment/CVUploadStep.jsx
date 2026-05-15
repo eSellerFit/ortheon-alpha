@@ -11,7 +11,7 @@ import {
   updateAssessmentCVProfile,
 } from "../../services/assessmentService";
 
-function CVUploadStep({ assessmentId, onComplete }) {
+function CVUploadStep({ assessmentId, onComplete, onBack }) {
   const [stepState, setStepState] = useState("idle");
   const [cvText, setCvText] = useState("");
   const [cvSource, setCvSource] = useState("manual_paste");
@@ -232,20 +232,20 @@ function CVUploadStep({ assessmentId, onComplete }) {
           onCorrectionChange={setUserCorrections}
         />
 
-        <div>
-          <button type="button" onClick={handleBackToTextReview}>
-            Back to CV text
-          </button>
-
-          <button type="button" onClick={handleSaveParsedProfile}>
+        <div className="action-row">
+          <button type="button" className="btn btn-primary" onClick={handleSaveParsedProfile}>
             Save parsed CV profile
           </button>
 
-          <button type="button" onClick={handleSaveReviewedText}>
+          <button type="button" className="btn btn-secondary" onClick={handleSaveReviewedText}>
             Save without AI
           </button>
 
-          <button type="button" onClick={handleSkipCV}>
+          <button type="button" className="btn btn-ghost" onClick={handleBackToTextReview}>
+            Back to CV text
+          </button>
+
+          <button type="button" className="btn btn-ghost" onClick={handleSkipCV}>
             Skip CV step
           </button>
         </div>
@@ -262,20 +262,20 @@ function CVUploadStep({ assessmentId, onComplete }) {
           {errorMessage || "We couldn't analyze your CV right now."}
         </p>
 
-        <div>
-          <button type="button" onClick={handleParseCV}>
+        <div className="action-row">
+          <button type="button" className="btn btn-primary" onClick={handleParseCV}>
             Retry AI analysis
           </button>
 
-          <button type="button" onClick={handleSaveReviewedText}>
+          <button type="button" className="btn btn-secondary" onClick={handleSaveReviewedText}>
             Continue with raw CV text only
           </button>
 
-          <button type="button" onClick={handleBackToTextReview}>
+          <button type="button" className="btn btn-ghost" onClick={handleBackToTextReview}>
             Back to CV text
           </button>
 
-          <button type="button" onClick={handleSkipCV}>
+          <button type="button" className="btn btn-ghost" onClick={handleSkipCV}>
             Skip CV step
           </button>
         </div>
@@ -299,16 +299,16 @@ function CVUploadStep({ assessmentId, onComplete }) {
 
         <p className="status error">{errorMessage}</p>
 
-        <div>
-          <button type="button" onClick={handleBackToUpload}>
+        <div className="action-row">
+          <button type="button" className="btn btn-secondary" onClick={handleBackToUpload}>
             Upload another PDF
           </button>
 
-          <button type="button" onClick={handleManualPasteStart}>
+          <button type="button" className="btn btn-secondary" onClick={handleManualPasteStart}>
             Paste CV text manually
           </button>
 
-          <button type="button" onClick={handleSkipCV}>
+          <button type="button" className="btn btn-ghost" onClick={handleSkipCV}>
             Skip CV step
           </button>
         </div>
@@ -318,6 +318,12 @@ function CVUploadStep({ assessmentId, onComplete }) {
 
   return (
     <div className="form">
+      {onBack && (
+        <button type="button" className="step-back-button" onClick={onBack}>
+          ← Back
+        </button>
+      )}
+
       <h2>CV Upload</h2>
 
       <p>
@@ -327,12 +333,12 @@ function CVUploadStep({ assessmentId, onComplete }) {
 
       <PdfUploadBox onFileSelected={handleFileSelected} />
 
-      <div>
-        <button type="button" onClick={handleManualPasteStart}>
+      <div className="action-row">
+        <button type="button" className="btn btn-secondary" onClick={handleManualPasteStart}>
           Paste CV text manually
         </button>
 
-        <button type="button" onClick={handleSkipCV}>
+        <button type="button" className="btn btn-ghost" onClick={handleSkipCV}>
           Skip CV step
         </button>
       </div>
