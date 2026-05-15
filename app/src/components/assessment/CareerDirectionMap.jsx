@@ -19,25 +19,62 @@ function getPathLabel(pathType) {
   return labels[pathType] || "Nearby path";
 }
 
-function getMapShortLabel(node) {
-  const label = node.directionLabel || node.label || "";
-  const lowerLabel = label.toLowerCase();
+const MAP_SHORT_LABELS = {
+  "BF-1-E":   "Financial Strategy",
+  "BF-1-IF":  "Financial Advisory",
+  "BF-4-E":   "HR & People Ops",
+  "BF-5-E":   "Workforce Planning",
+  "BF-6-E":   "People Analytics",
+  "BF-7-IF":  "Biz Advisory",
+  "BF-8-IF":  "Outplacement",
+  "BF-9-E":   "Compliance & Risk",
+  "BF-10-IF": "Comms / PR",
+  "BF-11-OV": "Wealth Mgmt",
+  "MG-1-E":   "General Mgmt",
+  "MG-4-ST":  "Startup Leadership",
+  "MG-5-NP":  "Nonprofit Ops",
+  "MG-6-E":   "Chief of Staff",
+  "MG-7-IF":  "Mgmt Consulting",
+  "MG-8-E":   "Program Mgmt",
+  "MG-9-E":   "Marketplace Ops",
+  "MG-9-IF":  "Marketplace Ops",
+  "MG-10-NP": "Nonprofit Dev",
+  "MG-11-OV": "Own Venture",
+  "MG-12-OV": "Social Enterprise",
+  "MG-13-E":  "Government Mgmt",
+  "SR-1-E":   "Enterprise Sales",
+  "SR-2-E":   "Customer Success",
+  "SR-3-E":   "Seller Enablement",
+  "CM-2-E":   "Data & Analytics",
+  "CM-4-ST":  "AI & Emerging Tech",
+  "CM-5-IF":  "AI Consulting",
+  "CM-6-E":   "Product Ops",
+  "CM-7-ST":  "AI Product Ops",
+  "CM-8-IF":  "Ops Consulting",
+  "ED-3-IF":  "L&D Consulting",
+  "ED-4-IF":  "Instructional Design",
+  "ED-5-IF":  "Exec Coaching",
+  "HC-2-OV":  "Coaching Practice",
+  "HC-3-E":   "Healthcare Admin",
+  "LG-2-IF":  "Fractional GC",
+  "LG-3-IF":  "Mediation",
+  "AD-5-IF":  "Fractional CMO",
+  "AD-6-IF":  "Content Strategy",
+};
 
+function getMapShortLabel(node) {
   if (node.nodeType === "current") {
     return node.label || "Current profile";
   }
 
-  if (lowerLabel.includes("marketplace")) return "Marketplace Ops";
-  if (lowerLabel.includes("general management")) return "General Mgmt";
-  if (lowerLabel.includes("chief of staff")) return "Biz Ops / CoS";
-  if (lowerLabel.includes("business operations")) return "Biz Ops / CoS";
-  if (lowerLabel.includes("consulting")) return "Advisory";
-  if (lowerLabel.includes("workforce")) return "Workforce Intel";
-  if (lowerLabel.includes("people analytics")) return "People Analytics";
-  if (lowerLabel.includes("hr tech")) return "HR Tech";
-  if (lowerLabel.includes("ai")) return "AI Path";
+  if (node.directionId && MAP_SHORT_LABELS[node.directionId]) {
+    return MAP_SHORT_LABELS[node.directionId];
+  }
 
-  return label.length > 24 ? `${label.slice(0, 24)}…` : label;
+  // Fallback for any direction not yet in the table: strip the " — Context" suffix
+  const label = node.directionLabel || node.label || "";
+  const stripped = label.split(" — ")[0];
+  return stripped.length > 20 ? `${stripped.slice(0, 20)}…` : stripped;
 }
 
 function getClusterIcon(cluster) {
@@ -87,21 +124,21 @@ function formatMoney(value) {
 
 function getRadialSlot(index, total) {
   if (total === 1) {
-    return { x: 50, y: 23 };
+    return { x: 50, y: 22 };
   }
 
   if (total === 2) {
     return [
-      { x: 34, y: 30 },
-      { x: 66, y: 30 },
+      { x: 28, y: 40 },
+      { x: 72, y: 40 },
     ][index];
   }
 
   return [
-    { x: 50, y: 21 },
+    { x: 50, y: 14 },
     { x: 76, y: 50 },
     { x: 24, y: 50 },
-  ][index] || { x: 50, y: 21 };
+  ][index] || { x: 50, y: 14 };
 }
 
 function normalizePrimaryNodes(primaryNodes = []) {
@@ -139,7 +176,7 @@ function buildCurrentNode(careerMap) {
     id: "current-profile",
     directionLabel: current.label || "Current profile",
     x: 50,
-    y: 58,
+    y: 76,
   };
 }
 
@@ -168,14 +205,14 @@ function MapNode({ node }) {
         left: `${node.x}%`,
         top: `${node.y}%`,
         transform: "translate(-50%, -50%)",
-        width: isCurrent ? 190 : 160,
-        minHeight: 52,
-        padding: "10px 12px",
-        borderRadius: 16,
-        background: isCurrent ? "#f2fbf8" : "#ffffff",
-        border: isCurrent ? "1px solid #0f766e" : undefined,
+        width: isCurrent ? 186 : 164,
+        minHeight: 56,
+        padding: "11px 13px",
+        borderRadius: 13,
+        background: isCurrent ? "#eef3f5" : "#ffffff",
+        border: isCurrent ? "1px solid #245f73" : undefined,
         zIndex: 3,
-        boxShadow: "0 10px 24px rgba(15, 23, 42, 0.08)",
+        boxShadow: "0 2px 8px rgba(17, 24, 39, 0.06)",
       }}
     >
       <div
@@ -187,16 +224,16 @@ function MapNode({ node }) {
       >
         <div
           style={{
-            width: 24,
-            height: 24,
+            width: 22,
+            height: 22,
             borderRadius: 999,
             display: "grid",
             placeItems: "center",
             flex: "0 0 auto",
-            background: isCurrent ? "#64748b" : "#0f766e",
+            background: isCurrent ? "#64748b" : "#245f73",
             color: "#ffffff",
-            fontSize: 11,
-            fontWeight: 800,
+            fontSize: 10,
+            fontWeight: 700,
           }}
         >
           {isCurrent ? "●" : getClusterIcon(node.mapCluster)}
@@ -216,8 +253,8 @@ function MapNode({ node }) {
             <span
               style={{
                 fontSize: 9,
-                fontWeight: 800,
-                color: "#64748b",
+                fontWeight: 700,
+                color: "#6b7280",
                 background: "#eef2f6",
                 borderRadius: 999,
                 padding: "3px 6px",
@@ -231,9 +268,9 @@ function MapNode({ node }) {
               <span
                 style={{
                   fontSize: 9,
-                  fontWeight: 800,
-                  color: "#0f766e",
-                  background: "#dff7ee",
+                  fontWeight: 600,
+                  color: "#52616f",
+                  background: "#eef3f5",
                   borderRadius: 999,
                   padding: "3px 6px",
                   lineHeight: 1,
@@ -247,9 +284,9 @@ function MapNode({ node }) {
           <div
             style={{
               fontSize: 13,
-              fontWeight: 800,
-              lineHeight: 1.2,
-              color: "#17212b",
+              fontWeight: 700,
+              lineHeight: 1.25,
+              color: "#111827",
             }}
           >
             {getMapShortLabel(node)}
@@ -257,17 +294,13 @@ function MapNode({ node }) {
 
           <div
             style={{
-              marginTop: 4,
-              fontSize: 10,
+              marginTop: 3,
+              fontSize: 11,
               lineHeight: 1.2,
-              color: "#667789",
+              color: "#6b7280",
             }}
           >
-            {isCurrent
-              ? "Current profile"
-              : `${getPathLabel(node.pathType)}${
-                  node.aiDurabilityRating ? ` · ${node.aiDurabilityRating}` : ""
-                }`}
+            {isCurrent ? "Current profile" : getPathLabel(node.pathType)}
           </div>
         </div>
       </div>
@@ -284,13 +317,13 @@ function HubMap({ careerMap }) {
     <div
       style={{
         position: "relative",
-        minHeight: 360,
-        border: "1px solid #d8e0e8",
-        borderRadius: 18,
+        minHeight: 520,
+        border: "1px solid #dbd8d0",
+        borderRadius: 16,
         background:
-          "radial-gradient(circle at center, rgba(15, 118, 110, 0.06), rgba(255,255,255,0) 42%), #ffffff",
+          "radial-gradient(ellipse at 50% 76%, rgba(36, 95, 115, 0.04), transparent 52%), #f9f8f6",
         overflow: "hidden",
-        marginTop: 22,
+        marginTop: 20,
       }}
     >
       <svg
@@ -312,8 +345,8 @@ function HubMap({ careerMap }) {
               y1={currentNode.y}
               x2={node.x}
               y2={node.y}
-              stroke={node.pathType === "direct" ? "#17212b" : "#0f766e"}
-              strokeWidth={node.pathType === "direct" ? 0.35 : 0.45}
+              stroke={node.pathType === "direct" ? "#374151" : "#3a7d8c"}
+              strokeWidth={node.pathType === "direct" ? 0.4 : 0.5}
               strokeDasharray={
                 getLineClass(node) === "bridge"
                   ? "2 2"
@@ -321,7 +354,7 @@ function HubMap({ careerMap }) {
                     ? "1 2"
                     : "0"
               }
-              opacity="0.9"
+              opacity="0.6"
             />
           ))}
       </svg>
@@ -340,22 +373,22 @@ function MapLegend() {
         display: "flex",
         alignItems: "center",
         flexWrap: "wrap",
-        gap: "12px 18px",
-        marginTop: 12,
-        padding: "10px 14px",
-        border: "1px solid #d8e0e8",
-        borderRadius: 14,
-        background: "#ffffff",
-        color: "#52616f",
+        gap: "10px 18px",
+        marginTop: 10,
+        padding: "9px 14px",
+        border: "1px solid #dbd8d0",
+        borderRadius: 12,
+        background: "#f9f8f6",
+        color: "#6b7280",
         fontSize: 12,
       }}
     >
       <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
         <span
           style={{
-            width: 28,
-            height: 2,
-            background: "#17212b",
+            width: 26,
+            height: 1.5,
+            background: "#374151",
             display: "inline-block",
           }}
         />
@@ -365,8 +398,8 @@ function MapLegend() {
       <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
         <span
           style={{
-            width: 28,
-            borderTop: "2px dashed #0f766e",
+            width: 26,
+            borderTop: "1.5px dashed #3a7d8c",
             display: "inline-block",
           }}
         />
@@ -376,23 +409,23 @@ function MapLegend() {
       <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
         <span
           style={{
-            width: 28,
-            borderTop: "2px dotted #52616f",
+            width: 26,
+            borderTop: "1.5px dotted #6b7280",
             display: "inline-block",
           }}
         />
         Longer path
       </div>
 
-      <div style={{ display: "inline-flex", alignItems: "center", gap: 7 }}>
+      <div style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
         <span>AI durability</span>
-        {["#d99a22", "#e7c66a", "#a8d5bd", "#2a9d78", "#0f766e"].map(
+        {["#9a7070", "#8a7a5a", "#8a9aaa", "#3a7d8c", "#245f73"].map(
           (color) => (
             <i
               key={color}
               style={{
-                width: 10,
-                height: 10,
+                width: 9,
+                height: 9,
                 borderRadius: 999,
                 display: "inline-block",
                 background: color,
@@ -491,32 +524,34 @@ function DirectionCard({ node, variant = "primary" }) {
   return (
     <article
       style={{
-        padding: 18,
-        border: "1px solid #d8e0e8",
-        borderRadius: 18,
-        background: "#ffffff",
-        boxShadow: "0 10px 24px rgba(15, 23, 42, 0.05)",
+        padding: isAdjacent ? 14 : 20,
+        border: "1px solid #dbd8d0",
+        borderRadius: isAdjacent ? 13 : 16,
+        background: isAdjacent ? "#fafaf8" : "#ffffff",
+        boxShadow: isAdjacent ? "none" : "0 1px 4px rgba(17, 24, 39, 0.04)",
       }}
     >
       <div
         style={{
           display: "flex",
           justifyContent: "space-between",
-          gap: 12,
+          gap: 10,
           alignItems: "flex-start",
-          marginBottom: 14,
+          marginBottom: isAdjacent ? 10 : 14,
         }}
       >
         <div
           style={{
-            width: 34,
-            height: 34,
+            width: isAdjacent ? 26 : 32,
+            height: isAdjacent ? 26 : 32,
             borderRadius: 999,
             display: "grid",
             placeItems: "center",
-            background: "#0f766e",
+            background: isAdjacent ? "#6b7280" : "#245f73",
             color: "#ffffff",
-            fontWeight: 800,
+            fontWeight: 700,
+            fontSize: isAdjacent ? 12 : 15,
+            flexShrink: 0,
           }}
         >
           {getClusterIcon(node.mapCluster)}
@@ -524,48 +559,84 @@ function DirectionCard({ node, variant = "primary" }) {
 
         <span
           style={{
-            padding: "7px 10px",
+            padding: isAdjacent ? "4px 8px" : "6px 10px",
             borderRadius: 999,
-            background: "#dff7ee",
-            color: "#0f766e",
-            fontWeight: 800,
-            fontSize: 12,
+            background: isAdjacent ? "#eeece8" : "#e7f1f3",
+            color: isAdjacent ? "#6b7280" : "#245f73",
+            fontWeight: 600,
+            fontSize: 11,
           }}
         >
-          {isAdjacent ? "Nearby path" : getPathLabel(node.pathType)}
+          {isAdjacent ? "Nearby" : getPathLabel(node.pathType)}
         </span>
       </div>
 
-      <h4 style={{ margin: "0 0 10px", fontSize: 18, lineHeight: 1.25 }}>
+      <h4
+        style={{
+          margin: isAdjacent ? "0 0 8px" : "0 0 12px",
+          fontSize: isAdjacent ? 15 : 17,
+          lineHeight: 1.3,
+          color: "#111827",
+          fontWeight: isAdjacent ? 600 : 700,
+        }}
+      >
         {node.directionLabel}
       </h4>
 
-      <div style={{ display: "grid", gap: 12 }}>
+      <div style={{ display: "grid", gap: isAdjacent ? 8 : 12 }}>
         <div>
-          <strong style={{ display: "block", marginBottom: 4 }}>
+          <strong
+            style={{
+              display: "block",
+              marginBottom: 3,
+              fontSize: isAdjacent ? 12 : 13,
+              color: "#374151",
+            }}
+          >
             {isAdjacent ? "Why it is nearby" : "What this direction means"}
           </strong>
-          <p style={{ margin: 0, color: "#52616f", lineHeight: 1.45 }}>
+          <p
+            style={{
+              margin: 0,
+              color: "#6b7280",
+              lineHeight: 1.5,
+              fontSize: isAdjacent ? 13 : 14,
+            }}
+          >
             {isAdjacent ? node.reason || getWhyItFits(node) : getPrimaryMeaning(node)}
           </p>
         </div>
 
         {!isAdjacent && (
           <div>
-            <strong style={{ display: "block", marginBottom: 4 }}>
+            <strong style={{ display: "block", marginBottom: 3, fontSize: 13, color: "#374151" }}>
               Why it fits
             </strong>
-            <p style={{ margin: 0, color: "#52616f", lineHeight: 1.45 }}>
+            <p style={{ margin: 0, color: "#6b7280", lineHeight: 1.5, fontSize: 14 }}>
               {getWhyItFits(node)}
             </p>
           </div>
         )}
 
         <div>
-          <strong style={{ display: "block", marginBottom: 4 }}>
+          <strong
+            style={{
+              display: "block",
+              marginBottom: 3,
+              fontSize: isAdjacent ? 12 : 13,
+              color: "#374151",
+            }}
+          >
             {isAdjacent ? "What would make it stronger" : "Credibility action"}
           </strong>
-          <p style={{ margin: 0, color: "#52616f", lineHeight: 1.45 }}>
+          <p
+            style={{
+              margin: 0,
+              color: "#6b7280",
+              lineHeight: 1.5,
+              fontSize: isAdjacent ? 13 : 14,
+            }}
+          >
             {isAdjacent
               ? "More evidence, stronger positioning, or a bridge project would make this path more credible."
               : getCredibilityAction(node)}
@@ -579,12 +650,16 @@ function DirectionCard({ node, variant = "primary" }) {
 function DirectionCards({ title, subtitle, nodes, variant }) {
   if (!nodes || nodes.length === 0) return null;
 
+  const isPrimary = variant === "primary";
+
   return (
-    <div style={{ marginTop: 28 }}>
-      <div style={{ marginBottom: 14 }}>
-        <h4 style={{ margin: "0 0 6px", fontSize: 22 }}>{title}</h4>
+    <div style={{ marginTop: 32 }}>
+      <div style={{ marginBottom: 16 }}>
+        <h4 style={{ margin: "0 0 6px", fontSize: isPrimary ? 20 : 17, color: "#111827" }}>
+          {title}
+        </h4>
         {subtitle && (
-          <p style={{ margin: 0, color: "#667789", fontSize: 15 }}>
+          <p style={{ margin: 0, color: "#6b7280", fontSize: 14 }}>
             {subtitle}
           </p>
         )}
@@ -593,8 +668,10 @@ function DirectionCards({ title, subtitle, nodes, variant }) {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-          gap: 14,
+          gridTemplateColumns: isPrimary
+            ? "repeat(auto-fill, minmax(300px, 1fr))"
+            : "repeat(auto-fill, minmax(260px, 1fr))",
+          gap: isPrimary ? 16 : 12,
         }}
       >
         {nodes.map((node) => (
@@ -614,16 +691,16 @@ function SignalItem({ label, value }) {
     <div
       style={{
         padding: 10,
-        border: "1px solid #e2e8ef",
-        borderRadius: 12,
+        border: "1px solid #e2e0da",
+        borderRadius: 10,
         background: "#ffffff",
       }}
     >
       <span
         style={{
           display: "block",
-          marginBottom: 4,
-          color: "#6b7a89",
+          marginBottom: 3,
+          color: "#6b7280",
           fontSize: 11,
           textTransform: "uppercase",
           letterSpacing: "0.04em",
@@ -631,7 +708,7 @@ function SignalItem({ label, value }) {
       >
         {label}
       </span>
-      <strong style={{ color: "#17212b", fontSize: 13, lineHeight: 1.3 }}>
+      <strong style={{ color: "#111827", fontSize: 13, lineHeight: 1.3, fontWeight: 600 }}>
         {value}
       </strong>
     </div>
@@ -655,18 +732,18 @@ function AssessmentSignals({ careerMap }) {
       style={{
         marginTop: 28,
         padding: 20,
-        border: "1px solid #d8e0e8",
-        borderRadius: 18,
-        background: "#ffffff",
+        border: "1px solid #dbd8d0",
+        borderRadius: 16,
+        background: "#f9f8f6",
       }}
     >
       <div style={{ marginBottom: 16 }}>
-        <h4 style={{ margin: "0 0 6px", fontSize: 22 }}>
-          Your assessment signals
+        <h4 style={{ margin: "0 0 6px", fontSize: 20, color: "#111827" }}>
+          What drove these results
         </h4>
-        <p style={{ margin: 0, color: "#667789", fontSize: 15 }}>
-          These are the main inputs behind the map. They make the recommendation
-          easier to understand and easier to correct later.
+        <p style={{ margin: 0, color: "#6b7280", fontSize: 14 }}>
+          The main inputs behind the map. They make the recommendation easier
+          to understand and easier to correct later.
         </p>
       </div>
 
@@ -732,12 +809,12 @@ function AssessmentSignals({ careerMap }) {
                   key={domain}
                   style={{
                     display: "inline-flex",
-                    padding: "6px 9px",
+                    padding: "5px 9px",
                     borderRadius: 999,
-                    background: "#e4f7f0",
-                    color: "#0f766e",
+                    background: "#e7f1f3",
+                    color: "#245f73",
                     fontSize: 12,
-                    fontWeight: 800,
+                    fontWeight: 600,
                   }}
                 >
                   {formatValue(domain)}
@@ -818,21 +895,22 @@ function AssessmentSignals({ careerMap }) {
 
 const signalCardStyle = {
   padding: 16,
-  border: "1px solid #e2e8ef",
-  borderRadius: 16,
-  background: "#fbfcfd",
+  border: "1px solid #e2e0da",
+  borderRadius: 14,
+  background: "#ffffff",
 };
 
 const signalTitleStyle = {
   margin: "0 0 4px",
-  color: "#17212b",
-  fontSize: 15,
+  color: "#111827",
+  fontSize: 14,
   lineHeight: 1.25,
+  fontWeight: 600,
 };
 
 const signalTextStyle = {
   margin: 0,
-  color: "#667085",
+  color: "#6b7280",
   fontSize: 13,
   lineHeight: 1.4,
 };
@@ -857,7 +935,7 @@ function CareerDirectionMap({ careerMap }) {
     <section className="career-map-section">
       <div className="career-map-header">
         <div>
-          <p className="eyebrow">Career map</p>
+          <p className="eyebrow">Career Direction Map</p>
           <h3>Your Career Direction Map</h3>
           <p className="career-map-intro">
             These are career directions, not fixed job titles. The map shows
@@ -883,7 +961,7 @@ function CareerDirectionMap({ careerMap }) {
       />
 
       <DirectionCards
-        title="Nearby trajectories to explore"
+        title="Nearby trajectories"
         subtitle="Adjacent paths that may become stronger with more evidence, bridge work, or clearer positioning."
         nodes={adjacentNodes}
         variant="adjacent"
