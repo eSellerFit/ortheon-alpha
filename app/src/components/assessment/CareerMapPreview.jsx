@@ -6,6 +6,8 @@ import {
   generateRecommendations,
 } from "../../utils/scoring";
 
+const showDebug = false;
+
 function CareerMapPreview() {
   const [assessmentId, setAssessmentId] = useState("");
   const [careerMap, setCareerMap] = useState(null);
@@ -66,19 +68,10 @@ function CareerMapPreview() {
 
   return (
     <div className="results-page">
-      <div className="results-hero">
-        <p className="eyebrow">Internal preview</p>
-        <h2>Career Map Preview</h2>
-        <p>
-          Load an existing Firebase assessment and regenerate the career map
-          locally from the current scoring logic, without running the full
-          assessment flow again.
-        </p>
-      </div>
+      <aside className="preview-controls-panel">
+        <p className="preview-controls-label">Internal preview · Career Map Preview</p>
 
-      <form className="map-preview-form" onSubmit={handleLoadMap}>
-        <label htmlFor="assessmentId">
-          Assessment ID
+        <form className="preview-controls-form" onSubmit={handleLoadMap}>
           <input
             id="assessmentId"
             type="text"
@@ -86,54 +79,52 @@ function CareerMapPreview() {
             onChange={(event) => setAssessmentId(event.target.value)}
             placeholder="Paste Firebase assessment ID"
           />
-        </label>
+          <button type="submit" disabled={status === "loading"}>
+            {status === "loading" ? "Regenerating…" : "Regenerate"}
+          </button>
+        </form>
 
-        <button type="submit" disabled={status === "loading"}>
-          {status === "loading" ? "Regenerating..." : "Regenerate map"}
-        </button>
-      </form>
+        {status === "error" && (
+          <p
+            className="status error"
+            style={{ fontSize: 12, padding: "6px 10px", margin: 0 }}
+          >
+            {errorMessage}
+          </p>
+        )}
 
-      {status === "error" && (
-        <p className="status error map-preview-status">{errorMessage}</p>
-      )}
-
-      {status === "success" && assessment && (
-        <div className="map-preview-meta">
-          <div>
-            <span>Assessment ID</span>
-            <strong>{assessment.id}</strong>
+        {status === "success" && assessment && (
+          <div className="preview-controls-meta">
+            <span>
+              ID: <strong>{assessment.id}</strong>
+            </span>
+            <span>
+              Status: <strong>{assessment.status || "unknown"}</strong>
+            </span>
+            <span>
+              Source: <strong>Regenerated locally</strong>
+            </span>
+            <span>
+              Version: <strong>{careerMap?.version || "unknown"}</strong>
+            </span>
           </div>
+        )}
+      </aside>
 
-          <div>
-            <span>Status</span>
-            <strong>{assessment.status || "unknown"}</strong>
-          </div>
-
-          <div>
-            <span>Preview source</span>
-            <strong>Regenerated locally</strong>
-          </div>
-
-          <div>
-            <span>Career map</span>
-            <strong>{careerMap?.version || "unknown"}</strong>
-          </div>
-        </div>
-      )}
-
-      {status === "success" && recommendations.length > 0 && (
+      {showDebug && status === "success" && recommendations.length > 0 && (
         <div
           style={{
-            marginTop: 18,
-            padding: 16,
+            padding: 14,
             border: "1px solid #d8e0e8",
-            borderRadius: 16,
+            borderRadius: 12,
             background: "#ffffff",
+            fontSize: 12,
           }}
         >
-          <h4 style={{ margin: "0 0 10px" }}>Debug: regenerated primary</h4>
-
-          <div style={{ display: "grid", gap: 8 }}>
+          <p style={{ margin: "0 0 8px", fontWeight: 600, color: "#6b7280" }}>
+            Debug: regenerated primary
+          </p>
+          <div style={{ display: "grid", gap: 6 }}>
             {recommendations.map((recommendation) => (
               <div
                 key={recommendation.directionId}
@@ -142,7 +133,6 @@ function CareerMapPreview() {
                   gridTemplateColumns: "90px 1fr 90px 120px",
                   gap: 10,
                   alignItems: "center",
-                  fontSize: 13,
                 }}
               >
                 <strong>{recommendation.directionId}</strong>
