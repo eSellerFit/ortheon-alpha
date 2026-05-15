@@ -16,6 +16,104 @@ const ALLOWED_LEADERSHIP_SCOPE = [
 ];
 const ALLOWED_CONFIDENCE = ["high", "medium", "low"];
 
+const MAX_ATTEMPTS = 3;
+const RETRY_DELAYS_MS = [0, 1500, 3000];
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isTransientStatus(status) {
+  return [500, 502, 503, 504, 529].includes(status);
+}
+
+function isNonRetryableStatus(status) {
+  return [400, 401, 403, 404].includes(status);
+}
+
+function isOverloadedBody(body) {
+  return JSON.stringify(body || "").toLowerCase().includes("overloaded");
+}
+
+function sanitizeErrorText(body) {
+  const msg =
+    body?.error?.message ||
+    body?.error?.type ||
+    (typeof body?.error === "string" ? body.error : null) ||
+    "Unknown error";
+  return String(msg).slice(0, 200);
+}
+
+async function callAnthropicWithRetry(apiKey, model, prompt) {
+  let lastStatus = null;
+  let lastBody = null;
+
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    if (attempt > 1) {
+      const delay = RETRY_DELAYS_MS[attempt - 1];
+      console.log(
+        `[parse-cv] attempt ${attempt}/${MAX_ATTEMPTS} — waiting ${delay}ms before retry`
+      );
+      await sleep(delay);
+    }
+
+    let response;
+    let body;
+
+    try {
+      response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model,
+          max_tokens: 3000,
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
+
+      body = await response.json().catch(() => ({}));
+    } catch (networkError) {
+      console.log(
+        `[parse-cv] attempt ${attempt}/${MAX_ATTEMPTS} — network error: ${networkError.message}`
+      );
+      lastBody = {};
+      lastStatus = 0;
+      continue;
+    }
+
+    lastStatus = response.status;
+    lastBody = body;
+
+    if (response.ok) {
+      console.log(
+        `[parse-cv] attempt ${attempt}/${MAX_ATTEMPTS} — status ${lastStatus} — success`
+      );
+      return { ok: true, data: body };
+    }
+
+    const safeError = sanitizeErrorText(body);
+    console.log(
+      `[parse-cv] attempt ${attempt}/${MAX_ATTEMPTS} — status ${lastStatus} — ${safeError}`
+    );
+
+    if (isNonRetryableStatus(lastStatus)) {
+      return { ok: false, status: lastStatus, body, retryable: false };
+    }
+
+    if (!isTransientStatus(lastStatus) && !isOverloadedBody(body)) {
+      return { ok: false, status: lastStatus, body, retryable: false };
+    }
+
+    // Transient — loop to next attempt
+  }
+
+  return { ok: false, status: lastStatus, body: lastBody, overloaded: true };
+}
+
 function normalizeSignal(signal) {
   const normalized = { ...signal };
 
@@ -104,6 +202,7 @@ export default async function handler(req, res) {
   }
 
   const trimmedText = cleanedCvText.slice(0, 12000);
+  const model = process.env.CLAUDE_MODEL || "claude-sonnet-4-5-20250929";
 
   const prompt = `You are a career assessment data extraction assistant for Ortheon, a career direction tool.
 
@@ -320,43 +419,38 @@ CV TEXT:
 ${trimmedText}`;
 
   try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": process.env.ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: process.env.CLAUDE_MODEL || "claude-sonnet-4-5-20250929",
-        max_tokens: 3000,
-        messages: [
-          {
-            role: "user",
-            content: prompt,
-          },
-        ],
-      }),
-    });
+    const result = await callAnthropicWithRetry(
+      process.env.ANTHROPIC_API_KEY,
+      model,
+      prompt
+    );
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error("Claude API error:", errorData);
+    if (!result.ok) {
+      if (result.overloaded) {
+        return res.status(503).json({
+          error:
+            "AI analysis service is temporarily busy. Please try again in a minute.",
+          details: "Overloaded",
+        });
+      }
 
+      console.error("[parse-cv] Claude API error:", sanitizeErrorText(result.body));
       return res.status(500).json({
         error: "Claude API call failed.",
-        details: errorData?.error?.message || "Unknown Claude API error.",
+        details: result.body?.error?.message || "Unknown Claude API error.",
       });
     }
 
-    const data = await response.json();
+    const data = result.data;
 
     const usage = data?.usage || {};
     const inputTokens = Number(usage.input_tokens) || 0;
     const outputTokens = Number(usage.output_tokens) || 0;
 
     const inputCostPerMTok = Number(process.env.CLAUDE_INPUT_COST_PER_MTOK || 3);
-    const outputCostPerMTok = Number(process.env.CLAUDE_OUTPUT_COST_PER_MTOK || 15);
+    const outputCostPerMTok = Number(
+      process.env.CLAUDE_OUTPUT_COST_PER_MTOK || 15
+    );
 
     const estimatedCostUsd =
       (inputTokens / 1_000_000) * inputCostPerMTok +
@@ -364,7 +458,7 @@ ${trimmedText}`;
 
     const apiUsage = {
       provider: "anthropic",
-      model: process.env.CLAUDE_MODEL || "claude-sonnet-4-5-20250929",
+      model,
       inputTokens,
       outputTokens,
       inputCostPerMTok,
@@ -373,7 +467,7 @@ ${trimmedText}`;
       calculatedAt: new Date().toISOString(),
     };
 
-    console.log("Claude CV parse usage:", apiUsage);
+    console.log("[parse-cv] usage:", apiUsage);
 
     const rawText = data?.content?.[0]?.text;
 
@@ -393,9 +487,7 @@ ${trimmedText}`;
     try {
       parsed = JSON.parse(cleanText);
     } catch (parseError) {
-      console.error("JSON parse error:", parseError);
-      console.error("Raw Claude response:", rawText);
-
+      console.error("[parse-cv] JSON parse error:", parseError.message);
       return res.status(500).json({
         error: "CV parsing returned invalid JSON. Please try again.",
       });
@@ -421,7 +513,7 @@ ${trimmedText}`;
       apiUsage,
     });
   } catch (error) {
-    console.error("CV parse function error:", error);
+    console.error("[parse-cv] unexpected error:", error.message);
 
     return res.status(500).json({
       error: "CV parsing failed. Please try again.",
