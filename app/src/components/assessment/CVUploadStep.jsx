@@ -187,10 +187,36 @@ function CVUploadStep({ assessmentId, onComplete }) {
   if (stepState === "parsing_cv") {
     return (
       <div className="form">
-        <h2>Analyzing CV</h2>
-        <p>
-          Ortheon is analyzing the reviewed CV text and extracting structured career signals.
-        </p>
+        <div className="cv-parse-loading">
+          <h2>Analyzing CV</h2>
+
+          <div className="cv-parse-spinner" aria-hidden="true" />
+
+          <p className="cv-parse-desc">
+            Ortheon is reading the reviewed CV text and extracting structured
+            career signals.
+          </p>
+
+          <div className="cv-parse-steps" role="status" aria-label="CV analysis in progress">
+            <div className="cv-parse-step">
+              <span className="cv-parse-step-label">Reading reviewed CV text</span>
+              <div className="cv-parse-step-dot" aria-hidden="true" />
+            </div>
+            <div className="cv-parse-step">
+              <span className="cv-parse-step-label">Extracting career signals</span>
+              <div className="cv-parse-step-dot" aria-hidden="true" />
+            </div>
+            <div className="cv-parse-step">
+              <span className="cv-parse-step-label">Preparing structured profile</span>
+              <div className="cv-parse-step-dot" aria-hidden="true" />
+            </div>
+          </div>
+
+          <p className="cv-parse-hint">
+            This usually takes a few moments. If the AI service is temporarily
+            busy, you'll be able to retry.
+          </p>
+        </div>
       </div>
     );
   }
