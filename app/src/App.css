@@ -474,6 +474,35 @@
   color: var(--color-text);
 }
 
+/* ── CV flow fallback link ──────────────────────────────────────── */
+.cv-skip-hint {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.cv-text-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.cv-text-link:hover {
+  color: var(--color-text);
+}
+
+.cv-text-link:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
 /* ── CV upload ──────────────────────────────────────────────────── */
 .pdf-upload-box {
   max-width: 640px;

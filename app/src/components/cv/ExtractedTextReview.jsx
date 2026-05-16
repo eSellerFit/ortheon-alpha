@@ -4,7 +4,6 @@ function ExtractedTextReview({
   onParse,
   onSaveRawText,
   onBack,
-  onSkip,
   disabled = false,
 }) {
   const characterCount = cvText.trim().length;
@@ -44,15 +43,6 @@ function ExtractedTextReview({
       <div className="action-row">
         <button
           type="button"
-          className="btn btn-secondary"
-          onClick={onBack}
-          disabled={disabled}
-        >
-          Upload another PDF
-        </button>
-
-        <button
-          type="button"
           className="btn btn-primary"
           onClick={onParse}
           disabled={disabled || characterCount < 100}
@@ -63,21 +53,24 @@ function ExtractedTextReview({
         <button
           type="button"
           className="btn btn-secondary"
+          onClick={onBack}
+          disabled={disabled}
+        >
+          Upload another PDF
+        </button>
+      </div>
+
+      <p className="cv-skip-hint">
+        Having trouble?{" "}
+        <button
+          type="button"
+          className="cv-text-link"
           onClick={onSaveRawText}
           disabled={disabled || characterCount < 100}
         >
-          Save without AI
+          Continue without AI CV analysis.
         </button>
-
-        <button
-          type="button"
-          className="btn btn-ghost"
-          onClick={onSkip}
-          disabled={disabled}
-        >
-          Skip CV step
-        </button>
-      </div>
+      </p>
     </div>
   );
 }

@@ -178,7 +178,6 @@ function CVUploadStep({ assessmentId, onComplete, onBack }) {
         onParse={handleParseCV}
         onSaveRawText={handleSaveReviewedText}
         onBack={handleBackToUpload}
-        onSkip={handleSkipCV}
         disabled={stepState === "saving"}
       />
     );
@@ -234,21 +233,20 @@ function CVUploadStep({ assessmentId, onComplete, onBack }) {
 
         <div className="action-row">
           <button type="button" className="btn btn-primary" onClick={handleSaveParsedProfile}>
-            Save parsed CV profile
-          </button>
-
-          <button type="button" className="btn btn-secondary" onClick={handleSaveReviewedText}>
-            Save without AI
+            Save CV analysis
           </button>
 
           <button type="button" className="btn btn-ghost" onClick={handleBackToTextReview}>
             Back to CV text
           </button>
-
-          <button type="button" className="btn btn-ghost" onClick={handleSkipCV}>
-            Skip CV step
-          </button>
         </div>
+
+        <p className="cv-skip-hint">
+          Not happy with the analysis?{" "}
+          <button type="button" className="cv-text-link" onClick={handleSaveReviewedText}>
+            Continue without AI CV analysis.
+          </button>
+        </p>
       </div>
     );
   }
@@ -268,7 +266,7 @@ function CVUploadStep({ assessmentId, onComplete, onBack }) {
           </button>
 
           <button type="button" className="btn btn-secondary" onClick={handleSaveReviewedText}>
-            Continue with raw CV text only
+            Continue without AI CV analysis
           </button>
 
           <button type="button" className="btn btn-ghost" onClick={handleBackToTextReview}>
@@ -337,11 +335,14 @@ function CVUploadStep({ assessmentId, onComplete, onBack }) {
         <button type="button" className="btn btn-secondary" onClick={handleManualPasteStart}>
           Paste CV text manually
         </button>
-
-        <button type="button" className="btn btn-ghost" onClick={handleSkipCV}>
-          Skip CV step
-        </button>
       </div>
+
+      <p className="cv-skip-hint">
+        Don't have a CV right now?{" "}
+        <button type="button" className="cv-text-link" onClick={handleSkipCV}>
+          Continue without CV analysis.
+        </button>
+      </p>
     </div>
   );
 }
