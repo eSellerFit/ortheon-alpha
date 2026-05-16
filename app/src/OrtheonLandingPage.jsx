@@ -687,9 +687,15 @@ export default function OrtheonLandingPage() {
             <img src="/ortheon-logo.png" alt="Ortheon" style={{ width: 36, height: 36, objectFit: "contain" }} />
             <span style={{ fontSize: 14, fontWeight: 600, color: "#1E2C3A", fontFamily: "'Georgia', serif" }}>Ortheon</span>
           </div>
-          <p style={{ fontSize: 13, color: "#8A97A5", margin: 0, fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>
-            © 2026 eSellerFit LLC · ortheon.app
-          </p>
+          <div>
+            <p style={{ fontSize: 13, color: "#8A97A5", margin: 0, fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>
+              © 2026 eSellerFit LLC · ortheon.app
+            </p>
+            <div style={{ display: "flex", gap: 24, marginTop: 8 }}>
+              <a href="/terms" style={{ fontSize: 13, color: "#8A97A5", textDecoration: "none", fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>Terms of Use</a>
+              <a href="/privacy" style={{ fontSize: 13, color: "#8A97A5", textDecoration: "none", fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>Privacy Policy</a>
+            </div>
+          </div>
         </div>
       </footer>
 
