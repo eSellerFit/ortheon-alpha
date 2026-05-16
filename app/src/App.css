@@ -474,6 +474,29 @@
   color: var(--color-text);
 }
 
+/* ── Print / PDF output ─────────────────────────────────────────── */
+@media print {
+  .results-hero,
+  .pdf-exclude {
+    display: none !important;
+  }
+
+  .result-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .career-map-section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .results-page {
+    padding: 0;
+    gap: var(--space-5);
+  }
+}
+
 /* ── CV flow fallback link ──────────────────────────────────────── */
 .cv-skip-hint {
   font-size: 13px;

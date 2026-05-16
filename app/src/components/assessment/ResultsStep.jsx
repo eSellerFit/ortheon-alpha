@@ -308,7 +308,7 @@ function ResultCard({ recommendation }) {
         </p>
       )}
 
-      <details className="debug-details">
+      <details className="debug-details pdf-exclude">
         <summary>Why this direction appeared</summary>
 
         <ScoreBreakdown breakdown={recommendation.scoreBreakdown} />
@@ -399,7 +399,9 @@ function ResultsStep({ assessmentId }) {
   const [recommendations, setRecommendations] = useState([]);
   const [careerMap, setCareerMap] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [pdfStatus, setPdfStatus] = useState("idle");
   const hasGeneratedRef = useRef(false);
+  const reportRef = useRef(null);
 
   useEffect(() => {
     async function loadAndGenerateResults() {
@@ -441,6 +443,53 @@ function ResultsStep({ assessmentId }) {
     loadAndGenerateResults();
   }, [assessmentId]);
 
+  async function handleDownloadPdf() {
+    if (!reportRef.current) return;
+
+    setPdfStatus("generating");
+
+    const excluded = reportRef.current.querySelectorAll(".pdf-exclude");
+    excluded.forEach((el) => {
+      el.dataset.pdfPrevDisplay = el.style.display;
+      el.style.display = "none";
+    });
+
+    try {
+      const html2pdfModule = await import("html2pdf.js");
+      const html2pdfFn = html2pdfModule.default ?? html2pdfModule;
+
+      await html2pdfFn()
+        .set({
+          margin: [10, 12, 10, 12],
+          filename: "ortheon-career-direction-report.pdf",
+          image: { type: "jpeg", quality: 0.92 },
+          html2canvas: {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+          },
+          jsPDF: {
+            unit: "mm",
+            format: "a4",
+            orientation: "portrait",
+          },
+          pagebreak: { mode: ["css", "legacy"] },
+        })
+        .from(reportRef.current)
+        .save();
+
+      setPdfStatus("idle");
+    } catch (error) {
+      console.error("PDF generation failed:", error);
+      setPdfStatus("error");
+    } finally {
+      excluded.forEach((el) => {
+        el.style.display = el.dataset.pdfPrevDisplay ?? "";
+        delete el.dataset.pdfPrevDisplay;
+      });
+    }
+  }
+
   if (!assessmentId) {
     return (
       <div className="results-page">
@@ -474,34 +523,51 @@ function ResultsStep({ assessmentId }) {
     <div className="results-page">
       <div className="results-hero">
         <p className="eyebrow">Step 8 of 8</p>
-        <h2>Your Career Direction Results</h2>
-        <p>
-          Ortheon compared your career anchors, financial reality, practical
-          constraints, CV signals, and priority weights against the current
-          direction library.
+        <h2>Your Career Direction Report is ready</h2>
+        <p className="intro">
+          Review your recommended directions, map, credibility signals, financial
+          reality, and the evidence behind the result. You can also download a PDF
+          copy for later.
         </p>
+        <div className="action-row">
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={handleDownloadPdf}
+            disabled={pdfStatus === "generating"}
+          >
+            {pdfStatus === "generating" ? "Preparing PDF…" : "Download PDF Report"}
+          </button>
+        </div>
+        {pdfStatus === "error" && (
+          <p className="status error">
+            Couldn't generate PDF. Please try again.
+          </p>
+        )}
       </div>
 
-      <CareerDirectionMap careerMap={careerMap} />
+      <div ref={reportRef}>
+        <CareerDirectionMap careerMap={careerMap} />
 
-      {recommendations.length === 0 ? (
-        <p className="status warning">
-          No recommendations could be generated from the current assessment data.
+        {recommendations.length === 0 ? (
+          <p className="status warning">
+            No recommendations could be generated from the current assessment data.
+          </p>
+        ) : (
+          <div className="results-list">
+            {recommendations.map((recommendation) => (
+              <ResultCard
+                key={recommendation.directionId}
+                recommendation={recommendation}
+              />
+            ))}
+          </div>
+        )}
+
+        <p className="status success pdf-exclude">
+          Results generated and saved.
         </p>
-      ) : (
-        <div className="results-list">
-          {recommendations.map((recommendation) => (
-            <ResultCard
-              key={recommendation.directionId}
-              recommendation={recommendation}
-            />
-          ))}
-        </div>
-      )}
-
-      <p className="status success">
-        Results generated and saved. Assessment ID: {assessmentId}
-      </p>
+      </div>
     </div>
   );
 }
