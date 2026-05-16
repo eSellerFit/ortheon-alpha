@@ -67,15 +67,7 @@ export default function OrtheonLandingPage() {
         maxWidth: 1200, margin: "0 auto", padding: "24px 32px"
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{
-            width: 32, height: 32, borderRadius: 8, background: "#1E2C3A",
-            display: "flex", alignItems: "center", justifyContent: "center"
-          }}>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <circle cx="8" cy="8" r="3" stroke="white" strokeWidth="1.5" />
-              <path d="M8 2V4M8 12V14M2 8H4M12 8H14" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-          </div>
+          <img src="/ortheon-logo.png" alt="Ortheon" style={{ width: 36, height: 36, objectFit: "contain" }} />
           <span style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.02em", color: "#1E2C3A", fontFamily: "'Georgia', serif" }}>
             Ortheon
           </span>
@@ -689,15 +681,7 @@ export default function OrtheonLandingPage() {
           display: "flex", alignItems: "center", justifyContent: "space-between"
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{
-              width: 24, height: 24, borderRadius: 6, background: "#1E2C3A",
-              display: "flex", alignItems: "center", justifyContent: "center"
-            }}>
-              <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-                <circle cx="8" cy="8" r="3" stroke="white" strokeWidth="1.5" />
-                <path d="M8 2V4M8 12V14M2 8H4M12 8H14" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
-            </div>
+            <img src="/ortheon-logo.png" alt="Ortheon" style={{ width: 36, height: 36, objectFit: "contain" }} />
             <span style={{ fontSize: 14, fontWeight: 600, color: "#1E2C3A", fontFamily: "'Georgia', serif" }}>Ortheon</span>
           </div>
           <p style={{ fontSize: 13, color: "#8A97A5", margin: 0, fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>
