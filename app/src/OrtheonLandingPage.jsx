@@ -569,6 +569,9 @@ export default function OrtheonLandingPage() {
             }}>
               Free during Alpha. No credit card required.
             </p>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", margin: "8px 0 0", fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>
+              By starting the assessment you agree to our <a href="/terms" style={{ color: "rgba(255,255,255,0.5)" }}>Terms of Use</a> and <a href="/privacy" style={{ color: "rgba(255,255,255,0.5)" }}>Privacy Policy</a>.
+            </p>
           </div>
         </div>
       </section>

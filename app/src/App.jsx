@@ -1,6 +1,8 @@
 import AssessmentFlow from "./pages/AssessmentFlow";
 import CareerMapPreview from "./components/assessment/CareerMapPreview";
 import OrtheonLandingPage from "./OrtheonLandingPage";
+import PrivacyPolicy from "./PrivacyPolicy";
+import TermsOfUse from "./TermsOfUse";
 import "./App.css";
 
 function App() {
@@ -13,6 +15,14 @@ function App() {
 
   if (path.includes("/assessment")) {
     return <AssessmentFlow />;
+  }
+
+  if (path.includes("/privacy")) {
+    return <PrivacyPolicy />;
+  }
+
+  if (path.includes("/terms")) {
+    return <TermsOfUse />;
   }
 
   return <OrtheonLandingPage />;
