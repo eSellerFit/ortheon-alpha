@@ -20,46 +20,65 @@ function getPathLabel(pathType) {
 }
 
 const MAP_SHORT_LABELS = {
-  "BF-1-E":   "Financial Strategy",
-  "BF-1-IF":  "Financial Advisory",
-  "BF-4-E":   "HR & People Ops",
-  "BF-5-E":   "Workforce Planning",
-  "BF-6-E":   "People Analytics",
-  "BF-7-IF":  "Biz Advisory",
-  "BF-8-IF":  "Outplacement",
-  "BF-9-E":   "Compliance & Risk",
+  "BF-1-E": "Financial Strategy",
+  "BF-1-IF": "Financial Advisory",
+  "BF-4-E": "HR & People Ops",
+  "BF-5-E": "Workforce Planning",
+  "BF-6-E": "People Analytics",
+  "BF-7-IF": "Biz Advisory",
+  "BF-8-IF": "Outplacement",
+  "BF-9-E": "Compliance & Risk",
   "BF-10-IF": "Comms / PR",
   "BF-11-OV": "Wealth Mgmt",
-  "MG-1-E":   "General Mgmt",
-  "MG-4-ST":  "Startup Leadership",
-  "MG-5-NP":  "Nonprofit Ops",
-  "MG-6-E":   "Chief of Staff",
-  "MG-7-IF":  "Mgmt Consulting",
-  "MG-8-E":   "Program Mgmt",
-  "MG-9-E":   "Marketplace Ops",
-  "MG-9-IF":  "Marketplace Ops",
+
+  "MG-1-E": "General Mgmt",
+  "MG-4-ST": "Startup Leadership",
+  "MG-5-NP": "Nonprofit Ops",
+  "MG-6-E": "Chief of Staff",
+  "MG-7-IF": "Mgmt Consulting",
+  "MG-8-E": "Program Mgmt",
+  "MG-9-E": "Marketplace Ops",
+  "MG-9-IF": "Marketplace Ops",
   "MG-10-NP": "Nonprofit Dev",
   "MG-11-OV": "Own Venture",
   "MG-12-OV": "Social Enterprise",
-  "MG-13-E":  "Government Mgmt",
-  "SR-1-E":   "Enterprise Sales",
-  "SR-2-E":   "Customer Success",
-  "SR-3-E":   "Seller Enablement",
-  "CM-2-E":   "Data & Analytics",
-  "CM-4-ST":  "AI & Emerging Tech",
-  "CM-5-IF":  "AI Consulting",
-  "CM-6-E":   "Product Ops",
-  "CM-7-ST":  "AI Product Ops",
-  "CM-8-IF":  "Ops Consulting",
-  "ED-3-IF":  "L&D Consulting",
-  "ED-4-IF":  "Instructional Design",
-  "ED-5-IF":  "Exec Coaching",
-  "HC-2-OV":  "Coaching Practice",
-  "HC-3-E":   "Healthcare Admin",
-  "LG-2-IF":  "Fractional GC",
-  "LG-3-IF":  "Mediation",
-  "AD-5-IF":  "Fractional CMO",
-  "AD-6-IF":  "Content Strategy",
+  "MG-13-E": "Government Mgmt",
+
+  "SR-1-E": "Enterprise Sales",
+  "SR-2-E": "Customer Success",
+  "SR-3-E": "Seller Enablement",
+
+  "CM-2-E": "Data & Analytics",
+  "CM-4-ST": "AI & Emerging Tech",
+  "CM-5-IF": "AI Consulting",
+  "CM-6-E": "Product Ops",
+  "CM-7-ST": "AI Product Ops",
+  "CM-8-IF": "Ops Consulting",
+
+  "TE-1-E": "CTO / VP Eng",
+  "TE-2-E": "Chief AI Officer",
+  "TE-3-E": "Tech Strategy",
+  "TE-4-IF": "Fractional CTO",
+  "TE-5-E": "Platform Modernization",
+
+  "ED-3-IF": "L&D Consulting",
+  "ED-4-IF": "Instructional Design",
+  "ED-5-IF": "Exec Coaching",
+
+  "HC-2-OV": "Coaching Practice",
+  "HC-3-E": "Healthcare Admin",
+
+  "LG-2-IF": "Fractional GC",
+  "LG-3-IF": "Mediation",
+
+  "AD-5-IF": "Fractional CMO",
+  "AD-6-IF": "Content Strategy",
+  "AD-7-IF": "UX / Product Design",
+
+  "AE-4-IF": "Engineering Consulting",
+  "AE-5-E": "Technical Program Mgmt",
+
+  "IR-1-OV": "Skilled Trades",
 };
 
 function getMapShortLabel(node) {
@@ -71,7 +90,6 @@ function getMapShortLabel(node) {
     return MAP_SHORT_LABELS[node.directionId];
   }
 
-  // Fallback for any direction not yet in the table: strip the " — Context" suffix
   const label = node.directionLabel || node.label || "";
   const stripped = label.split(" — ")[0];
   return stripped.length > 20 ? `${stripped.slice(0, 20)}…` : stripped;
@@ -82,9 +100,16 @@ function getClusterIcon(cluster) {
     enterprise_leadership: "◆",
     business_operations: "◈",
     marketplace_platforms: "◇",
+
+    technology_executive: "⬡",
+    engineering_leadership: "▲",
+    platform_technology: "▧",
+    ai_transformation: "✦",
+
+    people_operations: "◉",
     workforce_intelligence: "◎",
     people_analytics_hr_tech: "▥",
-    ai_transformation: "✦",
+
     independent_advisory: "●",
     learning_workforce_development: "◌",
     technical_engineering: "▲",
@@ -439,10 +464,10 @@ function MapLegend() {
 }
 
 const SUMMARY_CARD_ICONS = {
-  "Main pattern":     "◈",
+  "Main pattern": "◈",
   "Transition style": "▶",
-  "Bridge goal":      "◎",
-  "Main caution":     "△",
+  "Bridge goal": "◎",
+  "Main caution": "△",
 };
 
 function SummaryGrid({ summary }) {
@@ -469,6 +494,22 @@ function SummaryGrid({ summary }) {
 }
 
 function getPrimaryMeaning(node) {
+  if (node.mapCluster === "technology_executive") {
+    return "Uses technology leadership, engineering scale, architecture, and executive decision-making as the center of gravity.";
+  }
+
+  if (node.mapCluster === "engineering_leadership") {
+    return "Focuses on leading technical teams, delivery systems, and complex engineering execution.";
+  }
+
+  if (node.mapCluster === "platform_technology") {
+    return "Points toward software, platform, architecture, infrastructure, and modernization work.";
+  }
+
+  if (node.mapCluster === "ai_transformation") {
+    return "Uses AI, automation, and digital transformation evidence as the main direction signal.";
+  }
+
   if (node.mapCluster === "marketplace_platforms") {
     return "Uses marketplace, platform, ecosystem, and operations experience as the center of gravity.";
   }
@@ -481,6 +522,18 @@ function getPrimaryMeaning(node) {
     return "Focuses on connecting strategy, systems, people, and execution.";
   }
 
+  if (node.mapCluster === "people_operations") {
+    return "Uses HR, people operations, talent, and organizational work as the center of gravity.";
+  }
+
+  if (node.mapCluster === "workforce_intelligence") {
+    return "Focuses on workforce planning, talent systems, skills mapping, and people strategy.";
+  }
+
+  if (node.mapCluster === "people_analytics_hr_tech") {
+    return "Focuses on HR technology, people analytics, and workforce data systems.";
+  }
+
   if (node.mapCluster === "independent_advisory") {
     return "Turns experience into advisory, consulting, or fractional work.";
   }
@@ -489,6 +542,22 @@ function getPrimaryMeaning(node) {
 }
 
 function getWhyItFits(node) {
+  if (node.mapCluster === "technology_executive") {
+    return "Profile signals show senior technology, software, AI, architecture, or engineering leadership experience.";
+  }
+
+  if (node.mapCluster === "engineering_leadership") {
+    return "Profile signals show technical execution, delivery ownership, and engineering management experience.";
+  }
+
+  if (node.mapCluster === "platform_technology") {
+    return "Profile signals show software, systems, architecture, platform, or infrastructure experience.";
+  }
+
+  if (node.mapCluster === "ai_transformation") {
+    return "Profile signals show AI, automation, digital transformation, or technology change experience.";
+  }
+
   if (node.mapCluster === "marketplace_platforms") {
     return "Profile signals show marketplace, platform, or ecosystem operating experience.";
   }
@@ -499,6 +568,18 @@ function getWhyItFits(node) {
 
   if (node.mapCluster === "business_operations") {
     return "Profile signals show systems thinking, coordination, and operating rhythm.";
+  }
+
+  if (node.mapCluster === "people_operations") {
+    return "Profile signals show HR, talent, people operations, or organizational work.";
+  }
+
+  if (node.mapCluster === "workforce_intelligence") {
+    return "Profile signals show workforce, talent planning, people systems, or HR strategy experience.";
+  }
+
+  if (node.mapCluster === "people_analytics_hr_tech") {
+    return "Profile signals show HR data, people analytics, workforce systems, or HR technology experience.";
   }
 
   if (node.mapCluster === "independent_advisory") {
@@ -515,6 +596,22 @@ function getCredibilityAction(node) {
 
   if (node.pathType === "stretch") {
     return "Validate carefully with real market feedback before making it the main move.";
+  }
+
+  if (node.mapCluster === "technology_executive") {
+    return "Prepare examples showing technology strategy, engineering scale, architecture decisions, AI adoption, and business outcomes.";
+  }
+
+  if (node.mapCluster === "engineering_leadership") {
+    return "Prepare examples showing delivery ownership, team leadership, technical decisions, and measurable engineering outcomes.";
+  }
+
+  if (node.mapCluster === "platform_technology") {
+    return "Prepare examples showing architecture, platform modernization, cloud, infrastructure, or software delivery impact.";
+  }
+
+  if (node.mapCluster === "ai_transformation") {
+    return "Prepare examples showing AI use cases, automation impact, adoption strategy, and operating-model change.";
   }
 
   if (node.mapCluster === "marketplace_platforms") {
@@ -614,16 +711,32 @@ function DirectionCard({ node, variant = "primary" }) {
               fontSize: isAdjacent ? 13 : 14,
             }}
           >
-            {isAdjacent ? node.reason || getWhyItFits(node) : getPrimaryMeaning(node)}
+            {isAdjacent
+              ? node.reason || getWhyItFits(node)
+              : getPrimaryMeaning(node)}
           </p>
         </div>
 
         {!isAdjacent && (
           <div>
-            <strong style={{ display: "block", marginBottom: 3, fontSize: 13, color: "#374151" }}>
+            <strong
+              style={{
+                display: "block",
+                marginBottom: 3,
+                fontSize: 13,
+                color: "#374151",
+              }}
+            >
               Why it fits
             </strong>
-            <p style={{ margin: 0, color: "#6b7280", lineHeight: 1.5, fontSize: 14 }}>
+            <p
+              style={{
+                margin: 0,
+                color: "#6b7280",
+                lineHeight: 1.5,
+                fontSize: 14,
+              }}
+            >
               {getWhyItFits(node)}
             </p>
           </div>
@@ -664,9 +777,18 @@ function DirectionCards({ title, subtitle, nodes, variant }) {
   const isPrimary = variant === "primary";
 
   return (
-    <div style={{ marginTop: 32 }} className={isPrimary ? "pdf-recommended-section" : "pdf-nearby-section"}>
+    <div
+      style={{ marginTop: 32 }}
+      className={isPrimary ? "pdf-recommended-section" : "pdf-nearby-section"}
+    >
       <div style={{ marginBottom: 16 }}>
-        <h4 style={{ margin: "0 0 6px", fontSize: isPrimary ? 20 : 17, color: "#111827" }}>
+        <h4
+          style={{
+            margin: "0 0 6px",
+            fontSize: isPrimary ? 20 : 17,
+            color: "#111827",
+          }}
+        >
           {title}
         </h4>
         {subtitle && (
@@ -720,7 +842,14 @@ function SignalItem({ label, value }) {
       >
         {label}
       </span>
-      <strong style={{ color: "#111827", fontSize: 13, lineHeight: 1.3, fontWeight: 600 }}>
+      <strong
+        style={{
+          color: "#111827",
+          fontSize: 13,
+          lineHeight: 1.3,
+          fontWeight: 600,
+        }}
+      >
         {value}
       </strong>
     </div>
@@ -755,8 +884,8 @@ function AssessmentSignals({ careerMap }) {
           What drove these results
         </h4>
         <p style={{ margin: 0, color: "#6b7280", fontSize: 14 }}>
-          The main inputs behind the map. They make the recommendation easier
-          to understand and easier to correct later.
+          The main inputs behind the map. They make the recommendation easier to
+          understand and easier to correct later.
         </p>
       </div>
 
@@ -816,7 +945,14 @@ function AssessmentSignals({ careerMap }) {
         <article style={signalCardStyle}>
           <h5 style={signalTitleStyle}>CV / credibility signals</h5>
           <p style={signalTextStyle}>Experience patterns detected from CV.</p>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginTop: 12 }}>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 7,
+              marginTop: 12,
+            }}
+          >
             {domains.length > 0 ? (
               domains.slice(0, 6).map((domain) => (
                 <span
@@ -959,7 +1095,7 @@ function CareerDirectionMap({ careerMap }) {
         </div>
 
         <div className="career-map-version">
-          {careerMap.version || "career-map-v1.0"}
+          {careerMap.version || "career-map-v1.3-hard-hr-domain-gate"}
         </div>
       </div>
 

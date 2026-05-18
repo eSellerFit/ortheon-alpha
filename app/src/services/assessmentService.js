@@ -8,10 +8,10 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase";
 
-const ROLE_LIBRARY_VERSION = "v2.1";
-const SALARY_BENCHMARK_VERSION = "v2.0";
-const SCORING_VERSION = "transition-realism-v1.0";
-const CAREER_MAP_VERSION = "career-map-v1.0";
+const ROLE_LIBRARY_VERSION = "v2.2";
+const SALARY_BENCHMARK_VERSION = "v2.2";
+const SCORING_VERSION = "transition-realism-v1.3-hard-domain-gates";
+const CAREER_MAP_VERSION = "career-map-v1.3-hard-hr-domain-gate";
 const SOURCE = "ortheon-alpha-mvp";
 
 export async function createAssessmentDraft(formData) {

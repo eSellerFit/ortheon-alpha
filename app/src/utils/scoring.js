@@ -71,68 +71,142 @@ const signalMap = {
   absent: 0,
 };
 
-const talentAcquisitionKeywords = [
+const restrictedHrWorkforceDirectionIds = new Set([
+  "BF-4-E",
+  "BF-5-E",
+  "BF-6-E",
+  "BF-8-IF",
+]);
+
+const talentDirectionIds = new Set([
+  "BF-4-E",
+  "BF-5-E",
+  "BF-6-E",
+  "BF-8-IF",
+]);
+
+const technologyExecutiveDirectionIds = new Set([
+  "TE-1-E",
+  "TE-2-E",
+  "TE-3-E",
+  "TE-4-IF",
+  "TE-5-E",
+]);
+
+const genericManagementDirectionIds = new Set([
+  "MG-1-E",
+  "MG-6-E",
+  "MG-8-E",
+  "MG-13-E",
+]);
+
+const allowedHrDomainSignals = new Set([
+  "human resources",
+  "human_resources",
+  "people operations",
+  "people_operations",
   "talent acquisition",
+  "talent_acquisition",
+  "talent management",
+  "talent_management",
+  "workforce planning",
+  "workforce_planning",
+  "people analytics",
+  "people_analytics",
+  "hr analytics",
+  "hr_analytics",
+  "hr tech",
+  "hr_tech",
+  "hris",
   "recruiting",
   "recruitment",
-  "recruiter",
-  "sourcing",
-  "candidate",
-  "candidates",
-  "hiring",
   "staffing",
-  "workforce planning",
-  "talent planning",
-  "talent intelligence",
-  "talent pipeline",
-  "pipeline",
-  "full-cycle recruiting",
-  "full cycle recruiting",
-  "high-volume hiring",
-  "high volume hiring",
-  "executive search",
-  "headhunting",
-  "interviewing",
-  "offer management",
-  "ats",
-  "applicant tracking",
-  "employer brand",
-  "employer branding",
-  "talent strategy",
-  "people analytics",
-  "hr analytics",
-  "recruiting operations",
-  "recruitment operations",
-  "vendor management",
-  "hiring manager",
-  "hiring managers",
+  "outplacement",
+]);
+
+const explicitHrTitlePhrases = [
+  "hr manager",
+  "hr director",
+  "human resources manager",
+  "human resources director",
+  "hr business partner",
+  "hrbp",
+  "people partner",
+  "people operations manager",
+  "people operations director",
+  "talent acquisition manager",
+  "talent acquisition director",
+  "recruiting manager",
+  "recruitment manager",
+  "recruiter",
+  "sourcer",
+  "talent partner",
+  "workforce planning manager",
+  "people analytics manager",
+  "hris manager",
+  "compensation manager",
+  "total rewards manager",
+  "learning and development manager",
+  "l&d manager",
+  "outplacement consultant",
+  "career transition consultant",
 ];
 
-const strongTalentAcquisitionKeywords = [
-  "talent acquisition",
-  "recruiting",
-  "recruitment",
-  "recruiter",
-  "sourcing",
-  "hiring",
-  "staffing",
-  "workforce planning",
-  "talent planning",
-  "talent intelligence",
-  "full-cycle recruiting",
-  "full cycle recruiting",
-  "high-volume hiring",
-  "high volume hiring",
-  "executive search",
-  "employer brand",
-  "employer branding",
-  "talent strategy",
-  "people analytics",
-  "hr analytics",
-  "recruiting operations",
-  "recruitment operations",
-  "hiring manager",
-  "hiring managers",
+const technologyDomainSignals = new Set([
+  "technology",
+  "software engineering",
+  "software_engineering",
+  "data science",
+  "data_science",
+  "ai",
+  "artificial intelligence",
+  "machine learning",
+  "product",
+  "startup",
+  "operations",
+]);
+
+const technologyKeywords = [
+  "cto",
+  "chief technology officer",
+  "chief technical officer",
+  "chief of ai",
+  "vp engineering",
+  "vp of technology",
+  "vp technology",
+  "technical director",
+  "technology director",
+  "head of engineering",
+  "head of development",
+  "software engineering",
+  "software development",
+  "architecture",
+  "enterprise architecture",
+  "platform architecture",
+  "platform modernization",
+  "cloud",
+  "devops",
+  "data center",
+  "infrastructure",
+  "cybersecurity",
+  "ai",
+  "artificial intelligence",
+  "genai",
+  "generative ai",
+  "llm",
+  "machine learning",
+  "digital transformation",
+];
+
+const studentProfileKeywords = [
+  "high school",
+  "9th grade",
+  "10th grade",
+  "11th grade",
+  "12th grade",
+  "expected graduation",
+  "summer job",
+  "school student",
 ];
 
 const marketplaceKeywords = [
@@ -144,13 +218,9 @@ const marketplaceKeywords = [
   "gig economy",
   "seller",
   "sellers",
-  "merchant",
-  "merchants",
   "amazon",
   "shopify",
   "etsy",
-  "ebay",
-  "poshmark",
   "wildberries",
 ];
 
@@ -158,7 +228,6 @@ const operationsSupplyChainKeywords = [
   "supply chain",
   "logistics",
   "warehouse",
-  "warehousing",
   "inventory",
   "manufacturing",
   "procurement",
@@ -169,26 +238,16 @@ const operationsSupplyChainKeywords = [
 
 const broadBusinessOwnershipKeywords = [
   "p&l",
-  "p / l",
   "profit and loss",
   "business unit",
-  "business-unit",
   "country manager",
   "regional manager",
   "regional director",
   "general manager",
   "managing director",
   "revenue ownership",
-  "commercial accountability",
   "budget ownership",
-  "owned budget",
-  "owned revenue",
-  "multi-function",
-  "multifunction",
-  "cross-functional business ownership",
-  "business owner",
   "business ownership",
-  "gm role",
 ];
 
 const smallBusinessAdvisorKeywords = [
@@ -196,7 +255,6 @@ const smallBusinessAdvisorKeywords = [
   "business advisor",
   "business mentor",
   "score mentor",
-  "score",
   "startup advisor",
   "entrepreneurship education",
   "smb",
@@ -209,7 +267,6 @@ const nonprofitFundraisingKeywords = [
   "fundraising",
   "development leadership",
   "donor",
-  "donors",
   "grant writing",
   "grants",
   "mission organization",
@@ -221,7 +278,6 @@ const trainingLndKeywords = [
   "trainer",
   "learning and development",
   "l&d",
-  "learning development",
   "corporate training",
   "curriculum",
   "instructional design",
@@ -229,38 +285,20 @@ const trainingLndKeywords = [
   "workshop",
   "teaching",
   "education",
-  "coach",
   "coaching",
   "leadership development",
 ];
 
-const aiTransformationKeywords = [
-  "ai",
-  "automation",
-  "digital transformation",
-  "workflow automation",
-  "hr tech",
-  "people analytics",
-  "recruiting automation",
-  "talent analytics",
-  "ats",
-  "applicant tracking",
-];
-
-const genericManagementDirectionIds = new Set([
-  "MG-1-E",
-  "MG-6-E",
-  "MG-8-E",
-  "MG-13-E",
-]);
-
-const talentDirectionIds = new Set([
-  "BF-4-E",
-  "BF-5-E",
-  "BF-6-E",
-  "BF-8-IF",
-  "ED-5-IF",
-]);
+const technologyPrimaryPriority = {
+  "TE-1-E": 1,
+  "TE-2-E": 2,
+  "TE-3-E": 3,
+  "TE-5-E": 4,
+  "TE-4-IF": 5,
+  "CM-5-IF": 6,
+  "CM-7-ST": 7,
+  "CM-6-E": 8,
+};
 
 const talentPrimaryPriority = {
   "BF-4-E": 1,
@@ -277,26 +315,47 @@ function clampScore(value, min = 0, max = 100) {
 function normalizeText(value) {
   return String(value || "")
     .replace(/_/g, " ")
-    .replace(/[^\w\s/-]/g, " ")
+    .replace(/[^\p{L}\p{N}\s/-]/gu, " ")
     .replace(/\s+/g, " ")
     .toLowerCase()
     .trim();
 }
 
-function textIncludesAny(text, keywords) {
-  const normalizedText = normalizeText(text);
-
-  return keywords.some((keyword) =>
-    normalizedText.includes(normalizeText(keyword))
-  );
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-function countKeywordMatches(text, keywords) {
+function hasExactWord(text, word) {
   const normalizedText = normalizeText(text);
+  const normalizedWord = normalizeText(word);
 
-  return keywords.filter((keyword) =>
-    normalizedText.includes(normalizeText(keyword))
-  ).length;
+  if (!normalizedText || !normalizedWord) {
+    return false;
+  }
+
+  const regex = new RegExp(
+    `(^|\\s|/)${escapeRegExp(normalizedWord)}($|\\s|/)`,
+    "i"
+  );
+
+  return regex.test(normalizedText);
+}
+
+function hasExactPhrase(text, phrase) {
+  const normalizedText = ` ${normalizeText(text)} `;
+  const normalizedPhrase = ` ${normalizeText(phrase)} `;
+
+  return normalizedText.includes(normalizedPhrase);
+}
+
+function textIncludesAny(text, keywords) {
+  return keywords.some((keyword) => hasExactPhrase(text, keyword));
+}
+
+function getDomainSignals(assessment) {
+  return Array.isArray(assessment?.cvProfile?.domainSignals)
+    ? assessment.cvProfile.domainSignals.map((domain) => normalizeText(domain))
+    : [];
 }
 
 function buildAssessmentSearchText(assessment) {
@@ -309,20 +368,8 @@ function buildAssessmentSearchText(assessment) {
     .map((signal) => signal.evidence || "")
     .join(" ");
 
-  const competencyNamesText = competencySignals
-    .map((signal) => signal.competencyName || "")
-    .join(" ");
-
   const domainSignals = Array.isArray(cvProfile.domainSignals)
     ? cvProfile.domainSignals.join(" ")
-    : "";
-
-  const entrepreneurialSignals = Array.isArray(cvProfile.entrepreneurialSignals)
-    ? cvProfile.entrepreneurialSignals.join(" ")
-    : "";
-
-  const tradeSignals = Array.isArray(cvProfile.tradeSignals)
-    ? cvProfile.tradeSignals.join(" ")
     : "";
 
   return normalizeText(
@@ -331,44 +378,104 @@ function buildAssessmentSearchText(assessment) {
       assessment?.currentIndustry,
       cvProfile.careerSummary,
       domainSignals,
-      entrepreneurialSignals,
-      tradeSignals,
       cvProfile.senioritySignal,
       cvProfile.leadershipScope,
       cvProfile.tenurePattern,
       competencyEvidence,
-      competencyNamesText,
     ]
       .filter(Boolean)
       .join(" ")
   );
 }
 
-function hasTalentAcquisitionProfile(assessment) {
+function hasStudentProfile(assessment) {
   const profileText = buildAssessmentSearchText(assessment);
-  const domainSignals = assessment?.cvProfile?.domainSignals || [];
+  const seniority = normalizeText(assessment?.cvProfile?.senioritySignal);
 
-  const hasHrDomain = domainSignals.some((domain) =>
-    [
-      "human_resources",
-      "human resources",
-      "hr",
-      "people",
-      "talent",
-      "recruiting",
-      "recruitment",
-      "staffing",
-      "workforce",
-      "workforce planning",
-    ].includes(normalizeText(domain))
+  const hasStudentText = textIncludesAny(profileText, studentProfileKeywords);
+
+  const looksLikeHighSchool =
+    hasStudentText &&
+    (hasExactPhrase(profileText, "high school") ||
+      hasExactPhrase(profileText, "9th grade") ||
+      hasExactPhrase(profileText, "10th grade") ||
+      hasExactPhrase(profileText, "11th grade") ||
+      hasExactPhrase(profileText, "12th grade") ||
+      hasExactPhrase(profileText, "expected graduation"));
+
+  return looksLikeHighSchool || (seniority === "junior" && hasStudentText);
+}
+
+function hasHrWorkforceDomainEvidence(assessment) {
+  const domainSignals = getDomainSignals(assessment);
+
+  const hasExplicitHrDomain = domainSignals.some((domain) =>
+    allowedHrDomainSignals.has(domain)
   );
 
-  const strongKeywordMatchCount = countKeywordMatches(
-    profileText,
-    strongTalentAcquisitionKeywords
+  if (hasExplicitHrDomain) {
+    return true;
+  }
+
+  const currentRole = normalizeText(assessment?.currentRole || "");
+  const currentIndustry = normalizeText(assessment?.currentIndustry || "");
+  const roleOrIndustryText = `${currentRole} ${currentIndustry}`;
+
+  if (hasExactWord(roleOrIndustryText, "hr")) {
+    return true;
+  }
+
+  return explicitHrTitlePhrases.some((phrase) =>
+    hasExactPhrase(roleOrIndustryText, phrase)
+  );
+}
+
+function hasTalentAcquisitionProfile(assessment) {
+  return hasHrWorkforceDomainEvidence(assessment);
+}
+
+function hasTechnologyDomainEvidence(assessment) {
+  const domainSignals = getDomainSignals(assessment);
+  const profileText = buildAssessmentSearchText(assessment);
+
+  const hasDomainSignal = domainSignals.some((domain) =>
+    technologyDomainSignals.has(domain)
   );
 
-  return hasHrDomain || strongKeywordMatchCount >= 2;
+  return hasDomainSignal || textIncludesAny(profileText, technologyKeywords);
+}
+
+function hasTechnologyExecutiveProfile(assessment) {
+  const profileText = buildAssessmentSearchText(assessment);
+  const seniority = normalizeText(assessment?.cvProfile?.senioritySignal);
+  const leadershipScope = normalizeText(assessment?.cvProfile?.leadershipScope);
+
+  const hasExecutiveSeniority =
+    seniority === "executive" || seniority === "senior";
+
+  const hasLeadershipScope =
+    leadershipScope === "department" ||
+    leadershipScope === "organization" ||
+    leadershipScope === "cross organization";
+
+  const hasExecutiveTechTitle = textIncludesAny(profileText, [
+    "cto",
+    "chief technology officer",
+    "chief technical officer",
+    "chief of ai",
+    "technical director",
+    "technology director",
+    "vp engineering",
+    "vp of technology",
+    "vp technology",
+    "head of engineering",
+    "head of development",
+  ]);
+
+  return (
+    hasTechnologyDomainEvidence(assessment) &&
+    (hasExecutiveTechTitle || (hasExecutiveSeniority && hasLeadershipScope))
+  );
 }
 
 function hasMarketplaceProfile(assessment) {
@@ -407,17 +514,22 @@ function hasNonprofitFundraisingEvidence(assessment) {
 }
 
 function hasTrainingLndEvidence(assessment) {
-  return textIncludesAny(
-    buildAssessmentSearchText(assessment),
-    trainingLndKeywords
-  );
+  return textIncludesAny(buildAssessmentSearchText(assessment), trainingLndKeywords);
 }
 
 function hasAiTransformationEvidence(assessment) {
-  return textIncludesAny(
-    buildAssessmentSearchText(assessment),
-    aiTransformationKeywords
-  );
+  return textIncludesAny(buildAssessmentSearchText(assessment), [
+    "ai",
+    "artificial intelligence",
+    "genai",
+    "generative ai",
+    "llm",
+    "machine learning",
+    "automation",
+    "digital transformation",
+    "ai agents",
+    "ai product",
+  ]);
 }
 
 function directionSearchText(direction) {
@@ -438,6 +550,10 @@ function directionSearchText(direction) {
   );
 }
 
+function isRestrictedHrWorkforceDirection(direction) {
+  return restrictedHrWorkforceDirectionIds.has(direction?.directionId);
+}
+
 function isTalentDirection(direction) {
   if (!direction) {
     return false;
@@ -450,16 +566,44 @@ function isTalentDirection(direction) {
   const text = directionSearchText(direction);
 
   return textIncludesAny(text, [
-    "talent",
     "human resources",
     "people operations",
     "workforce planning",
     "talent intelligence",
     "people analytics",
     "hr tech",
-    "career",
+    "talent acquisition",
     "outplacement",
-    "leadership development",
+  ]);
+}
+
+function isTechnologyExecutiveDirection(direction) {
+  return technologyExecutiveDirectionIds.has(direction?.directionId);
+}
+
+function isTechnologyDirection(direction) {
+  if (!direction) {
+    return false;
+  }
+
+  if (isTechnologyExecutiveDirection(direction)) {
+    return true;
+  }
+
+  const text = directionSearchText(direction);
+
+  return textIncludesAny(text, [
+    "technology",
+    "software",
+    "engineering",
+    "platform",
+    "ai",
+    "machine learning",
+    "digital transformation",
+    "product operations",
+    "data science",
+    "technical program",
+    "systems engineering",
   ]);
 }
 
@@ -514,6 +658,7 @@ function isCorporateTrainingDirection(direction) {
 function isAiTransformationDirection(direction) {
   return textIncludesAny(directionSearchText(direction), [
     "ai transformation",
+    "chief ai",
     "ai",
     "automation",
     "digital transformation",
@@ -558,18 +703,6 @@ function getDisplayDirectionLabel(direction, assessment) {
 
   if (direction.directionId === "BF-4-E") {
     return "Talent Acquisition / People Operations — Enterprise";
-  }
-
-  if (direction.directionId === "BF-5-E") {
-    return "Workforce Planning / Talent Intelligence — Enterprise";
-  }
-
-  if (direction.directionId === "BF-6-E") {
-    return "People Analytics / HR Tech — Enterprise";
-  }
-
-  if (direction.directionId === "BF-8-IF") {
-    return "Career / Outplacement Strategy — Independent";
   }
 
   return direction.directionLabel;
@@ -894,6 +1027,14 @@ function getFitBand(total, financialFlag) {
 }
 
 function hasDomainMatch(direction, assessment) {
+  if (isRestrictedHrWorkforceDirection(direction)) {
+    return hasHrWorkforceDomainEvidence(assessment);
+  }
+
+  if (isTechnologyExecutiveDirection(direction)) {
+    return hasTechnologyDomainEvidence(assessment);
+  }
+
   if (!direction.relevantDomains || direction.relevantDomains.length === 0) {
     return true;
   }
@@ -906,10 +1047,7 @@ function hasDomainMatch(direction, assessment) {
     normalizeText(domain)
   );
 
-  const domainSignals =
-    assessment?.cvProfile?.domainSignals?.map((domain) =>
-      normalizeText(domain)
-    ) || [];
+  const domainSignals = getDomainSignals(assessment);
 
   const domainSignalMatch = relevantDomains.some((domain) =>
     domainSignals.some(
@@ -923,35 +1061,11 @@ function hasDomainMatch(direction, assessment) {
 
   const profileText = buildAssessmentSearchText(assessment);
 
-  const textMatch = relevantDomains.some((domain) =>
-    profileText.includes(domain)
-  );
-
-  if (textMatch) {
-    return true;
-  }
-
-  if (direction.domainSpecificityRequired === "high") {
-    return false;
-  }
-
-  return false;
+  return relevantDomains.some((domain) => hasExactPhrase(profileText, domain));
 }
 
 function getTransitionLabel(direction, flags, totalScore, fitBand) {
   const isHighFinancialRisk = direction.financialRiskLevel === "high";
-
-  if (
-    fitBand === "Bridge Required" &&
-    direction.transitionCategory === "open_transition"
-  ) {
-    return {
-      label: "Market-credible path",
-      sublabel: "Structurally accessible but low overall fit",
-      treatment: "secondary",
-      showBridges: false,
-    };
-  }
 
   if (flags.includes("domain_credibility_gap")) {
     return {
@@ -972,20 +1086,13 @@ function getTransitionLabel(direction, flags, totalScore, fitBand) {
   }
 
   if (direction.transitionCategory === "bridge_friendly") {
-    if (direction.transitionPathway === "stretch") {
-      return {
-        label: isHighFinancialRisk
-          ? "Stretch path — high financial risk"
-          : "Stretch path",
-        sublabel:
-          "Significant gap in autonomy, ambiguity tolerance, or execution pressure",
-        treatment: "secondary",
-        showBridges: direction.bridgeDirections?.length > 0,
-      };
-    }
-
     return {
-      label: "Bridge path",
+      label:
+        direction.transitionPathway === "stretch"
+          ? isHighFinancialRisk
+            ? "Stretch path — high financial risk"
+            : "Stretch path"
+          : "Bridge path",
       sublabel:
         direction.bridgeDirections?.length > 0
           ? "Credible via intermediate step"
@@ -1298,23 +1405,46 @@ function buildCurrentProfileNode(assessment) {
   const senioritySignal = assessment?.cvProfile?.senioritySignal || null;
   const leadershipScope = assessment?.cvProfile?.leadershipScope || null;
   const isTalentProfile = hasTalentAcquisitionProfile(assessment);
+  const isTechExecutive = hasTechnologyExecutiveProfile(assessment);
+  const isStudent = hasStudentProfile(assessment);
+
+  if (isStudent) {
+    return {
+      type: "current_profile",
+      label: "Student / Early work profile",
+      mapQuadrant: "corporate_human",
+      mapCluster: "business_operations",
+      description:
+        "This appears to be a student or summer-job profile. Adult career-transition recommendations are not generated from this profile type.",
+      domainSignals,
+      senioritySignal,
+      leadershipScope,
+      unsupportedProfileType: "high_school_student",
+    };
+  }
 
   const labelParts = [];
 
-  if (isTalentProfile) {
-    labelParts.push("Talent");
+  if (isTechExecutive) {
+    labelParts.push("Technology Executive");
+  } else if (domainSignals.includes("technology")) {
+    labelParts.push("Technology");
   }
 
-  if (domainSignals.includes("human_resources")) {
-    labelParts.push("People");
+  if (domainSignals.includes("software_engineering")) {
+    labelParts.push("Software Engineering");
+  }
+
+  if (domainSignals.includes("data_science")) {
+    labelParts.push("Data / AI");
+  }
+
+  if (isTalentProfile) {
+    labelParts.push("People / Workforce");
   }
 
   if (domainSignals.includes("operations")) {
     labelParts.push("Operations");
-  }
-
-  if (domainSignals.includes("technology")) {
-    labelParts.push("Technology");
   }
 
   if (domainSignals.includes("entrepreneurship")) {
@@ -1333,9 +1463,15 @@ function buildCurrentProfileNode(assessment) {
   return {
     type: "current_profile",
     label,
-    mapQuadrant: "corporate_operational",
-    mapCluster: isTalentProfile
-      ? "workforce_intelligence"
+    mapQuadrant: isTechExecutive
+      ? "corporate_operational"
+      : isTalentProfile
+      ? "corporate_human"
+      : "corporate_operational",
+    mapCluster: isTechExecutive
+      ? "technology_executive"
+      : isTalentProfile
+      ? "people_operations"
       : "business_operations",
     description:
       "Current profile position based on CV domain signals, seniority, and career history.",
@@ -1391,26 +1527,18 @@ function directionLooksCredentialedOrLicensed(direction) {
     "counselor",
     "clinical",
     "psychology",
-    "psychologist",
-    "social worker",
     "financial planning",
-    "financial planner",
     "wealth management",
     "investment advisor",
-    "registered investment",
     "legal",
     "lawyer",
     "attorney",
     "medical",
-    "physician",
     "nursing",
-    "nurse",
-    "accounting",
     "cpa",
-    "tax practice",
   ];
 
-  return licensedKeywords.some((keyword) => text.includes(keyword));
+  return textIncludesAny(text, licensedKeywords);
 }
 
 function hasMatchingCredentialForDirection(assessment, direction) {
@@ -1452,16 +1580,14 @@ function isBroadEntrepreneurialAdjacent(direction) {
 
   const text = directionSearchText(direction);
 
-  const broadEntrepreneurialKeywords = [
+  return textIncludesAny(text, [
     "startup leadership",
     "founder",
     "early operator",
     "own venture",
     "service business",
     "local business",
-  ];
-
-  return broadEntrepreneurialKeywords.some((keyword) => text.includes(keyword));
+  ]);
 }
 
 function canShowAsNearbyTrajectory(direction, assessment) {
@@ -1469,11 +1595,29 @@ function canShowAsNearbyTrajectory(direction, assessment) {
     return false;
   }
 
+  if (hasStudentProfile(assessment)) {
+    return false;
+  }
+
   if (isBroadEntrepreneurialAdjacent(direction)) {
     return false;
   }
 
+  if (
+    isRestrictedHrWorkforceDirection(direction) &&
+    !hasHrWorkforceDomainEvidence(assessment)
+  ) {
+    return false;
+  }
+
   if (!hasTalentAcquisitionProfile(assessment) && isTalentDirection(direction)) {
+    return false;
+  }
+
+  if (
+    isTechnologyExecutiveDirection(direction) &&
+    !hasTechnologyDomainEvidence(assessment)
+  ) {
     return false;
   }
 
@@ -1515,12 +1659,16 @@ function canShowAsNearbyTrajectory(direction, assessment) {
   const mapMetadata = getCareerMapMetadata(direction);
 
   const preferredNearbyClusters = new Set([
+    "technology_executive",
+    "engineering_leadership",
+    "platform_technology",
     "marketplace_platforms",
-    "workforce_intelligence",
-    "people_analytics_hr_tech",
     "ai_transformation",
     "business_operations",
     "independent_advisory",
+    "people_operations",
+    "workforce_intelligence",
+    "people_analytics_hr_tech",
   ]);
 
   return preferredNearbyClusters.has(mapMetadata.mapCluster);
@@ -1532,8 +1680,23 @@ function hasMapRelevance(direction, assessment, primaryClusterSet) {
   const profileText = buildAssessmentSearchText(assessment);
   const tags = mapMetadata.mapTags || [];
   const isTalentProfile = hasTalentAcquisitionProfile(assessment);
+  const isTechProfile = hasTechnologyDomainEvidence(assessment);
+
+  if (
+    isRestrictedHrWorkforceDirection(direction) &&
+    !hasHrWorkforceDomainEvidence(assessment)
+  ) {
+    return false;
+  }
 
   if (!isTalentProfile && isTalentDirection(direction)) {
+    return false;
+  }
+
+  if (
+    isTechnologyExecutiveDirection(direction) &&
+    !hasTechnologyDomainEvidence(assessment)
+  ) {
     return false;
   }
 
@@ -1543,44 +1706,37 @@ function hasMapRelevance(direction, assessment, primaryClusterSet) {
     )
   );
 
-  const tagMatchesSummary = tags.some((tag) =>
-    profileText.includes(normalizeText(tag))
-  );
+  const tagMatchesSummary = tags.some((tag) => hasExactPhrase(profileText, tag));
 
   const clusterMatchesPrimary = primaryClusterSet.has(mapMetadata.mapCluster);
+
+  const techRelevant =
+    isTechProfile &&
+    [
+      "technology_executive",
+      "engineering_leadership",
+      "platform_technology",
+      "ai_transformation",
+      "business_operations",
+      "independent_advisory",
+    ].includes(mapMetadata.mapCluster);
 
   const talentRelevant =
     isTalentProfile &&
     [
+      "people_operations",
       "workforce_intelligence",
       "people_analytics_hr_tech",
       "ai_transformation",
       "business_operations",
     ].includes(mapMetadata.mapCluster);
 
-  const strategicallyRelevantClusters = new Set([
-    "marketplace_platforms",
-    "workforce_intelligence",
-    "people_analytics_hr_tech",
-    "ai_transformation",
-    "business_operations",
-    "independent_advisory",
-  ]);
-
-  const strategicallyRelevant =
-    strategicallyRelevantClusters.has(mapMetadata.mapCluster) &&
-    (domainSignals.includes("operations") ||
-      domainSignals.includes("human_resources") ||
-      domainSignals.includes("technology") ||
-      domainSignals.includes("consulting") ||
-      domainSignals.includes("entrepreneurship"));
-
   return (
     tagMatchesDomain ||
     tagMatchesSummary ||
     clusterMatchesPrimary ||
-    talentRelevant ||
-    strategicallyRelevant
+    techRelevant ||
+    talentRelevant
   );
 }
 
@@ -1596,8 +1752,9 @@ function buildAdjacentMapNodes(assessment, primaryRecommendations, limit = 5) {
   );
 
   const isTalentProfile = hasTalentAcquisitionProfile(assessment);
+  const isTechProfile = hasTechnologyDomainEvidence(assessment);
 
-  const adjacentCandidates = roleLibrary
+  return roleLibrary
     .filter((direction) => !primaryIds.has(direction.directionId))
     .filter((direction) => direction.aiDurabilityRating !== "D0")
     .filter((direction) => canShowAsAdjacentDirection(assessment, direction))
@@ -1616,9 +1773,10 @@ function buildAdjacentMapNodes(assessment, primaryRecommendations, limit = 5) {
 
       if (
         [
+          "technology_executive",
+          "engineering_leadership",
+          "platform_technology",
           "marketplace_platforms",
-          "workforce_intelligence",
-          "people_analytics_hr_tech",
           "ai_transformation",
         ].includes(mapMetadata.mapCluster)
       ) {
@@ -1626,22 +1784,27 @@ function buildAdjacentMapNodes(assessment, primaryRecommendations, limit = 5) {
       }
 
       if (
+        isTechProfile &&
+        [
+          "technology_executive",
+          "engineering_leadership",
+          "platform_technology",
+          "ai_transformation",
+        ].includes(mapMetadata.mapCluster)
+      ) {
+        relevanceScore += 35;
+      }
+
+      if (
         isTalentProfile &&
         [
+          "people_operations",
           "workforce_intelligence",
           "people_analytics_hr_tech",
           "ai_transformation",
         ].includes(mapMetadata.mapCluster)
       ) {
         relevanceScore += 30;
-      }
-
-      if (
-        isTalentProfile &&
-        isMarketplaceDirection(direction) &&
-        !hasMarketplaceProfile(assessment)
-      ) {
-        relevanceScore -= 25;
       }
 
       if (direction.aiDurabilityRating === "D4") {
@@ -1675,14 +1838,20 @@ function buildAdjacentMapNodes(assessment, primaryRecommendations, limit = 5) {
     })
     .sort((a, b) => b.relevanceScore - a.relevanceScore)
     .slice(0, limit);
-
-  return adjacentCandidates;
 }
 
 function getAdjacentRouteReason(mapCluster) {
   const reasons = {
+    technology_executive:
+      "Nearby route supported by technology leadership and executive decision-making signals.",
+    engineering_leadership:
+      "Nearby route supported by technical delivery and engineering leadership signals.",
+    platform_technology:
+      "Nearby route supported by software, platform, architecture, and product technology signals.",
     marketplace_platforms:
       "Nearby route supported by marketplace, platform, and ecosystem operating experience.",
+    people_operations:
+      "Nearby route supported by HR, people operations, and organizational leadership signals.",
     workforce_intelligence:
       "Nearby route supported by workforce planning, talent systems, and people operations signals.",
     people_analytics_hr_tech:
@@ -1690,7 +1859,7 @@ function getAdjacentRouteReason(mapCluster) {
     ai_transformation:
       "Nearby route supported by AI workflow, automation, and operating model experience.",
     business_operations:
-      "Nearby route supported by business operations, execution, and cross-functional leadership.",
+      "Nearby route supported by business operations and cross-functional leadership.",
     independent_advisory:
       "Nearby route supported by consulting, advisory, and client-facing experience.",
   };
@@ -1753,7 +1922,12 @@ function buildLongerPathNodes(primaryRecommendations, assessment) {
   return Array.from(longerPathMap.values());
 }
 
-function buildCareerMapSummary(primaryNodes, adjacentNodes, longerPathNodes) {
+function buildCareerMapSummary(
+  assessment,
+  primaryNodes,
+  adjacentNodes,
+  longerPathNodes
+) {
   const primaryClusters = [
     ...new Set(primaryNodes.map((node) => node.mapCluster)),
   ];
@@ -1774,19 +1948,49 @@ function buildCareerMapSummary(primaryNodes, adjacentNodes, longerPathNodes) {
       node.mapQuadrant === "autonomous_human"
   );
 
-  const hasPrimaryAi = primaryClusters.includes("ai_transformation");
+  const isStudent = hasStudentProfile(assessment);
+  const isTalentProfile = hasTalentAcquisitionProfile(assessment);
+  const isTechExecutive = hasTechnologyExecutiveProfile(assessment);
+
+  if (isStudent) {
+    return {
+      mainPattern: "Student profile outside current adult career-transition scope",
+      transitionStyle: "No adult career-transition map generated",
+      bridgeGoal:
+        "Use this profile for early work strengths, not adult career direction recommendations.",
+      mainCaution:
+        "This version of Ortheon is designed for adult career-transition profiles.",
+    };
+  }
+
+  const hasPrimaryTechnology =
+    primaryClusters.includes("technology_executive") ||
+    primaryClusters.includes("engineering_leadership") ||
+    primaryClusters.includes("platform_technology") ||
+    textIncludesAny(primaryLabels, [
+      "cto",
+      "vp engineering",
+      "technology",
+      "engineering",
+      "architecture",
+      "platform",
+      "digital transformation",
+    ]);
+
+  const hasPrimaryAi =
+    primaryClusters.includes("ai_transformation") ||
+    textIncludesAny(primaryLabels, [
+      "ai",
+      "chief ai",
+      "ai transformation",
+      "ai product",
+    ]);
 
   const hasPrimaryWorkforce =
-    primaryClusters.includes("workforce_intelligence") ||
-    primaryClusters.includes("people_analytics_hr_tech") ||
-    textIncludesAny(primaryLabels, [
-      "talent acquisition",
-      "people operations",
-      "workforce planning",
-      "talent intelligence",
-      "people analytics",
-      "hr tech",
-    ]);
+    isTalentProfile &&
+    (primaryClusters.includes("people_operations") ||
+      primaryClusters.includes("workforce_intelligence") ||
+      primaryClusters.includes("people_analytics_hr_tech"));
 
   const hasPrimaryMarketplace =
     primaryClusters.includes("marketplace_platforms") ||
@@ -1796,21 +2000,20 @@ function buildCareerMapSummary(primaryNodes, adjacentNodes, longerPathNodes) {
     primaryClusters.includes("independent_advisory") ||
     textIncludesAny(primaryLabels, ["consultant", "fractional", "advisor"]);
 
-  const hasPrimaryStartup =
-    primaryClusters.includes("enterprise_leadership") ||
-    textIncludesAny(primaryLabels, ["startup", "founder", "emerging tech"]);
-
   let mainPattern = "Business operations and leadership";
 
-  if (hasPrimaryWorkforce && hasPrimaryAi) {
+  if (isTechExecutive && hasPrimaryAi) {
     mainPattern =
-      "Talent systems, workforce intelligence, and AI-enabled people operations";
+      "Technology leadership, AI transformation, and platform-scale execution";
+  } else if (isTechExecutive || hasPrimaryTechnology) {
+    mainPattern =
+      "Technology leadership, software/platform strategy, and enterprise execution";
+  } else if (hasPrimaryWorkforce && hasPrimaryAi) {
+    mainPattern =
+      "HR, talent systems, workforce intelligence, and AI-enabled people operations";
   } else if (hasPrimaryWorkforce) {
     mainPattern =
-      "Talent acquisition, workforce intelligence, and people systems";
-  } else if (hasPrimaryAi && hasPrimaryStartup) {
-    mainPattern =
-      "AI startup, product operations, and technology entrepreneurship";
+      "HR, talent systems, workforce intelligence, and people operations";
   } else if (hasPrimaryAi && hasPrimaryAdvisory) {
     mainPattern = "AI transformation, product strategy, and advisory paths";
   } else if (hasPrimaryAi) {
@@ -1819,8 +2022,6 @@ function buildCareerMapSummary(primaryNodes, adjacentNodes, longerPathNodes) {
     mainPattern = "Marketplace operations and business systems";
   } else if (hasPrimaryAdvisory) {
     mainPattern = "Independent advisory, strategy, and client-facing expertise";
-  } else if (hasPrimaryStartup) {
-    mainPattern = "Startup leadership and entrepreneurial execution";
   }
 
   const transitionStyle = hasIndependent
@@ -1838,68 +2039,81 @@ function buildCareerMapSummary(primaryNodes, adjacentNodes, longerPathNodes) {
 }
 
 function getDomainCalibrationAdjustment(direction, assessment) {
-  const isTalentProfile = hasTalentAcquisitionProfile(assessment);
-
-  if (!isTalentProfile) {
-    return {
-      adjustment: 0,
-      reasons: [],
-    };
-  }
-
   let adjustment = 0;
   const reasons = [];
 
-  if (direction.directionId === "BF-4-E") {
-    adjustment += 34;
+  const isTalentProfile = hasTalentAcquisitionProfile(assessment);
+  const isTechExecutive = hasTechnologyExecutiveProfile(assessment);
+  const hasTechDomain = hasTechnologyDomainEvidence(assessment);
+
+  if (isRestrictedHrWorkforceDirection(direction) && !isTalentProfile) {
+    adjustment -= 500;
     reasons.push(
-      "Talent acquisition profile directly supports TA / people operations leadership."
+      "HR / workforce direction suppressed because HR-domain evidence was not detected."
     );
   }
 
-  if (direction.directionId === "BF-5-E") {
-    adjustment += 30;
-    reasons.push(
-      "Talent acquisition profile strongly supports workforce planning / talent intelligence."
-    );
+  if (isTechnologyExecutiveDirection(direction)) {
+    if (isTechExecutive) {
+      adjustment += 34;
+      reasons.push(
+        "Technology executive profile directly supports CTO / technology leadership direction."
+      );
+    } else if (hasTechDomain) {
+      adjustment += 14;
+      reasons.push(
+        "Technology domain evidence supports this direction, though executive scope may need validation."
+      );
+    } else {
+      adjustment -= 80;
+      reasons.push(
+        "Technology executive direction reduced because technology-domain evidence was not detected."
+      );
+    }
   }
 
-  if (direction.directionId === "BF-6-E") {
-    adjustment += 24;
-    reasons.push(
-      "Talent acquisition profile supports people analytics and HR technology, but may require stronger analytics proof."
-    );
+  if (isTalentProfile) {
+    if (direction.directionId === "BF-4-E") {
+      adjustment += 28;
+    }
+
+    if (direction.directionId === "BF-5-E") {
+      adjustment += 26;
+    }
+
+    if (direction.directionId === "BF-6-E") {
+      adjustment += 20;
+    }
+
+    if (direction.directionId === "BF-8-IF") {
+      adjustment += 12;
+    }
   }
 
-  if (direction.directionId === "BF-8-IF") {
-    adjustment += 12;
+  if (
+    isTechExecutive &&
+    isGenericManagementDirection(direction) &&
+    !isTechnologyExecutiveDirection(direction)
+  ) {
+    adjustment -= 18;
     reasons.push(
-      "Talent acquisition experience can support career and outplacement strategy."
-    );
-  }
-
-  if (direction.directionId === "ED-5-IF") {
-    adjustment += 8;
-    reasons.push(
-      "People leadership experience can support leadership development paths."
+      "Generic management direction reduced because more specific technology executive paths are available."
     );
   }
 
   if (isGenericManagementDirection(direction)) {
     const hasBusinessOwnership = hasBroadBusinessOwnershipEvidence(assessment);
-    adjustment += hasBusinessOwnership ? -8 : -30;
-    reasons.push(
-      hasBusinessOwnership
-        ? "Generic management direction reduced because a more specific expertise path is available."
-        : "Generic management direction reduced because broader business ownership evidence was not detected."
-    );
+
+    if (!hasBusinessOwnership && !isTechExecutive) {
+      adjustment -= 24;
+      reasons.push(
+        "Generic management direction reduced because broader business ownership evidence was not detected."
+      );
+    }
   }
 
   if (isMarketplaceDirection(direction) && !hasMarketplaceProfile(assessment)) {
     adjustment -= 24;
-    reasons.push(
-      "Marketplace direction reduced because marketplace/platform evidence was not detected."
-    );
   }
 
   if (
@@ -1907,19 +2121,21 @@ function getDomainCalibrationAdjustment(direction, assessment) {
     !hasOperationsSupplyChainProfile(assessment)
   ) {
     adjustment -= 22;
-    reasons.push(
-      "Supply chain / operations consulting direction reduced because specific domain evidence was not detected."
-    );
   }
 
   if (
     direction.directionId === "CM-5-IF" &&
     !hasAiTransformationEvidence(assessment)
   ) {
-    adjustment -= 10;
-    reasons.push(
-      "AI transformation direction reduced because direct AI / automation evidence was limited."
-    );
+    adjustment -= 18;
+  }
+
+  if (
+    isTechExecutive &&
+    isAiTransformationDirection(direction) &&
+    hasAiTransformationEvidence(assessment)
+  ) {
+    adjustment += 14;
   }
 
   return {
@@ -1929,6 +2145,15 @@ function getDomainCalibrationAdjustment(direction, assessment) {
 }
 
 function isDomainSpecificRecommendation(recommendation, assessment) {
+  if (hasTechnologyExecutiveProfile(assessment)) {
+    return (
+      isTechnologyExecutiveDirection(recommendation) ||
+      recommendation.directionId === "CM-5-IF" ||
+      recommendation.directionId === "CM-7-ST" ||
+      recommendation.directionId === "CM-6-E"
+    );
+  }
+
   if (hasTalentAcquisitionProfile(assessment)) {
     return isTalentDirection(recommendation);
   }
@@ -1937,17 +2162,51 @@ function isDomainSpecificRecommendation(recommendation, assessment) {
 }
 
 function shouldSuppressPrimaryForDomainProfile(recommendation, assessment) {
-  if (!hasTalentAcquisitionProfile(assessment)) {
-    return false;
+  if (hasStudentProfile(assessment)) {
+    return true;
   }
 
-  if (isTalentDirection(recommendation)) {
-    return false;
+  if (
+    isRestrictedHrWorkforceDirection(recommendation) &&
+    !hasHrWorkforceDomainEvidence(assessment)
+  ) {
+    return true;
+  }
+
+  if (!hasTalentAcquisitionProfile(assessment) && isTalentDirection(recommendation)) {
+    return true;
+  }
+
+  if (
+    isTechnologyExecutiveDirection(recommendation) &&
+    !hasTechnologyDomainEvidence(assessment)
+  ) {
+    return true;
+  }
+
+  if (hasTechnologyExecutiveProfile(assessment)) {
+    if (isTechnologyExecutiveDirection(recommendation)) {
+      return false;
+    }
+
+    if (
+      isTalentDirection(recommendation) &&
+      !hasHrWorkforceDomainEvidence(assessment)
+    ) {
+      return true;
+    }
+  }
+
+  if (hasTalentAcquisitionProfile(assessment)) {
+    if (isTalentDirection(recommendation)) {
+      return false;
+    }
   }
 
   if (
     isGenericManagementDirection(recommendation) &&
-    !hasBroadBusinessOwnershipEvidence(assessment)
+    !hasBroadBusinessOwnershipEvidence(assessment) &&
+    !hasTechnologyExecutiveProfile(assessment)
   ) {
     return true;
   }
@@ -1986,6 +2245,19 @@ function sortTalentDomainRecommendations(recommendations) {
   });
 }
 
+function sortTechnologyDomainRecommendations(recommendations) {
+  return [...recommendations].sort((a, b) => {
+    const priorityA = technologyPrimaryPriority[a.directionId] || 99;
+    const priorityB = technologyPrimaryPriority[b.directionId] || 99;
+
+    if (priorityA !== priorityB) {
+      return priorityA - priorityB;
+    }
+
+    return b.scores.total - a.scores.total;
+  });
+}
+
 function pushUniqueRecommendation(target, recommendation) {
   if (!recommendation) {
     return;
@@ -1999,73 +2271,127 @@ function pushUniqueRecommendation(target, recommendation) {
 }
 
 function selectFinalRecommendations(results, assessment, limit = 3) {
+  if (hasStudentProfile(assessment)) {
+    return [];
+  }
+
   const sorted = sortRecommendationsByScore(results);
 
-  if (!hasTalentAcquisitionProfile(assessment)) {
-    return sorted.slice(0, limit).map((result, index) => ({
-      ...result,
-      rank: index + 1,
-    }));
-  }
+  if (hasTechnologyExecutiveProfile(assessment)) {
+    const selected = [];
 
-  const selected = [];
-
-  const domainSpecificCandidates = sorted.filter((recommendation) =>
-    isDomainSpecificRecommendation(recommendation, assessment)
-  );
-
-  const acceptableDomainCandidates = sortTalentDomainRecommendations(
-    domainSpecificCandidates.filter(
-      (recommendation) => recommendation.scores.total >= 45
-    )
-  );
-
-  acceptableDomainCandidates.slice(0, 3).forEach((recommendation) => {
-    pushUniqueRecommendation(selected, recommendation);
-  });
-
-  const nonSuppressedCandidates = sorted.filter(
-    (recommendation) =>
-      !shouldSuppressPrimaryForDomainProfile(recommendation, assessment)
-  );
-
-  for (const recommendation of nonSuppressedCandidates) {
-    if (selected.length >= limit) {
-      break;
-    }
-
-    pushUniqueRecommendation(selected, recommendation);
-  }
-
-  if (selected.length < limit && hasBroadBusinessOwnershipEvidence(assessment)) {
-    const generalCandidates = sorted.filter((recommendation) =>
-      isGenericManagementDirection(recommendation)
+    const technologySpecificCandidates = sorted.filter((recommendation) =>
+      isDomainSpecificRecommendation(recommendation, assessment)
     );
 
-    for (const recommendation of generalCandidates) {
+    const acceptableTechnologyCandidates = sortTechnologyDomainRecommendations(
+      technologySpecificCandidates.filter(
+        (recommendation) => recommendation.scores.total >= 35
+      )
+    );
+
+    acceptableTechnologyCandidates.slice(0, 3).forEach((recommendation) => {
+      pushUniqueRecommendation(selected, recommendation);
+    });
+
+    const nonSuppressedCandidates = sorted.filter(
+      (recommendation) =>
+        !shouldSuppressPrimaryForDomainProfile(recommendation, assessment)
+    );
+
+    for (const recommendation of nonSuppressedCandidates) {
       if (selected.length >= limit) {
         break;
       }
 
       pushUniqueRecommendation(selected, recommendation);
     }
+
+    return selected.slice(0, limit).map((result, index) => ({
+      ...result,
+      rank: index + 1,
+    }));
   }
 
-  for (const recommendation of sorted) {
-    if (selected.length >= limit) {
-      break;
+  if (hasTalentAcquisitionProfile(assessment)) {
+    const selected = [];
+
+    const domainSpecificCandidates = sorted.filter((recommendation) =>
+      isDomainSpecificRecommendation(recommendation, assessment)
+    );
+
+    const acceptableDomainCandidates = sortTalentDomainRecommendations(
+      domainSpecificCandidates.filter(
+        (recommendation) => recommendation.scores.total >= 45
+      )
+    );
+
+    acceptableDomainCandidates.slice(0, 3).forEach((recommendation) => {
+      pushUniqueRecommendation(selected, recommendation);
+    });
+
+    const nonSuppressedCandidates = sorted.filter(
+      (recommendation) =>
+        !shouldSuppressPrimaryForDomainProfile(recommendation, assessment)
+    );
+
+    for (const recommendation of nonSuppressedCandidates) {
+      if (selected.length >= limit) {
+        break;
+      }
+
+      pushUniqueRecommendation(selected, recommendation);
     }
 
-    pushUniqueRecommendation(selected, recommendation);
+    return selected.slice(0, limit).map((result, index) => ({
+      ...result,
+      rank: index + 1,
+    }));
   }
 
-  return selected.slice(0, limit).map((result, index) => ({
-    ...result,
-    rank: index + 1,
-  }));
+  return sorted
+    .filter(
+      (recommendation) =>
+        !shouldSuppressPrimaryForDomainProfile(recommendation, assessment)
+    )
+    .slice(0, limit)
+    .map((result, index) => ({
+      ...result,
+      rank: index + 1,
+    }));
+}
+
+function shouldSkipDirectionBeforeScoring(direction, assessment) {
+  if (hasStudentProfile(assessment)) {
+    return true;
+  }
+
+  if (
+    isRestrictedHrWorkforceDirection(direction) &&
+    !hasHrWorkforceDomainEvidence(assessment)
+  ) {
+    return true;
+  }
+
+  if (!hasTalentAcquisitionProfile(assessment) && isTalentDirection(direction)) {
+    return true;
+  }
+
+  if (
+    isTechnologyExecutiveDirection(direction) &&
+    !hasTechnologyDomainEvidence(assessment)
+  ) {
+    return true;
+  }
+
+  return false;
 }
 
 export function generateRecommendations(assessment) {
+  if (hasStudentProfile(assessment)) {
+    return [];
+  }
+
   const weights = normalizeWeights(assessment?.priorityWeights);
 
   const competencySignals = assessment?.cvProfile?.competencySignals || [];
@@ -2093,6 +2419,10 @@ export function generateRecommendations(assessment) {
       continue;
     }
 
+    if (shouldSkipDirectionBeforeScoring(direction, assessment)) {
+      continue;
+    }
+
     const eligibilityResult = evaluateEligibility(
       professionalCredentials,
       direction
@@ -2112,6 +2442,24 @@ export function generateRecommendations(assessment) {
       !hasDomainMatch(direction, assessment)
     ) {
       competencyScore = Math.round(competencyScore * 0.45);
+      flags.push("domain_credibility_gap");
+    }
+
+    if (
+      direction.transitionCategory === "open_transition" &&
+      direction.domainSpecificityRequired === "medium" &&
+      !hasDomainMatch(direction, assessment)
+    ) {
+      competencyScore = Math.round(competencyScore * 0.65);
+      flags.push("domain_credibility_gap");
+    }
+
+    if (
+      direction.transitionCategory === "bridge_friendly" &&
+      direction.domainSpecificityRequired === "medium" &&
+      !hasDomainMatch(direction, assessment)
+    ) {
+      competencyScore = Math.round(competencyScore * 0.7);
       flags.push("domain_credibility_gap");
     }
 
@@ -2256,13 +2604,14 @@ export function generateCareerMap(assessment, recommendations) {
   const inputFactors = buildAssessmentInputFactors(assessment);
 
   return {
-    version: "career-map-v1.0",
+    version: "career-map-v1.3-hard-hr-domain-gate",
     currentProfileNode,
     primaryNodes,
     adjacentNodes,
     longerPathNodes,
     inputFactors,
     summary: buildCareerMapSummary(
+      assessment,
       primaryNodes,
       adjacentNodes,
       longerPathNodes

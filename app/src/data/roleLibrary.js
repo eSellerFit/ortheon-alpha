@@ -1,8 +1,8 @@
 // src/data/roleLibrary.js
-// Ortheon Role Library v2.1 — Complete Master
-// 44 directions across 10 O*NET categories
+// Ortheon Role Library v2.2 — Domain-Gated Master
+// 49 directions across 11 direction families
 // financialPathway is NOT here — see salaryBenchmarks.js
-// Last validated: May 11, 2026
+// Last validated: May 18, 2026
 
 // TRANSITION CATEGORY DEFINITIONS:
 // open_transition    — credible direct or near-direct move for most profiles with relevant competencies
@@ -10,15 +10,19 @@
 // domain_heavy       — requires demonstrated domain expertise, not just transferable skills
 // credentialed       — requires regulated license or formal credential to practice
 
-export const roleLibrary = [
+// IMPORTANT DOMAIN RULE:
+// Team leadership, hiring, coaching, or managing people is NOT by itself HR / workforce domain evidence.
+// HR / workforce / people analytics roles require evidence that HR, talent, workforce, or people systems
+// were the actual professional domain, not only a management responsibility inside another domain.
 
+export const roleLibrary = [
   // ============================================================
   // BUSINESS & FINANCE (BF) — 10 directions
   // ============================================================
 
   {
     directionId: "BF-1-E",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["13-2051.00", "13-2054.00"],
     onetTitles: ["Financial and Investment Analysts", "Financial Risk Specialists"],
     category: "Business & Finance",
@@ -30,27 +34,33 @@ export const roleLibrary = [
     aiExposureSource: "Anthropic Economic Index 2026",
     requiredCompetencies: [8, 4, 9],
     preferredCompetencies: [5, 1, 7],
-    dominantAnchors: [
-      { anchorId: "technical", idealMin: 7, idealMax: 10 }
-    ],
+    dominantAnchors: [{ anchorId: "technical", idealMin: 7, idealMax: 10 }],
     significantAnchors: [
       { anchorId: "security", idealMin: 5, idealMax: 10 },
-      { anchorId: "challenge", idealMin: 5, idealMax: 10 }
+      { anchorId: "challenge", idealMin: 5, idealMax: 10 },
     ],
     transitionCategory: "domain_heavy",
     domainSpecificityRequired: "high",
-    relevantDomains: ["finance", "investment", "banking", "financial services", "accounting", "risk"],
+    relevantDomains: [
+      "finance",
+      "investment",
+      "banking",
+      "financial services",
+      "accounting",
+      "risk",
+    ],
     financialRiskLevel: "low",
     bridgeDirections: [],
     longerPathOptions: [],
     stretchabilityRequired: "low",
     transitionPathway: "direct",
-    d4EvolutionPath: "AI-augmented financial strategist using AI for all analysis while focusing on judgment and client relationships"
+    d4EvolutionPath:
+      "AI-augmented financial strategist using AI for analysis while focusing on judgment and stakeholder decisions",
   },
 
   {
     directionId: "BF-1-IF",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["13-2051.00", "13-2052.00"],
     onetTitles: ["Financial and Investment Analysts", "Personal Financial Advisors"],
     category: "Business & Finance",
@@ -64,25 +74,30 @@ export const roleLibrary = [
     preferredCompetencies: [5, 1, 20],
     dominantAnchors: [
       { anchorId: "autonomy", idealMin: 7, idealMax: 10 },
-      { anchorId: "technical", idealMin: 6, idealMax: 10 }
+      { anchorId: "technical", idealMin: 6, idealMax: 10 },
     ],
-    significantAnchors: [
-      { anchorId: "challenge", idealMin: 5, idealMax: 10 }
-    ],
+    significantAnchors: [{ anchorId: "challenge", idealMin: 5, idealMax: 10 }],
     transitionCategory: "domain_heavy",
     domainSpecificityRequired: "high",
-    relevantDomains: ["finance", "investment", "banking", "financial planning", "wealth management"],
+    relevantDomains: [
+      "finance",
+      "investment",
+      "banking",
+      "financial planning",
+      "wealth management",
+    ],
     financialRiskLevel: "medium",
     bridgeDirections: ["BF-1-E"],
     longerPathOptions: ["BF-11-OV"],
     stretchabilityRequired: "high",
     transitionPathway: "bridge",
-    d4EvolutionPath: "AI-powered fractional CFO serving more clients at higher value using AI leverage"
+    d4EvolutionPath:
+      "AI-powered fractional finance advisor using AI for modeling while focusing on judgment and client trust",
   },
 
   {
     directionId: "BF-4-E",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["13-1071.00", "11-3121.00"],
     onetTitles: ["Human Resources Specialists", "Human Resources Managers"],
     category: "Business & Finance",
@@ -96,25 +111,31 @@ export const roleLibrary = [
     preferredCompetencies: [12, 6, 5],
     dominantAnchors: [
       { anchorId: "impact", idealMin: 6, idealMax: 10 },
-      { anchorId: "management", idealMin: 6, idealMax: 10 }
+      { anchorId: "management", idealMin: 6, idealMax: 10 },
     ],
-    significantAnchors: [
-      { anchorId: "security", idealMin: 6, idealMax: 10 }
+    significantAnchors: [{ anchorId: "security", idealMin: 6, idealMax: 10 }],
+    transitionCategory: "domain_heavy",
+    domainSpecificityRequired: "high",
+    relevantDomains: [
+      "human resources",
+      "people operations",
+      "talent acquisition",
+      "talent management",
+      "workforce",
+      "hr",
     ],
-    transitionCategory: "open_transition",
-    domainSpecificityRequired: "low",
-    relevantDomains: [],
     financialRiskLevel: "low",
     bridgeDirections: [],
     longerPathOptions: ["BF-5-E", "BF-6-E"],
-    stretchabilityRequired: "low",
+    stretchabilityRequired: "medium",
     transitionPathway: "direct",
-    d4EvolutionPath: "AI-enabled people strategist using AI for admin and analytics while focusing on culture, leadership development, and organizational design"
+    d4EvolutionPath:
+      "AI-enabled people strategist using AI for admin and analytics while focusing on culture, leadership, and organizational design",
   },
 
   {
     directionId: "BF-5-E",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["13-1071.00", "13-1161.01"],
     onetTitles: ["Human Resources Specialists", "Human Resources Information System Specialists"],
     category: "Business & Finance",
@@ -128,26 +149,35 @@ export const roleLibrary = [
     preferredCompetencies: [4, 20, 22, 5],
     dominantAnchors: [
       { anchorId: "technical", idealMin: 6, idealMax: 10 },
-      { anchorId: "impact", idealMin: 5, idealMax: 10 }
+      { anchorId: "impact", idealMin: 5, idealMax: 10 },
     ],
     significantAnchors: [
       { anchorId: "management", idealMin: 4, idealMax: 9 },
-      { anchorId: "security", idealMin: 5, idealMax: 10 }
+      { anchorId: "security", idealMin: 5, idealMax: 10 },
     ],
-    transitionCategory: "bridge_friendly",
-    domainSpecificityRequired: "medium",
-    relevantDomains: ["human resources", "talent acquisition", "recruiting", "people analytics", "workforce"],
+    transitionCategory: "domain_heavy",
+    domainSpecificityRequired: "high",
+    relevantDomains: [
+      "human resources",
+      "talent acquisition",
+      "talent management",
+      "workforce planning",
+      "people analytics",
+      "hr analytics",
+      "workforce",
+    ],
     financialRiskLevel: "low",
     bridgeDirections: ["BF-4-E", "BF-6-E"],
     longerPathOptions: [],
     stretchabilityRequired: "medium",
     transitionPathway: "bridge",
-    d4EvolutionPath: "AI-powered workforce strategist using AI for skills mapping and org design while focusing on strategic talent decisions"
+    d4EvolutionPath:
+      "AI-powered workforce strategist using AI for skills mapping and org design while focusing on strategic talent decisions",
   },
 
   {
     directionId: "BF-6-E",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["15-2051.00", "13-1071.00"],
     onetTitles: ["Data Scientists", "Human Resources Specialists"],
     category: "Business & Finance",
@@ -161,26 +191,34 @@ export const roleLibrary = [
     preferredCompetencies: [20, 22, 10, 5],
     dominantAnchors: [
       { anchorId: "technical", idealMin: 7, idealMax: 10 },
-      { anchorId: "challenge", idealMin: 5, idealMax: 10 }
+      { anchorId: "challenge", idealMin: 5, idealMax: 10 },
     ],
     significantAnchors: [
       { anchorId: "impact", idealMin: 5, idealMax: 10 },
-      { anchorId: "security", idealMin: 4, idealMax: 9 }
+      { anchorId: "security", idealMin: 4, idealMax: 9 },
     ],
-    transitionCategory: "bridge_friendly",
-    domainSpecificityRequired: "medium",
-    relevantDomains: ["data analytics", "human resources", "people analytics", "business intelligence"],
+    transitionCategory: "domain_heavy",
+    domainSpecificityRequired: "high",
+    relevantDomains: [
+      "human resources",
+      "people analytics",
+      "hr analytics",
+      "hr tech",
+      "workforce planning",
+      "talent analytics",
+    ],
     financialRiskLevel: "low",
     bridgeDirections: ["BF-4-E", "BF-5-E", "CM-2-E"],
     longerPathOptions: [],
     stretchabilityRequired: "medium",
     transitionPathway: "bridge",
-    d4EvolutionPath: "AI-native people analyst using predictive attrition, performance modeling, and DEI analytics while focusing on strategic interpretation"
+    d4EvolutionPath:
+      "AI-native people analyst using predictive attrition, performance modeling, and workforce analytics while focusing on strategic interpretation",
   },
 
   {
     directionId: "BF-7-IF",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["13-2099.01", "13-1111.00"],
     onetTitles: ["Financial Quantitative Analysts", "Management Analysts"],
     category: "Business & Finance",
@@ -194,26 +232,33 @@ export const roleLibrary = [
     preferredCompetencies: [1, 15, 11, 13],
     dominantAnchors: [
       { anchorId: "impact", idealMin: 7, idealMax: 10 },
-      { anchorId: "autonomy", idealMin: 6, idealMax: 10 }
+      { anchorId: "autonomy", idealMin: 6, idealMax: 10 },
     ],
     significantAnchors: [
       { anchorId: "management", idealMin: 5, idealMax: 10 },
-      { anchorId: "workModel", idealMin: 5, idealMax: 10 }
+      { anchorId: "workModel", idealMin: 5, idealMax: 10 },
     ],
     transitionCategory: "bridge_friendly",
-    domainSpecificityRequired: "low",
-    relevantDomains: [],
+    domainSpecificityRequired: "medium",
+    relevantDomains: [
+      "small business",
+      "entrepreneurship",
+      "consulting",
+      "business advisory",
+      "operations",
+    ],
     financialRiskLevel: "medium",
-    bridgeDirections: ["MG-7-IF", "BF-8-IF"],
+    bridgeDirections: ["MG-7-IF"],
     longerPathOptions: [],
     stretchabilityRequired: "high",
     transitionPathway: "bridge",
-    d4EvolutionPath: "AI-powered SME advisor using AI for financial modeling and market analysis while focusing on founder coaching and transformation"
+    d4EvolutionPath:
+      "AI-powered SME advisor using AI for financial modeling and market analysis while focusing on founder coaching and transformation",
   },
 
   {
     directionId: "BF-8-IF",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["13-1071.00", "21-1012.00"],
     onetTitles: ["Human Resources Specialists", "Educational, Guidance, and Career Counselors and Advisors"],
     category: "Business & Finance",
@@ -227,26 +272,34 @@ export const roleLibrary = [
     preferredCompetencies: [4, 14, 5, 8],
     dominantAnchors: [
       { anchorId: "impact", idealMin: 8, idealMax: 10 },
-      { anchorId: "autonomy", idealMin: 6, idealMax: 10 }
+      { anchorId: "autonomy", idealMin: 6, idealMax: 10 },
     ],
     significantAnchors: [
       { anchorId: "workModel", idealMin: 5, idealMax: 10 },
-      { anchorId: "management", idealMin: 4, idealMax: 9 }
+      { anchorId: "management", idealMin: 4, idealMax: 9 },
     ],
-    transitionCategory: "bridge_friendly",
-    domainSpecificityRequired: "low",
-    relevantDomains: [],
+    transitionCategory: "domain_heavy",
+    domainSpecificityRequired: "high",
+    relevantDomains: [
+      "human resources",
+      "talent acquisition",
+      "career coaching",
+      "outplacement",
+      "workforce transition",
+      "leadership development",
+    ],
     financialRiskLevel: "medium",
     bridgeDirections: ["BF-4-E", "ED-5-IF"],
     longerPathOptions: [],
     stretchabilityRequired: "high",
     transitionPathway: "bridge",
-    d4EvolutionPath: "AI-powered career advisor using AI for role matching and market intelligence while focusing on human coaching and decision support"
+    d4EvolutionPath:
+      "AI-powered career advisor using AI for role matching and market intelligence while focusing on human coaching and decision support",
   },
 
   {
     directionId: "BF-9-E",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["13-1041.00", "13-2054.00"],
     onetTitles: ["Compliance Officers", "Financial Risk Specialists"],
     category: "Business & Finance",
@@ -260,26 +313,35 @@ export const roleLibrary = [
     preferredCompetencies: [8, 12, 6, 5],
     dominantAnchors: [
       { anchorId: "security", idealMin: 7, idealMax: 10 },
-      { anchorId: "technical", idealMin: 6, idealMax: 10 }
+      { anchorId: "technical", idealMin: 6, idealMax: 10 },
     ],
     significantAnchors: [
       { anchorId: "management", idealMin: 4, idealMax: 9 },
-      { anchorId: "challenge", idealMin: 4, idealMax: 8 }
+      { anchorId: "challenge", idealMin: 4, idealMax: 8 },
     ],
     transitionCategory: "open_transition",
     domainSpecificityRequired: "medium",
-    relevantDomains: ["compliance", "risk", "legal", "regulatory", "audit", "finance", "governance"],
+    relevantDomains: [
+      "compliance",
+      "risk",
+      "legal",
+      "regulatory",
+      "audit",
+      "finance",
+      "governance",
+    ],
     financialRiskLevel: "low",
     bridgeDirections: [],
     longerPathOptions: [],
     stretchabilityRequired: "low",
     transitionPathway: "direct",
-    d4EvolutionPath: "AI-augmented compliance officer using AI for regulatory monitoring and audit trails while focusing on risk judgment and governance leadership"
+    d4EvolutionPath:
+      "AI-augmented compliance officer using AI for regulatory monitoring and audit trails while focusing on risk judgment and governance leadership",
   },
 
   {
     directionId: "BF-10-IF",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["13-1161.00", "11-2011.00"],
     onetTitles: ["Market Research Analysts and Marketing Specialists", "Advertising and Promotions Managers"],
     category: "Business & Finance",
@@ -293,26 +355,31 @@ export const roleLibrary = [
     preferredCompetencies: [4, 11, 5, 13],
     dominantAnchors: [
       { anchorId: "impact", idealMin: 6, idealMax: 10 },
-      { anchorId: "autonomy", idealMin: 6, idealMax: 10 }
+      { anchorId: "autonomy", idealMin: 6, idealMax: 10 },
     ],
-    significantAnchors: [
-      { anchorId: "challenge", idealMin: 5, idealMax: 10 },
-      { anchorId: "workModel", idealMin: 5, idealMax: 10 }
-    ],
+    significantAnchors: [{ anchorId: "challenge", idealMin: 5, idealMax: 10 }],
     transitionCategory: "bridge_friendly",
     domainSpecificityRequired: "medium",
-    relevantDomains: ["communications", "marketing", "public relations", "media", "PR", "brand"],
+    relevantDomains: [
+      "communications",
+      "marketing",
+      "public relations",
+      "media",
+      "PR",
+      "brand",
+    ],
     financialRiskLevel: "medium",
     bridgeDirections: ["AD-5-IF"],
     longerPathOptions: [],
     stretchabilityRequired: "medium",
     transitionPathway: "bridge",
-    d4EvolutionPath: "AI-augmented communications strategist using AI for content production and monitoring while focusing on narrative strategy and stakeholder relationships"
+    d4EvolutionPath:
+      "AI-augmented communications strategist using AI for content production and monitoring while focusing on narrative strategy and stakeholder relationships",
   },
 
   {
     directionId: "BF-11-OV",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["13-2052.00"],
     onetTitles: ["Personal Financial Advisors"],
     category: "Business & Finance",
@@ -326,27 +393,34 @@ export const roleLibrary = [
     preferredCompetencies: [1, 10, 5, 15],
     dominantAnchors: [
       { anchorId: "autonomy", idealMin: 7, idealMax: 10 },
-      { anchorId: "technical", idealMin: 6, idealMax: 10 }
+      { anchorId: "technical", idealMin: 6, idealMax: 10 },
     ],
     significantAnchors: [
       { anchorId: "impact", idealMin: 5, idealMax: 10 },
-      { anchorId: "workModel", idealMin: 5, idealMax: 10 }
+      { anchorId: "workModel", idealMin: 5, idealMax: 10 },
     ],
     eligibility: {
       gateType: "hard",
       acceptedCredentials: ["financial_advisory"],
       acceptedStatuses: ["active"],
-      reason: "Independent financial advisory practice requires FINRA registration or RIA status (Series 65/66 or equivalent)."
+      reason:
+        "Independent financial advisory practice requires FINRA registration or RIA status (Series 65/66 or equivalent).",
     },
     transitionCategory: "credentialed",
     domainSpecificityRequired: "high",
-    relevantDomains: ["finance", "financial planning", "wealth management", "investment"],
+    relevantDomains: [
+      "finance",
+      "financial planning",
+      "wealth management",
+      "investment",
+    ],
     financialRiskLevel: "high",
     bridgeDirections: ["BF-1-E", "BF-1-IF"],
     longerPathOptions: [],
     stretchabilityRequired: "high",
     transitionPathway: "bridge",
-    d4EvolutionPath: "AI-powered financial advisor using AI for portfolio analysis and client reporting while focusing on life planning and trusted advisor relationships"
+    d4EvolutionPath:
+      "AI-powered financial advisor using AI for portfolio analysis and client reporting while focusing on life planning and trusted advisor relationships",
   },
 
   // ============================================================
@@ -355,7 +429,7 @@ export const roleLibrary = [
 
   {
     directionId: "MG-1-E",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["11-1021.00"],
     onetTitles: ["General and Operations Managers"],
     category: "Management",
@@ -367,27 +441,32 @@ export const roleLibrary = [
     aiExposureSource: "Anthropic Economic Index 2026",
     requiredCompetencies: [4, 10, 11, 12],
     preferredCompetencies: [8, 1, 6, 9],
-    dominantAnchors: [
-      { anchorId: "management", idealMin: 7, idealMax: 10 }
-    ],
+    dominantAnchors: [{ anchorId: "management", idealMin: 7, idealMax: 10 }],
     significantAnchors: [
       { anchorId: "impact", idealMin: 5, idealMax: 10 },
-      { anchorId: "challenge", idealMin: 5, idealMax: 10 }
+      { anchorId: "challenge", idealMin: 5, idealMax: 10 },
     ],
     transitionCategory: "open_transition",
-    domainSpecificityRequired: "low",
-    relevantDomains: [],
+    domainSpecificityRequired: "medium",
+    relevantDomains: [
+      "management",
+      "operations",
+      "business ownership",
+      "p&l",
+      "executive leadership",
+    ],
     financialRiskLevel: "low",
     bridgeDirections: [],
     longerPathOptions: [],
     stretchabilityRequired: "medium",
     transitionPathway: "direct",
-    d4EvolutionPath: "AI-augmented executive using AI for reporting and scenario modeling while focusing on strategy and people leadership"
+    d4EvolutionPath:
+      "AI-augmented executive using AI for reporting and scenario modeling while focusing on strategy and leadership",
   },
 
   {
     directionId: "MG-4-ST",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["11-1011.00", "11-1011.03"],
     onetTitles: ["Chief Executives", "Chief Sustainability Officers"],
     category: "Management",
@@ -401,27 +480,29 @@ export const roleLibrary = [
     preferredCompetencies: [4, 8, 9],
     dominantAnchors: [
       { anchorId: "autonomy", idealMin: 7, idealMax: 10 },
-      { anchorId: "impact", idealMin: 7, idealMax: 10 }
+      { anchorId: "impact", idealMin: 7, idealMax: 10 },
     ],
-    significantAnchors: [
-      { anchorId: "challenge", idealMin: 7, idealMax: 10 }
-    ],
+    significantAnchors: [{ anchorId: "challenge", idealMin: 7, idealMax: 10 }],
     transitionCategory: "bridge_friendly",
-    domainSpecificityRequired: "low",
-    relevantDomains: [],
+    domainSpecificityRequired: "medium",
+    relevantDomains: ["startup", "entrepreneurship", "founder", "product"],
     financialRiskLevel: "high",
     bridgeDirections: ["MG-9-E", "CM-6-E", "MG-6-E"],
     longerPathOptions: [],
     stretchabilityRequired: "high",
     transitionPathway: "stretch",
-    d4EvolutionPath: "AI-native founder operating at 10x leverage with minimal headcount"
+    d4EvolutionPath:
+      "AI-native founder operating at higher leverage with minimal headcount",
   },
 
   {
     directionId: "MG-5-NP",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["11-9151.00", "11-9031.00"],
-    onetTitles: ["Social and Community Service Managers", "Education Administrators, Preschool and Childcare Center/Program"],
+    onetTitles: [
+      "Social and Community Service Managers",
+      "Education Administrators, Preschool and Childcare Center/Program",
+    ],
     category: "Management",
     metaDirection: "Nonprofit & Mission Leadership",
     context: "Nonprofit / Mission",
@@ -433,26 +514,33 @@ export const roleLibrary = [
     preferredCompetencies: [6, 11, 13],
     dominantAnchors: [
       { anchorId: "impact", idealMin: 8, idealMax: 10 },
-      { anchorId: "management", idealMin: 6, idealMax: 10 }
+      { anchorId: "management", idealMin: 6, idealMax: 10 },
     ],
     significantAnchors: [
       { anchorId: "security", idealMin: 5, idealMax: 10 },
-      { anchorId: "workModel", idealMin: 4, idealMax: 10 }
+      { anchorId: "workModel", idealMin: 4, idealMax: 10 },
     ],
     transitionCategory: "open_transition",
-    domainSpecificityRequired: "low",
-    relevantDomains: [],
+    domainSpecificityRequired: "medium",
+    relevantDomains: [
+      "nonprofit",
+      "mission organization",
+      "education",
+      "community",
+      "social impact",
+    ],
     financialRiskLevel: "low",
     bridgeDirections: [],
     longerPathOptions: ["MG-10-NP", "MG-12-OV"],
     stretchabilityRequired: "medium",
     transitionPathway: "direct",
-    d4EvolutionPath: "AI-enabled mission leader using AI for impact measurement and reporting while focusing on community and organizational strategy"
+    d4EvolutionPath:
+      "AI-enabled mission leader using AI for impact measurement and reporting while focusing on community and organizational strategy",
   },
 
   {
     directionId: "MG-6-E",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["11-1011.03", "11-9199.00"],
     onetTitles: ["Chief Sustainability Officers", "Managers, All Other"],
     category: "Management",
@@ -466,26 +554,34 @@ export const roleLibrary = [
     preferredCompetencies: [1, 9, 5, 8],
     dominantAnchors: [
       { anchorId: "management", idealMin: 6, idealMax: 10 },
-      { anchorId: "impact", idealMin: 6, idealMax: 10 }
+      { anchorId: "impact", idealMin: 6, idealMax: 10 },
     ],
     significantAnchors: [
       { anchorId: "challenge", idealMin: 5, idealMax: 10 },
-      { anchorId: "security", idealMin: 4, idealMax: 9 }
+      { anchorId: "security", idealMin: 4, idealMax: 9 },
     ],
     transitionCategory: "open_transition",
-    domainSpecificityRequired: "low",
-    relevantDomains: [],
+    domainSpecificityRequired: "medium",
+    relevantDomains: [
+      "business operations",
+      "strategy",
+      "operations",
+      "chief of staff",
+      "execution",
+      "management",
+    ],
     financialRiskLevel: "low",
     bridgeDirections: [],
     longerPathOptions: ["MG-1-E", "MG-4-ST"],
     stretchabilityRequired: "medium",
     transitionPathway: "direct",
-    d4EvolutionPath: "AI-augmented operations leader using AI for reporting and synthesis while focusing on organizational alignment and execution"
+    d4EvolutionPath:
+      "AI-augmented operations leader using AI for reporting and synthesis while focusing on organizational alignment and execution",
   },
 
   {
     directionId: "MG-7-IF",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["13-1111.00"],
     onetTitles: ["Management Analysts"],
     category: "Management",
@@ -499,26 +595,33 @@ export const roleLibrary = [
     preferredCompetencies: [9, 12, 5, 10],
     dominantAnchors: [
       { anchorId: "autonomy", idealMin: 7, idealMax: 10 },
-      { anchorId: "challenge", idealMin: 7, idealMax: 10 }
+      { anchorId: "challenge", idealMin: 7, idealMax: 10 },
     ],
     significantAnchors: [
       { anchorId: "technical", idealMin: 5, idealMax: 10 },
-      { anchorId: "impact", idealMin: 5, idealMax: 10 }
+      { anchorId: "impact", idealMin: 5, idealMax: 10 },
     ],
     transitionCategory: "bridge_friendly",
     domainSpecificityRequired: "medium",
-    relevantDomains: ["consulting", "strategy", "management", "operations", "advisory"],
+    relevantDomains: [
+      "consulting",
+      "strategy",
+      "management",
+      "operations",
+      "advisory",
+    ],
     financialRiskLevel: "medium",
     bridgeDirections: ["MG-1-E", "MG-6-E"],
     longerPathOptions: [],
     stretchabilityRequired: "high",
     transitionPathway: "bridge",
-    d4EvolutionPath: "AI-powered strategy consultant using AI for research and benchmarking while focusing on insight synthesis and executive advisory"
+    d4EvolutionPath:
+      "AI-powered strategy consultant using AI for research and benchmarking while focusing on insight synthesis and executive advisory",
   },
 
   {
     directionId: "MG-8-E",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["11-9199.01", "13-1082.00"],
     onetTitles: ["Regulatory Affairs Managers", "Project Management Specialists"],
     category: "Management",
@@ -532,26 +635,34 @@ export const roleLibrary = [
     preferredCompetencies: [9, 1, 11, 7],
     dominantAnchors: [
       { anchorId: "management", idealMin: 6, idealMax: 10 },
-      { anchorId: "security", idealMin: 5, idealMax: 10 }
+      { anchorId: "security", idealMin: 5, idealMax: 10 },
     ],
     significantAnchors: [
       { anchorId: "challenge", idealMin: 4, idealMax: 9 },
-      { anchorId: "impact", idealMin: 4, idealMax: 9 }
+      { anchorId: "impact", idealMin: 4, idealMax: 9 },
     ],
     transitionCategory: "open_transition",
-    domainSpecificityRequired: "low",
-    relevantDomains: [],
+    domainSpecificityRequired: "medium",
+    relevantDomains: [
+      "project management",
+      "program management",
+      "delivery",
+      "operations",
+      "technology",
+      "engineering",
+    ],
     financialRiskLevel: "low",
     bridgeDirections: [],
     longerPathOptions: ["MG-1-E", "MG-6-E"],
     stretchabilityRequired: "low",
     transitionPathway: "direct",
-    d4EvolutionPath: "AI-augmented program manager using AI for risk modeling and resource allocation while focusing on stakeholder alignment and delivery quality"
+    d4EvolutionPath:
+      "AI-augmented program manager using AI for risk modeling and resource allocation while focusing on stakeholder alignment and delivery quality",
   },
 
   {
     directionId: "MG-9-E",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["11-1021.00", "11-9199.00"],
     onetTitles: ["General and Operations Managers", "Managers, All Other"],
     category: "Management",
@@ -565,26 +676,34 @@ export const roleLibrary = [
     preferredCompetencies: [8, 20, 12, 5],
     dominantAnchors: [
       { anchorId: "challenge", idealMin: 6, idealMax: 10 },
-      { anchorId: "impact", idealMin: 6, idealMax: 10 }
+      { anchorId: "impact", idealMin: 6, idealMax: 10 },
     ],
     significantAnchors: [
       { anchorId: "technical", idealMin: 5, idealMax: 10 },
-      { anchorId: "management", idealMin: 5, idealMax: 10 }
+      { anchorId: "management", idealMin: 5, idealMax: 10 },
     ],
     transitionCategory: "open_transition",
     domainSpecificityRequired: "medium",
-    relevantDomains: ["marketplace", "platform", "operations", "e-commerce", "two-sided market", "gig economy"],
+    relevantDomains: [
+      "marketplace",
+      "platform",
+      "operations",
+      "e-commerce",
+      "two-sided market",
+      "gig economy",
+    ],
     financialRiskLevel: "low",
     bridgeDirections: [],
     longerPathOptions: ["MG-9-IF", "MG-4-ST"],
     stretchabilityRequired: "medium",
     transitionPathway: "direct",
-    d4EvolutionPath: "AI-augmented platform operator using AI for supply/demand modeling and pricing optimization while focusing on ecosystem strategy"
+    d4EvolutionPath:
+      "AI-augmented platform operator using AI for supply/demand modeling and pricing optimization while focusing on ecosystem strategy",
   },
 
   {
     directionId: "MG-9-IF",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["11-1021.00", "13-1111.00"],
     onetTitles: ["General and Operations Managers", "Management Analysts"],
     category: "Management",
@@ -598,59 +717,75 @@ export const roleLibrary = [
     preferredCompetencies: [8, 15, 20, 5],
     dominantAnchors: [
       { anchorId: "autonomy", idealMin: 7, idealMax: 10 },
-      { anchorId: "challenge", idealMin: 6, idealMax: 10 }
+      { anchorId: "challenge", idealMin: 6, idealMax: 10 },
     ],
     significantAnchors: [
       { anchorId: "technical", idealMin: 5, idealMax: 10 },
-      { anchorId: "impact", idealMin: 5, idealMax: 10 }
+      { anchorId: "impact", idealMin: 5, idealMax: 10 },
     ],
     transitionCategory: "bridge_friendly",
     domainSpecificityRequired: "medium",
-    relevantDomains: ["marketplace", "platform", "operations", "e-commerce", "two-sided market"],
+    relevantDomains: [
+      "marketplace",
+      "platform",
+      "operations",
+      "e-commerce",
+      "two-sided market",
+    ],
     financialRiskLevel: "medium",
     bridgeDirections: ["MG-9-E", "MG-7-IF"],
     longerPathOptions: [],
     stretchabilityRequired: "high",
     transitionPathway: "bridge",
-    d4EvolutionPath: "AI-powered platform advisor helping startups and scale-ups build marketplace mechanics and operational infrastructure"
+    d4EvolutionPath:
+      "AI-powered platform advisor helping startups and scale-ups build marketplace mechanics and operational infrastructure",
   },
 
   {
     directionId: "MG-10-NP",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["11-9151.00", "13-1131.00"],
     onetTitles: ["Social and Community Service Managers", "Fundraisers"],
     category: "Management",
     metaDirection: "Nonprofit Fundraising & Development Leadership",
     context: "Nonprofit / Mission",
     contextCode: "NP",
-    directionLabel: "Nonprofit Fundraising & Development Leadership — Mission Organization",
+    directionLabel:
+      "Nonprofit Fundraising & Development Leadership — Mission Organization",
     aiDurabilityRating: "D3",
     aiExposureSource: "Anthropic Economic Index 2026",
     requiredCompetencies: [14, 10, 1, 3],
     preferredCompetencies: [13, 4, 11, 5],
     dominantAnchors: [
       { anchorId: "impact", idealMin: 8, idealMax: 10 },
-      { anchorId: "management", idealMin: 6, idealMax: 10 }
+      { anchorId: "management", idealMin: 6, idealMax: 10 },
     ],
     significantAnchors: [
       { anchorId: "challenge", idealMin: 5, idealMax: 10 },
-      { anchorId: "workModel", idealMin: 4, idealMax: 9 }
+      { anchorId: "workModel", idealMin: 4, idealMax: 9 },
     ],
     transitionCategory: "bridge_friendly",
     domainSpecificityRequired: "medium",
-    relevantDomains: ["nonprofit", "fundraising", "development", "philanthropy", "grants", "donor relations"],
+    relevantDomains: [
+      "nonprofit",
+      "fundraising",
+      "development",
+      "philanthropy",
+      "grants",
+      "donor relations",
+    ],
     financialRiskLevel: "low",
     bridgeDirections: ["MG-5-NP"],
     longerPathOptions: [],
     stretchabilityRequired: "medium",
     transitionPathway: "bridge",
-    d4EvolutionPath: "AI-augmented development director using AI for donor analytics and grant research while focusing on relationship cultivation and mission storytelling"
+    d4EvolutionPath:
+      "AI-augmented development director using AI for donor analytics and grant research while focusing on relationship cultivation and mission storytelling",
   },
 
   {
     directionId: "MG-11-OV",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["11-1021.00", "13-1199.04"],
     onetTitles: ["General and Operations Managers", "Business Continuity Planners"],
     category: "Management",
@@ -664,26 +799,33 @@ export const roleLibrary = [
     preferredCompetencies: [8, 1, 10, 5],
     dominantAnchors: [
       { anchorId: "autonomy", idealMin: 8, idealMax: 10 },
-      { anchorId: "impact", idealMin: 6, idealMax: 10 }
+      { anchorId: "impact", idealMin: 6, idealMax: 10 },
     ],
     significantAnchors: [
       { anchorId: "challenge", idealMin: 6, idealMax: 10 },
-      { anchorId: "workModel", idealMin: 5, idealMax: 10 }
+      { anchorId: "workModel", idealMin: 5, idealMax: 10 },
     ],
     transitionCategory: "bridge_friendly",
-    domainSpecificityRequired: "low",
-    relevantDomains: [],
+    domainSpecificityRequired: "medium",
+    relevantDomains: [
+      "entrepreneurship",
+      "small business",
+      "service business",
+      "operations",
+      "local business",
+    ],
     financialRiskLevel: "high",
     bridgeDirections: ["MG-1-E", "MG-7-IF"],
     longerPathOptions: [],
     stretchabilityRequired: "high",
     transitionPathway: "stretch",
-    d4EvolutionPath: "AI-augmented business owner using AI for customer acquisition, operations, and financial management while focusing on service quality and local relationships"
+    d4EvolutionPath:
+      "AI-augmented business owner using AI for customer acquisition, operations, and financial management while focusing on service quality and local relationships",
   },
 
   {
     directionId: "MG-12-OV",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["11-9151.00", "11-1011.00"],
     onetTitles: ["Social and Community Service Managers", "Chief Executives"],
     category: "Management",
@@ -697,26 +839,33 @@ export const roleLibrary = [
     preferredCompetencies: [10, 13, 4, 8],
     dominantAnchors: [
       { anchorId: "impact", idealMin: 9, idealMax: 10 },
-      { anchorId: "autonomy", idealMin: 7, idealMax: 10 }
+      { anchorId: "autonomy", idealMin: 7, idealMax: 10 },
     ],
     significantAnchors: [
       { anchorId: "challenge", idealMin: 6, idealMax: 10 },
-      { anchorId: "workModel", idealMin: 5, idealMax: 10 }
+      { anchorId: "workModel", idealMin: 5, idealMax: 10 },
     ],
     transitionCategory: "bridge_friendly",
-    domainSpecificityRequired: "low",
-    relevantDomains: [],
+    domainSpecificityRequired: "medium",
+    relevantDomains: [
+      "social impact",
+      "nonprofit",
+      "mission organization",
+      "entrepreneurship",
+      "community",
+    ],
     financialRiskLevel: "high",
     bridgeDirections: ["MG-5-NP", "MG-10-NP"],
     longerPathOptions: [],
     stretchabilityRequired: "high",
     transitionPathway: "stretch",
-    d4EvolutionPath: "AI-powered impact founder using AI for measurement, reporting, and operational leverage while focusing on mission execution and stakeholder trust"
+    d4EvolutionPath:
+      "AI-powered impact founder using AI for measurement, reporting, and operational leverage while focusing on mission execution and stakeholder trust",
   },
 
   {
     directionId: "MG-13-E",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["11-1021.00", "11-9199.02"],
     onetTitles: ["General and Operations Managers", "Compliance Managers"],
     category: "Management",
@@ -730,21 +879,22 @@ export const roleLibrary = [
     preferredCompetencies: [1, 7, 9, 3],
     dominantAnchors: [
       { anchorId: "security", idealMin: 7, idealMax: 10 },
-      { anchorId: "management", idealMin: 7, idealMax: 10 }
+      { anchorId: "management", idealMin: 7, idealMax: 10 },
     ],
     significantAnchors: [
       { anchorId: "impact", idealMin: 5, idealMax: 10 },
-      { anchorId: "workModel", idealMin: 4, idealMax: 9 }
+      { anchorId: "workModel", idealMin: 4, idealMax: 9 },
     ],
     transitionCategory: "open_transition",
-    domainSpecificityRequired: "low",
-    relevantDomains: [],
+    domainSpecificityRequired: "medium",
+    relevantDomains: ["government", "public sector", "policy", "compliance"],
     financialRiskLevel: "low",
     bridgeDirections: [],
     longerPathOptions: [],
     stretchabilityRequired: "low",
     transitionPathway: "direct",
-    d4EvolutionPath: "AI-augmented public sector manager using AI for service delivery optimization and regulatory compliance while focusing on public accountability and policy execution"
+    d4EvolutionPath:
+      "AI-augmented public sector manager using AI for service delivery optimization and regulatory compliance while focusing on public accountability and policy execution",
   },
 
   // ============================================================
@@ -753,9 +903,12 @@ export const roleLibrary = [
 
   {
     directionId: "SR-1-E",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["41-4011.00", "41-9031.00"],
-    onetTitles: ["Sales Representatives, Wholesale and Manufacturing", "Sales Engineers"],
+    onetTitles: [
+      "Sales Representatives, Wholesale and Manufacturing",
+      "Sales Engineers",
+    ],
     category: "Sales & Related",
     metaDirection: "Enterprise & Complex Sales",
     context: "Enterprise",
@@ -767,25 +920,30 @@ export const roleLibrary = [
     preferredCompetencies: [10, 4, 13],
     dominantAnchors: [
       { anchorId: "impact", idealMin: 6, idealMax: 10 },
-      { anchorId: "challenge", idealMin: 6, idealMax: 10 }
+      { anchorId: "challenge", idealMin: 6, idealMax: 10 },
     ],
-    significantAnchors: [
-      { anchorId: "autonomy", idealMin: 5, idealMax: 10 }
-    ],
+    significantAnchors: [{ anchorId: "autonomy", idealMin: 5, idealMax: 10 }],
     transitionCategory: "open_transition",
-    domainSpecificityRequired: "low",
-    relevantDomains: [],
+    domainSpecificityRequired: "medium",
+    relevantDomains: [
+      "sales",
+      "business development",
+      "account management",
+      "customer success",
+      "partnerships",
+    ],
     financialRiskLevel: "low",
     bridgeDirections: [],
     longerPathOptions: ["SR-2-E", "SR-3-E"],
     stretchabilityRequired: "low",
     transitionPathway: "direct",
-    d4EvolutionPath: "AI-augmented strategic seller using AI for prospecting and CRM while focusing on high-value relationships and complex negotiations"
+    d4EvolutionPath:
+      "AI-augmented strategic seller using AI for prospecting and CRM while focusing on high-value relationships and complex negotiations",
   },
 
   {
     directionId: "SR-2-E",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["11-2022.00", "41-3099.00"],
     onetTitles: ["Sales Managers", "Sales Representatives, Services, All Other"],
     category: "Sales & Related",
@@ -799,26 +957,33 @@ export const roleLibrary = [
     preferredCompetencies: [4, 6, 13, 9],
     dominantAnchors: [
       { anchorId: "impact", idealMin: 6, idealMax: 10 },
-      { anchorId: "management", idealMin: 5, idealMax: 10 }
+      { anchorId: "management", idealMin: 5, idealMax: 10 },
     ],
     significantAnchors: [
       { anchorId: "security", idealMin: 4, idealMax: 9 },
-      { anchorId: "challenge", idealMin: 4, idealMax: 9 }
+      { anchorId: "challenge", idealMin: 4, idealMax: 9 },
     ],
     transitionCategory: "open_transition",
-    domainSpecificityRequired: "low",
-    relevantDomains: [],
+    domainSpecificityRequired: "medium",
+    relevantDomains: [
+      "sales",
+      "customer success",
+      "account management",
+      "client relationship",
+      "partnerships",
+    ],
     financialRiskLevel: "low",
     bridgeDirections: [],
     longerPathOptions: ["SR-1-E"],
     stretchabilityRequired: "low",
     transitionPathway: "direct",
-    d4EvolutionPath: "AI-augmented CS leader using AI for health scoring and risk detection while focusing on strategic relationships and expansion"
+    d4EvolutionPath:
+      "AI-augmented CS leader using AI for health scoring and risk detection while focusing on strategic relationships and expansion",
   },
 
   {
     directionId: "SR-3-E",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["11-2022.00", "13-1151.00"],
     onetTitles: ["Sales Managers", "Training and Development Specialists"],
     category: "Sales & Related",
@@ -832,21 +997,28 @@ export const roleLibrary = [
     preferredCompetencies: [4, 6, 13, 5],
     dominantAnchors: [
       { anchorId: "impact", idealMin: 6, idealMax: 10 },
-      { anchorId: "management", idealMin: 5, idealMax: 10 }
+      { anchorId: "management", idealMin: 5, idealMax: 10 },
     ],
     significantAnchors: [
       { anchorId: "technical", idealMin: 4, idealMax: 9 },
-      { anchorId: "challenge", idealMin: 4, idealMax: 9 }
+      { anchorId: "challenge", idealMin: 4, idealMax: 9 },
     ],
     transitionCategory: "open_transition",
-    domainSpecificityRequired: "low",
-    relevantDomains: [],
+    domainSpecificityRequired: "medium",
+    relevantDomains: [
+      "sales",
+      "sales enablement",
+      "partner success",
+      "training",
+      "customer success",
+    ],
     financialRiskLevel: "low",
     bridgeDirections: [],
     longerPathOptions: [],
     stretchabilityRequired: "low",
     transitionPathway: "direct",
-    d4EvolutionPath: "AI-augmented enablement leader using AI for content generation and coaching feedback while focusing on sales culture and capability building"
+    d4EvolutionPath:
+      "AI-augmented enablement leader using AI for content generation and coaching feedback while focusing on sales culture and capability building",
   },
 
   // ============================================================
@@ -855,9 +1027,13 @@ export const roleLibrary = [
 
   {
     directionId: "CM-2-E",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["15-2051.00", "15-2051.01", "15-2051.02"],
-    onetTitles: ["Data Scientists", "Business Intelligence Analysts", "Data Warehousing Specialists"],
+    onetTitles: [
+      "Data Scientists",
+      "Business Intelligence Analysts",
+      "Data Warehousing Specialists",
+    ],
     category: "Computer & Mathematical",
     metaDirection: "Data Science & Analytics",
     context: "Enterprise",
@@ -869,27 +1045,36 @@ export const roleLibrary = [
     preferredCompetencies: [5, 20, 22],
     dominantAnchors: [
       { anchorId: "technical", idealMin: 7, idealMax: 10 },
-      { anchorId: "challenge", idealMin: 6, idealMax: 10 }
+      { anchorId: "challenge", idealMin: 6, idealMax: 10 },
     ],
-    significantAnchors: [
-      { anchorId: "workModel", idealMin: 4, idealMax: 10 }
-    ],
+    significantAnchors: [{ anchorId: "workModel", idealMin: 4, idealMax: 10 }],
     transitionCategory: "domain_heavy",
     domainSpecificityRequired: "high",
-    relevantDomains: ["data science", "analytics", "machine learning", "statistics", "data engineering", "business intelligence"],
+    relevantDomains: [
+      "data science",
+      "analytics",
+      "machine learning",
+      "statistics",
+      "data engineering",
+      "business intelligence",
+    ],
     financialRiskLevel: "low",
     bridgeDirections: [],
     longerPathOptions: ["CM-4-ST"],
     stretchabilityRequired: "low",
     transitionPathway: "direct",
-    d4EvolutionPath: "AI-powered data strategist using AI for routine analysis while focusing on insight generation and strategic decision support"
+    d4EvolutionPath:
+      "AI-powered data strategist using AI for routine analysis while focusing on insight generation and strategic decision support",
   },
 
   {
     directionId: "CM-4-ST",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["15-1221.00", "15-2031.00"],
-    onetTitles: ["Computer and Information Research Scientists", "Operations Research Analysts"],
+    onetTitles: [
+      "Computer and Information Research Scientists",
+      "Operations Research Analysts",
+    ],
     category: "Computer & Mathematical",
     metaDirection: "AI, ML & Emerging Tech",
     context: "Startup",
@@ -901,25 +1086,32 @@ export const roleLibrary = [
     preferredCompetencies: [4, 20, 8],
     dominantAnchors: [
       { anchorId: "technical", idealMin: 8, idealMax: 10 },
-      { anchorId: "challenge", idealMin: 8, idealMax: 10 }
+      { anchorId: "challenge", idealMin: 8, idealMax: 10 },
     ],
-    significantAnchors: [
-      { anchorId: "autonomy", idealMin: 6, idealMax: 10 }
-    ],
+    significantAnchors: [{ anchorId: "autonomy", idealMin: 6, idealMax: 10 }],
     transitionCategory: "domain_heavy",
     domainSpecificityRequired: "high",
-    relevantDomains: ["machine learning", "artificial intelligence", "deep learning", "NLP", "computer science", "research"],
+    relevantDomains: [
+      "machine learning",
+      "artificial intelligence",
+      "deep learning",
+      "NLP",
+      "computer science",
+      "research",
+      "LLM",
+    ],
     financialRiskLevel: "high",
     bridgeDirections: [],
     longerPathOptions: [],
     stretchabilityRequired: "medium",
     transitionPathway: "direct",
-    d4EvolutionPath: "This IS the D4 path. Building the AI tools that transform other occupations."
+    d4EvolutionPath:
+      "This IS the D4 path. Building the AI tools that transform other occupations.",
   },
 
   {
     directionId: "CM-5-IF",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["15-1299.09", "13-1111.00"],
     onetTitles: ["AI/ML Specialists", "Management Analysts"],
     category: "Computer & Mathematical",
@@ -933,26 +1125,35 @@ export const roleLibrary = [
     preferredCompetencies: [22, 23, 5, 1],
     dominantAnchors: [
       { anchorId: "technical", idealMin: 7, idealMax: 10 },
-      { anchorId: "autonomy", idealMin: 7, idealMax: 10 }
+      { anchorId: "autonomy", idealMin: 7, idealMax: 10 },
     ],
     significantAnchors: [
       { anchorId: "challenge", idealMin: 7, idealMax: 10 },
-      { anchorId: "impact", idealMin: 5, idealMax: 10 }
+      { anchorId: "impact", idealMin: 5, idealMax: 10 },
     ],
     transitionCategory: "bridge_friendly",
     domainSpecificityRequired: "medium",
-    relevantDomains: ["AI", "digital transformation", "technology", "automation", "data", "consulting"],
+    relevantDomains: [
+      "AI",
+      "digital transformation",
+      "technology",
+      "automation",
+      "data",
+      "consulting",
+      "software_engineering",
+    ],
     financialRiskLevel: "medium",
     bridgeDirections: ["MG-7-IF", "CM-6-E"],
-    longerPathOptions: ["CM-4-ST"],
+    longerPathOptions: ["CM-4-ST", "TE-2-E"],
     stretchabilityRequired: "high",
     transitionPathway: "bridge",
-    d4EvolutionPath: "This IS the D4 path — helping organizations integrate AI at the strategy and operations layer"
+    d4EvolutionPath:
+      "This IS the D4 path — helping organizations integrate AI at the strategy and operations layer",
   },
 
   {
     directionId: "CM-6-E",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["11-9199.00", "15-1299.09"],
     onetTitles: ["Managers, All Other", "AI/ML Specialists"],
     category: "Computer & Mathematical",
@@ -966,26 +1167,34 @@ export const roleLibrary = [
     preferredCompetencies: [8, 20, 5, 22],
     dominantAnchors: [
       { anchorId: "technical", idealMin: 5, idealMax: 10 },
-      { anchorId: "challenge", idealMin: 6, idealMax: 10 }
+      { anchorId: "challenge", idealMin: 6, idealMax: 10 },
     ],
     significantAnchors: [
       { anchorId: "impact", idealMin: 5, idealMax: 10 },
-      { anchorId: "management", idealMin: 4, idealMax: 9 }
+      { anchorId: "management", idealMin: 4, idealMax: 9 },
     ],
     transitionCategory: "open_transition",
     domainSpecificityRequired: "medium",
-    relevantDomains: ["product management", "product operations", "SaaS", "technology", "platform"],
+    relevantDomains: [
+      "product management",
+      "product operations",
+      "SaaS",
+      "technology",
+      "platform",
+      "software_engineering",
+    ],
     financialRiskLevel: "low",
     bridgeDirections: [],
-    longerPathOptions: ["CM-7-ST", "MG-4-ST"],
+    longerPathOptions: ["CM-7-ST", "MG-4-ST", "TE-3-E"],
     stretchabilityRequired: "medium",
     transitionPathway: "direct",
-    d4EvolutionPath: "AI-native product ops leader using AI for data pipelines and experimentation frameworks while focusing on product-market feedback loops"
+    d4EvolutionPath:
+      "AI-native product ops leader using AI for data pipelines and experimentation frameworks while focusing on product-market feedback loops",
   },
 
   {
     directionId: "CM-7-ST",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["15-1299.09", "11-9199.00"],
     onetTitles: ["AI/ML Specialists", "Managers, All Other"],
     category: "Computer & Mathematical",
@@ -999,26 +1208,35 @@ export const roleLibrary = [
     preferredCompetencies: [22, 23, 5, 3],
     dominantAnchors: [
       { anchorId: "technical", idealMin: 7, idealMax: 10 },
-      { anchorId: "challenge", idealMin: 7, idealMax: 10 }
+      { anchorId: "challenge", idealMin: 7, idealMax: 10 },
     ],
     significantAnchors: [
       { anchorId: "autonomy", idealMin: 6, idealMax: 10 },
-      { anchorId: "impact", idealMin: 6, idealMax: 10 }
+      { anchorId: "impact", idealMin: 6, idealMax: 10 },
     ],
     transitionCategory: "domain_heavy",
     domainSpecificityRequired: "high",
-    relevantDomains: ["AI", "machine learning", "LLM", "product operations", "AI product", "generative AI"],
+    relevantDomains: [
+      "AI",
+      "machine learning",
+      "LLM",
+      "product operations",
+      "AI product",
+      "generative AI",
+      "technology",
+    ],
     financialRiskLevel: "high",
-    bridgeDirections: ["CM-6-E", "CM-5-IF"],
+    bridgeDirections: ["CM-6-E", "CM-5-IF", "TE-2-E"],
     longerPathOptions: [],
     stretchabilityRequired: "high",
     transitionPathway: "stretch",
-    d4EvolutionPath: "This IS the D4 path — building AI-native product operations at the frontier of LLM deployment and evaluation"
+    d4EvolutionPath:
+      "This IS the D4 path — building AI-native product operations at the frontier of LLM deployment and evaluation",
   },
 
   {
     directionId: "CM-8-IF",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["15-1299.09", "13-1111.00"],
     onetTitles: ["AI/ML Specialists", "Management Analysts"],
     category: "Computer & Mathematical",
@@ -1032,21 +1250,243 @@ export const roleLibrary = [
     preferredCompetencies: [1, 8, 15, 5],
     dominantAnchors: [
       { anchorId: "technical", idealMin: 6, idealMax: 10 },
-      { anchorId: "autonomy", idealMin: 6, idealMax: 10 }
+      { anchorId: "autonomy", idealMin: 6, idealMax: 10 },
     ],
     significantAnchors: [
       { anchorId: "challenge", idealMin: 6, idealMax: 10 },
-      { anchorId: "impact", idealMin: 4, idealMax: 9 }
+      { anchorId: "impact", idealMin: 4, idealMax: 9 },
     ],
     transitionCategory: "domain_heavy",
     domainSpecificityRequired: "high",
-    relevantDomains: ["operations", "supply chain", "logistics", "manufacturing", "process improvement", "lean"],
+    relevantDomains: [
+      "operations",
+      "supply chain",
+      "logistics",
+      "manufacturing",
+      "process improvement",
+      "lean",
+    ],
     financialRiskLevel: "medium",
     bridgeDirections: ["MG-7-IF"],
     longerPathOptions: [],
     stretchabilityRequired: "high",
     transitionPathway: "bridge",
-    d4EvolutionPath: "AI-powered operations advisor using AI for process modeling and supply chain optimization while focusing on strategic diagnostics and implementation leadership"
+    d4EvolutionPath:
+      "AI-powered operations advisor using AI for process modeling and supply chain optimization while focusing on strategic diagnostics and implementation leadership",
+  },
+
+  // ============================================================
+  // TECHNOLOGY EXECUTIVE (TE) — 5 directions
+  // ============================================================
+
+  {
+    directionId: "TE-1-E",
+    version: "v2.2",
+    onetCodes: ["11-3021.00", "15-1299.08"],
+    onetTitles: ["Computer and Information Systems Managers", "Computer Systems Engineers/Architects"],
+    category: "Technology Executive",
+    metaDirection: "CTO & Engineering Leadership",
+    context: "Enterprise",
+    contextCode: "E",
+    directionLabel: "CTO / VP Engineering — Enterprise",
+    aiDurabilityRating: "D3",
+    aiExposureSource: "Anthropic Economic Index 2026",
+    requiredCompetencies: [4, 10, 12, 23],
+    preferredCompetencies: [8, 9, 5, 20],
+    dominantAnchors: [
+      { anchorId: "technical", idealMin: 7, idealMax: 10 },
+      { anchorId: "management", idealMin: 7, idealMax: 10 },
+    ],
+    significantAnchors: [
+      { anchorId: "challenge", idealMin: 6, idealMax: 10 },
+      { anchorId: "impact", idealMin: 5, idealMax: 10 },
+    ],
+    transitionCategory: "domain_heavy",
+    domainSpecificityRequired: "high",
+    relevantDomains: [
+      "technology",
+      "software_engineering",
+      "engineering leadership",
+      "architecture",
+      "platform",
+      "cloud",
+      "DevOps",
+    ],
+    financialRiskLevel: "low",
+    bridgeDirections: ["TE-5-E", "CM-6-E"],
+    longerPathOptions: ["TE-2-E", "TE-4-IF"],
+    stretchabilityRequired: "medium",
+    transitionPathway: "direct",
+    d4EvolutionPath:
+      "AI-augmented technology executive using AI for architecture analysis, engineering productivity, and strategic decision support while focusing on leadership, judgment, and platform direction",
+  },
+
+  {
+    directionId: "TE-2-E",
+    version: "v2.2",
+    onetCodes: ["11-3021.00", "15-1299.09"],
+    onetTitles: ["Computer and Information Systems Managers", "AI/ML Specialists"],
+    category: "Technology Executive",
+    metaDirection: "AI Leadership & Transformation",
+    context: "Enterprise",
+    contextCode: "E",
+    directionLabel: "Chief AI Officer / AI Transformation Leader — Enterprise",
+    aiDurabilityRating: "D4",
+    aiExposureSource: "Anthropic Economic Index 2026",
+    requiredCompetencies: [4, 20, 21, 23],
+    preferredCompetencies: [10, 8, 5, 22],
+    dominantAnchors: [
+      { anchorId: "technical", idealMin: 7, idealMax: 10 },
+      { anchorId: "challenge", idealMin: 7, idealMax: 10 },
+    ],
+    significantAnchors: [
+      { anchorId: "management", idealMin: 5, idealMax: 10 },
+      { anchorId: "impact", idealMin: 6, idealMax: 10 },
+    ],
+    transitionCategory: "domain_heavy",
+    domainSpecificityRequired: "high",
+    relevantDomains: [
+      "AI",
+      "generative AI",
+      "LLM",
+      "machine learning",
+      "digital transformation",
+      "technology",
+      "automation",
+    ],
+    financialRiskLevel: "low",
+    bridgeDirections: ["CM-5-IF", "CM-7-ST"],
+    longerPathOptions: ["TE-4-IF"],
+    stretchabilityRequired: "medium",
+    transitionPathway: "direct",
+    d4EvolutionPath:
+      "This IS a D4 executive path — leading AI adoption, AI governance, and operating-model transformation across organizations",
+  },
+
+  {
+    directionId: "TE-3-E",
+    version: "v2.2",
+    onetCodes: ["11-3021.00", "13-1111.00"],
+    onetTitles: ["Computer and Information Systems Managers", "Management Analysts"],
+    category: "Technology Executive",
+    metaDirection: "Technology Strategy & Digital Transformation",
+    context: "Enterprise",
+    contextCode: "E",
+    directionLabel: "Technology Strategy / Digital Transformation Executive — Enterprise",
+    aiDurabilityRating: "D3",
+    aiExposureSource: "Anthropic Economic Index 2026",
+    requiredCompetencies: [4, 8, 10, 12],
+    preferredCompetencies: [20, 21, 9, 23],
+    dominantAnchors: [
+      { anchorId: "technical", idealMin: 6, idealMax: 10 },
+      { anchorId: "management", idealMin: 6, idealMax: 10 },
+    ],
+    significantAnchors: [
+      { anchorId: "impact", idealMin: 5, idealMax: 10 },
+      { anchorId: "challenge", idealMin: 5, idealMax: 10 },
+    ],
+    transitionCategory: "domain_heavy",
+    domainSpecificityRequired: "high",
+    relevantDomains: [
+      "technology",
+      "digital transformation",
+      "software_engineering",
+      "enterprise architecture",
+      "automation",
+      "platform",
+      "data",
+    ],
+    financialRiskLevel: "low",
+    bridgeDirections: ["TE-1-E", "CM-5-IF"],
+    longerPathOptions: ["TE-4-IF"],
+    stretchabilityRequired: "medium",
+    transitionPathway: "direct",
+    d4EvolutionPath:
+      "AI-augmented transformation executive using AI for process redesign and decision support while focusing on architecture, adoption, and business outcomes",
+  },
+
+  {
+    directionId: "TE-4-IF",
+    version: "v2.2",
+    onetCodes: ["11-3021.00", "13-1111.00"],
+    onetTitles: ["Computer and Information Systems Managers", "Management Analysts"],
+    category: "Technology Executive",
+    metaDirection: "Fractional CTO & Technical Advisory",
+    context: "Independent / Fractional",
+    contextCode: "IF",
+    directionLabel: "Fractional CTO / Technical Advisor — Independent",
+    aiDurabilityRating: "D4",
+    aiExposureSource: "Anthropic Economic Index 2026",
+    requiredCompetencies: [4, 14, 15, 23],
+    preferredCompetencies: [20, 8, 10, 12],
+    dominantAnchors: [
+      { anchorId: "autonomy", idealMin: 7, idealMax: 10 },
+      { anchorId: "technical", idealMin: 7, idealMax: 10 },
+    ],
+    significantAnchors: [
+      { anchorId: "challenge", idealMin: 6, idealMax: 10 },
+      { anchorId: "impact", idealMin: 5, idealMax: 10 },
+    ],
+    transitionCategory: "bridge_friendly",
+    domainSpecificityRequired: "high",
+    relevantDomains: [
+      "technology",
+      "software_engineering",
+      "architecture",
+      "startup",
+      "platform",
+      "AI",
+      "consulting",
+    ],
+    financialRiskLevel: "medium",
+    bridgeDirections: ["TE-1-E", "TE-3-E", "CM-5-IF"],
+    longerPathOptions: [],
+    stretchabilityRequired: "high",
+    transitionPathway: "bridge",
+    d4EvolutionPath:
+      "AI-powered fractional CTO using AI to review architecture, improve delivery systems, and advise founders while focusing on strategic technical judgment",
+  },
+
+  {
+    directionId: "TE-5-E",
+    version: "v2.2",
+    onetCodes: ["15-1299.08", "11-3021.00"],
+    onetTitles: ["Computer Systems Engineers/Architects", "Computer and Information Systems Managers"],
+    category: "Technology Executive",
+    metaDirection: "Enterprise Architecture & Platform Modernization",
+    context: "Enterprise",
+    contextCode: "E",
+    directionLabel: "Enterprise Architecture / Platform Modernization — Enterprise",
+    aiDurabilityRating: "D3",
+    aiExposureSource: "Anthropic Economic Index 2026",
+    requiredCompetencies: [4, 8, 12, 18],
+    preferredCompetencies: [20, 21, 23, 9],
+    dominantAnchors: [
+      { anchorId: "technical", idealMin: 7, idealMax: 10 },
+      { anchorId: "challenge", idealMin: 5, idealMax: 10 },
+    ],
+    significantAnchors: [
+      { anchorId: "management", idealMin: 4, idealMax: 9 },
+      { anchorId: "security", idealMin: 4, idealMax: 9 },
+    ],
+    transitionCategory: "domain_heavy",
+    domainSpecificityRequired: "high",
+    relevantDomains: [
+      "technology",
+      "software_engineering",
+      "enterprise architecture",
+      "platform",
+      "cloud",
+      "DevOps",
+      "infrastructure",
+    ],
+    financialRiskLevel: "low",
+    bridgeDirections: ["TE-1-E", "MG-8-E"],
+    longerPathOptions: ["TE-3-E"],
+    stretchabilityRequired: "medium",
+    transitionPathway: "direct",
+    d4EvolutionPath:
+      "AI-augmented architecture leader using AI for codebase analysis, modernization planning, and dependency mapping while focusing on systems judgment and governance",
   },
 
   // ============================================================
@@ -1055,7 +1495,7 @@ export const roleLibrary = [
 
   {
     directionId: "ED-3-IF",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["13-1151.00", "25-9031.00"],
     onetTitles: ["Training and Development Specialists", "Instructional Coordinators"],
     category: "Education & Library",
@@ -1069,25 +1509,30 @@ export const roleLibrary = [
     preferredCompetencies: [5, 13, 23],
     dominantAnchors: [
       { anchorId: "impact", idealMin: 7, idealMax: 10 },
-      { anchorId: "autonomy", idealMin: 6, idealMax: 10 }
+      { anchorId: "autonomy", idealMin: 6, idealMax: 10 },
     ],
-    significantAnchors: [
-      { anchorId: "workModel", idealMin: 5, idealMax: 10 }
-    ],
+    significantAnchors: [{ anchorId: "workModel", idealMin: 5, idealMax: 10 }],
     transitionCategory: "bridge_friendly",
-    domainSpecificityRequired: "low",
-    relevantDomains: [],
+    domainSpecificityRequired: "medium",
+    relevantDomains: [
+      "training",
+      "learning and development",
+      "education",
+      "facilitation",
+      "leadership development",
+    ],
     financialRiskLevel: "medium",
-    bridgeDirections: ["BF-4-E", "SR-3-E"],
+    bridgeDirections: ["SR-3-E", "ED-5-IF"],
     longerPathOptions: ["ED-4-IF", "ED-5-IF"],
     stretchabilityRequired: "high",
     transitionPathway: "bridge",
-    d4EvolutionPath: "AI-powered learning designer using AI for content creation while focusing on facilitation and organizational learning strategy"
+    d4EvolutionPath:
+      "AI-powered learning designer using AI for content creation while focusing on facilitation and organizational learning strategy",
   },
 
   {
     directionId: "ED-4-IF",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["25-9031.00", "13-1151.00"],
     onetTitles: ["Instructional Coordinators", "Training and Development Specialists"],
     category: "Education & Library",
@@ -1101,26 +1546,34 @@ export const roleLibrary = [
     preferredCompetencies: [10, 13, 23, 4],
     dominantAnchors: [
       { anchorId: "technical", idealMin: 6, idealMax: 10 },
-      { anchorId: "autonomy", idealMin: 6, idealMax: 10 }
+      { anchorId: "autonomy", idealMin: 6, idealMax: 10 },
     ],
     significantAnchors: [
       { anchorId: "workModel", idealMin: 6, idealMax: 10 },
-      { anchorId: "impact", idealMin: 5, idealMax: 10 }
+      { anchorId: "impact", idealMin: 5, idealMax: 10 },
     ],
     transitionCategory: "bridge_friendly",
     domainSpecificityRequired: "medium",
-    relevantDomains: ["instructional design", "e-learning", "L&D", "curriculum", "training", "education technology"],
+    relevantDomains: [
+      "instructional design",
+      "e-learning",
+      "L&D",
+      "curriculum",
+      "training",
+      "education technology",
+    ],
     financialRiskLevel: "medium",
     bridgeDirections: ["ED-3-IF"],
     longerPathOptions: [],
     stretchabilityRequired: "medium",
     transitionPathway: "bridge",
-    d4EvolutionPath: "AI-native instructional designer using AI for content generation and adaptive learning while focusing on learning architecture and experience design"
+    d4EvolutionPath:
+      "AI-native instructional designer using AI for content generation and adaptive learning while focusing on learning architecture and experience design",
   },
 
   {
     directionId: "ED-5-IF",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["13-1071.00", "11-3121.00"],
     onetTitles: ["Human Resources Specialists", "Human Resources Managers"],
     category: "Education & Library",
@@ -1134,21 +1587,28 @@ export const roleLibrary = [
     preferredCompetencies: [1, 4, 5, 3],
     dominantAnchors: [
       { anchorId: "impact", idealMin: 8, idealMax: 10 },
-      { anchorId: "autonomy", idealMin: 7, idealMax: 10 }
+      { anchorId: "autonomy", idealMin: 7, idealMax: 10 },
     ],
     significantAnchors: [
       { anchorId: "workModel", idealMin: 6, idealMax: 10 },
-      { anchorId: "challenge", idealMin: 5, idealMax: 10 }
+      { anchorId: "challenge", idealMin: 5, idealMax: 10 },
     ],
     transitionCategory: "bridge_friendly",
     domainSpecificityRequired: "medium",
-    relevantDomains: ["leadership", "management", "coaching", "HR", "people development", "executive"],
+    relevantDomains: [
+      "leadership development",
+      "coaching",
+      "executive coaching",
+      "training",
+      "people development",
+    ],
     financialRiskLevel: "medium",
-    bridgeDirections: ["BF-4-E", "ED-3-IF"],
+    bridgeDirections: ["ED-3-IF"],
     longerPathOptions: [],
     stretchabilityRequired: "high",
     transitionPathway: "bridge",
-    d4EvolutionPath: "AI-augmented executive coach using AI for behavioral pattern analysis and 360 synthesis while focusing on the human coaching relationship"
+    d4EvolutionPath:
+      "AI-augmented executive coach using AI for behavioral pattern analysis and 360 synthesis while focusing on the human coaching relationship",
   },
 
   // ============================================================
@@ -1157,7 +1617,7 @@ export const roleLibrary = [
 
   {
     directionId: "HC-2-OV",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["21-1014.00", "21-1013.00"],
     onetTitles: ["Mental Health Counselors", "Marriage and Family Therapists"],
     category: "Healthcare Practitioners",
@@ -1171,31 +1631,37 @@ export const roleLibrary = [
     preferredCompetencies: [1, 10, 5],
     dominantAnchors: [
       { anchorId: "impact", idealMin: 8, idealMax: 10 },
-      { anchorId: "autonomy", idealMin: 7, idealMax: 10 }
+      { anchorId: "autonomy", idealMin: 7, idealMax: 10 },
     ],
-    significantAnchors: [
-      { anchorId: "workModel", idealMin: 6, idealMax: 10 }
-    ],
+    significantAnchors: [{ anchorId: "workModel", idealMin: 6, idealMax: 10 }],
     eligibility: {
       gateType: "hard",
       acceptedCredentials: ["healthcare_clinical"],
       acceptedStatuses: ["active", "in_progress"],
-      reason: "Licensed mental health practice requires state clinical licensure (LPC, LCSW, MFT, or equivalent)."
+      reason:
+        "Licensed mental health practice requires state clinical licensure (LPC, LCSW, MFT, or equivalent).",
     },
     transitionCategory: "credentialed",
     domainSpecificityRequired: "high",
-    relevantDomains: ["mental health", "counseling", "therapy", "clinical psychology", "social work"],
+    relevantDomains: [
+      "mental health",
+      "counseling",
+      "therapy",
+      "clinical psychology",
+      "social work",
+    ],
     financialRiskLevel: "high",
     bridgeDirections: ["ED-5-IF"],
     longerPathOptions: [],
     stretchabilityRequired: "high",
     transitionPathway: "bridge",
-    d4EvolutionPath: "AI-augmented therapist using AI for admin and progress tracking while focusing entirely on the therapeutic relationship"
+    d4EvolutionPath:
+      "AI-augmented therapist using AI for admin and progress tracking while focusing entirely on the therapeutic relationship",
   },
 
   {
     directionId: "HC-3-E",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["11-9111.00", "11-9179.02"],
     onetTitles: ["Medical and Health Services Managers", "Human Resources Managers, Healthcare"],
     category: "Healthcare Practitioners",
@@ -1209,21 +1675,28 @@ export const roleLibrary = [
     preferredCompetencies: [9, 8, 1, 7],
     dominantAnchors: [
       { anchorId: "management", idealMin: 7, idealMax: 10 },
-      { anchorId: "security", idealMin: 6, idealMax: 10 }
+      { anchorId: "security", idealMin: 6, idealMax: 10 },
     ],
     significantAnchors: [
       { anchorId: "impact", idealMin: 5, idealMax: 10 },
-      { anchorId: "challenge", idealMin: 4, idealMax: 9 }
+      { anchorId: "challenge", idealMin: 4, idealMax: 9 },
     ],
     transitionCategory: "open_transition",
     domainSpecificityRequired: "medium",
-    relevantDomains: ["healthcare", "hospital", "clinical operations", "health systems", "medical"],
+    relevantDomains: [
+      "healthcare",
+      "hospital",
+      "clinical operations",
+      "health systems",
+      "medical",
+    ],
     financialRiskLevel: "low",
     bridgeDirections: [],
     longerPathOptions: [],
     stretchabilityRequired: "medium",
     transitionPathway: "direct",
-    d4EvolutionPath: "AI-augmented healthcare administrator using AI for operational analytics and compliance monitoring while focusing on care quality and organizational leadership"
+    d4EvolutionPath:
+      "AI-augmented healthcare administrator using AI for operational analytics and compliance monitoring while focusing on care quality and organizational leadership",
   },
 
   // ============================================================
@@ -1232,7 +1705,7 @@ export const roleLibrary = [
 
   {
     directionId: "LG-2-IF",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["23-1011.00"],
     onetTitles: ["Lawyers"],
     category: "Legal",
@@ -1246,31 +1719,38 @@ export const roleLibrary = [
     preferredCompetencies: [4, 7, 15],
     dominantAnchors: [
       { anchorId: "technical", idealMin: 7, idealMax: 10 },
-      { anchorId: "autonomy", idealMin: 6, idealMax: 10 }
+      { anchorId: "autonomy", idealMin: 6, idealMax: 10 },
     ],
-    significantAnchors: [
-      { anchorId: "security", idealMin: 4, idealMax: 8 }
-    ],
+    significantAnchors: [{ anchorId: "security", idealMin: 4, idealMax: 8 }],
     eligibility: {
       gateType: "hard",
       acceptedCredentials: ["legal_bar"],
       acceptedStatuses: ["active"],
-      reason: "Fractional general counsel requires active bar admission to provide legal advice."
+      reason:
+        "Fractional general counsel requires active bar admission to provide legal advice.",
     },
     transitionCategory: "credentialed",
     domainSpecificityRequired: "high",
-    relevantDomains: ["law", "legal", "contracts", "corporate law", "compliance", "litigation"],
+    relevantDomains: [
+      "law",
+      "legal",
+      "contracts",
+      "corporate law",
+      "compliance",
+      "litigation",
+    ],
     financialRiskLevel: "medium",
     bridgeDirections: [],
     longerPathOptions: [],
     stretchabilityRequired: "high",
     transitionPathway: "bridge",
-    d4EvolutionPath: "AI-powered legal strategist using AI for research and drafting while focusing on strategic counsel and client relationships"
+    d4EvolutionPath:
+      "AI-powered legal strategist using AI for research and drafting while focusing on strategic counsel and client relationships",
   },
 
   {
     directionId: "LG-3-IF",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["23-1022.00", "23-1011.00"],
     onetTitles: ["Arbitrators, Mediators, and Conciliators", "Lawyers"],
     category: "Legal",
@@ -1284,27 +1764,36 @@ export const roleLibrary = [
     preferredCompetencies: [4, 3, 7, 5],
     dominantAnchors: [
       { anchorId: "impact", idealMin: 7, idealMax: 10 },
-      { anchorId: "autonomy", idealMin: 6, idealMax: 10 }
+      { anchorId: "autonomy", idealMin: 6, idealMax: 10 },
     ],
     significantAnchors: [
       { anchorId: "workModel", idealMin: 5, idealMax: 10 },
-      { anchorId: "challenge", idealMin: 5, idealMax: 10 }
+      { anchorId: "challenge", idealMin: 5, idealMax: 10 },
     ],
     eligibility: {
       gateType: "soft",
       acceptedCredentials: ["legal_bar", "other_regulated"],
       acceptedStatuses: ["active", "in_progress"],
-      reason: "Mediator certification (CMC or state equivalent) strengthens credibility; not legally required in all jurisdictions but strongly preferred."
+      reason:
+        "Mediator certification (CMC or state equivalent) strengthens credibility; not legally required in all jurisdictions but strongly preferred.",
     },
     transitionCategory: "bridge_friendly",
     domainSpecificityRequired: "medium",
-    relevantDomains: ["law", "legal", "HR", "conflict resolution", "negotiation", "arbitration"],
+    relevantDomains: [
+      "law",
+      "legal",
+      "conflict resolution",
+      "negotiation",
+      "arbitration",
+      "mediation",
+    ],
     financialRiskLevel: "high",
     bridgeDirections: ["LG-2-IF", "ED-5-IF"],
     longerPathOptions: [],
     stretchabilityRequired: "high",
     transitionPathway: "bridge",
-    d4EvolutionPath: "AI-augmented mediator using AI for case preparation and pattern analysis while focusing on facilitation and human resolution"
+    d4EvolutionPath:
+      "AI-augmented mediator using AI for case preparation and pattern analysis while focusing on facilitation and human resolution",
   },
 
   // ============================================================
@@ -1313,7 +1802,7 @@ export const roleLibrary = [
 
   {
     directionId: "AD-5-IF",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["11-2021.00", "27-3031.00"],
     onetTitles: ["Marketing Managers", "Public Relations Specialists"],
     category: "Arts, Design & Media",
@@ -1327,25 +1816,31 @@ export const roleLibrary = [
     preferredCompetencies: [10, 11, 20],
     dominantAnchors: [
       { anchorId: "autonomy", idealMin: 7, idealMax: 10 },
-      { anchorId: "impact", idealMin: 6, idealMax: 10 }
+      { anchorId: "impact", idealMin: 6, idealMax: 10 },
     ],
-    significantAnchors: [
-      { anchorId: "challenge", idealMin: 5, idealMax: 10 }
-    ],
+    significantAnchors: [{ anchorId: "challenge", idealMin: 5, idealMax: 10 }],
     transitionCategory: "bridge_friendly",
     domainSpecificityRequired: "medium",
-    relevantDomains: ["marketing", "brand", "PR", "communications", "growth", "digital marketing"],
+    relevantDomains: [
+      "marketing",
+      "brand",
+      "PR",
+      "communications",
+      "growth",
+      "digital marketing",
+    ],
     financialRiskLevel: "medium",
     bridgeDirections: ["BF-10-IF"],
     longerPathOptions: [],
     stretchabilityRequired: "high",
     transitionPathway: "bridge",
-    d4EvolutionPath: "AI-augmented brand strategist using AI for content production while focusing on strategy and client relationships"
+    d4EvolutionPath:
+      "AI-augmented brand strategist using AI for content production while focusing on strategy and client relationships",
   },
 
   {
     directionId: "AD-6-IF",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["27-3042.00", "11-2021.00"],
     onetTitles: ["Technical Writers", "Marketing Managers"],
     category: "Arts, Design & Media",
@@ -1359,26 +1854,33 @@ export const roleLibrary = [
     preferredCompetencies: [10, 11, 20, 5],
     dominantAnchors: [
       { anchorId: "autonomy", idealMin: 6, idealMax: 10 },
-      { anchorId: "technical", idealMin: 5, idealMax: 10 }
+      { anchorId: "technical", idealMin: 5, idealMax: 10 },
     ],
     significantAnchors: [
       { anchorId: "workModel", idealMin: 6, idealMax: 10 },
-      { anchorId: "impact", idealMin: 5, idealMax: 10 }
+      { anchorId: "impact", idealMin: 5, idealMax: 10 },
     ],
     transitionCategory: "bridge_friendly",
-    domainSpecificityRequired: "low",
-    relevantDomains: [],
+    domainSpecificityRequired: "medium",
+    relevantDomains: [
+      "content strategy",
+      "technical writing",
+      "knowledge management",
+      "marketing",
+      "communications",
+    ],
     financialRiskLevel: "medium",
     bridgeDirections: ["AD-5-IF"],
     longerPathOptions: [],
     stretchabilityRequired: "medium",
     transitionPathway: "bridge",
-    d4EvolutionPath: "AI-augmented content strategist using AI for content generation while focusing on knowledge architecture and organizational learning systems"
+    d4EvolutionPath:
+      "AI-augmented content strategist using AI for content generation while focusing on knowledge architecture and organizational learning systems",
   },
 
   {
     directionId: "AD-7-IF",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["27-1024.00", "15-1255.00"],
     onetTitles: ["Graphic Designers", "Web and Digital Interface Designers"],
     category: "Arts, Design & Media",
@@ -1392,21 +1894,29 @@ export const roleLibrary = [
     preferredCompetencies: [20, 10, 15, 1],
     dominantAnchors: [
       { anchorId: "technical", idealMin: 7, idealMax: 10 },
-      { anchorId: "autonomy", idealMin: 6, idealMax: 10 }
+      { anchorId: "autonomy", idealMin: 6, idealMax: 10 },
     ],
     significantAnchors: [
       { anchorId: "challenge", idealMin: 6, idealMax: 10 },
-      { anchorId: "workModel", idealMin: 5, idealMax: 10 }
+      { anchorId: "workModel", idealMin: 5, idealMax: 10 },
     ],
     transitionCategory: "domain_heavy",
     domainSpecificityRequired: "high",
-    relevantDomains: ["UX", "product design", "user research", "design", "UI", "interaction design"],
+    relevantDomains: [
+      "UX",
+      "product design",
+      "user research",
+      "design",
+      "UI",
+      "interaction design",
+    ],
     financialRiskLevel: "medium",
     bridgeDirections: [],
     longerPathOptions: [],
     stretchabilityRequired: "high",
     transitionPathway: "bridge",
-    d4EvolutionPath: "AI-augmented design strategist using AI for prototyping and user research synthesis while focusing on systems thinking and experience architecture"
+    d4EvolutionPath:
+      "AI-augmented design strategist using AI for prototyping and user research synthesis while focusing on systems thinking and experience architecture",
   },
 
   // ============================================================
@@ -1415,7 +1925,7 @@ export const roleLibrary = [
 
   {
     directionId: "AE-4-IF",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["17-2051.00", "11-9041.00"],
     onetTitles: ["Civil Engineers", "Architectural and Engineering Managers"],
     category: "Architecture & Engineering",
@@ -1429,31 +1939,38 @@ export const roleLibrary = [
     preferredCompetencies: [9, 8, 1],
     dominantAnchors: [
       { anchorId: "technical", idealMin: 8, idealMax: 10 },
-      { anchorId: "autonomy", idealMin: 7, idealMax: 10 }
+      { anchorId: "autonomy", idealMin: 7, idealMax: 10 },
     ],
-    significantAnchors: [
-      { anchorId: "challenge", idealMin: 6, idealMax: 10 }
-    ],
+    significantAnchors: [{ anchorId: "challenge", idealMin: 6, idealMax: 10 }],
     eligibility: {
       gateType: "soft",
       acceptedCredentials: ["engineering_pe"],
       acceptedStatuses: ["active", "in_progress"],
-      reason: "PE license significantly increases credibility and client eligibility for independent engineering consulting."
+      reason:
+        "PE license significantly increases credibility and client eligibility for independent engineering consulting.",
     },
     transitionCategory: "domain_heavy",
     domainSpecificityRequired: "high",
-    relevantDomains: ["engineering", "civil engineering", "mechanical engineering", "structural", "infrastructure", "construction"],
+    relevantDomains: [
+      "engineering",
+      "civil engineering",
+      "mechanical engineering",
+      "structural",
+      "infrastructure",
+      "construction",
+    ],
     financialRiskLevel: "medium",
     bridgeDirections: [],
     longerPathOptions: [],
     stretchabilityRequired: "high",
     transitionPathway: "bridge",
-    d4EvolutionPath: "AI-powered engineering advisor using AI for analysis and modeling while focusing on strategic technical direction"
+    d4EvolutionPath:
+      "AI-powered engineering advisor using AI for analysis and modeling while focusing on strategic technical direction",
   },
 
   {
     directionId: "AE-5-E",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["17-2051.00", "17-2199.00"],
     onetTitles: ["Civil Engineers", "Engineers, All Other"],
     category: "Architecture & Engineering",
@@ -1467,21 +1984,29 @@ export const roleLibrary = [
     preferredCompetencies: [1, 8, 7, 5],
     dominantAnchors: [
       { anchorId: "technical", idealMin: 7, idealMax: 10 },
-      { anchorId: "management", idealMin: 6, idealMax: 10 }
+      { anchorId: "management", idealMin: 6, idealMax: 10 },
     ],
     significantAnchors: [
       { anchorId: "security", idealMin: 5, idealMax: 10 },
-      { anchorId: "challenge", idealMin: 5, idealMax: 10 }
+      { anchorId: "challenge", idealMin: 5, idealMax: 10 },
     ],
     transitionCategory: "domain_heavy",
     domainSpecificityRequired: "high",
-    relevantDomains: ["engineering", "systems engineering", "technical program management", "aerospace", "defense", "hardware"],
+    relevantDomains: [
+      "engineering",
+      "systems engineering",
+      "technical program management",
+      "aerospace",
+      "defense",
+      "hardware",
+    ],
     financialRiskLevel: "low",
     bridgeDirections: [],
     longerPathOptions: [],
     stretchabilityRequired: "medium",
     transitionPathway: "direct",
-    d4EvolutionPath: "AI-augmented technical program manager using AI for system modeling and dependency tracking while focusing on technical leadership and delivery"
+    d4EvolutionPath:
+      "AI-augmented technical program manager using AI for system modeling and dependency tracking while focusing on technical leadership and delivery",
   },
 
   // ============================================================
@@ -1490,9 +2015,12 @@ export const roleLibrary = [
 
   {
     directionId: "IR-1-OV",
-    version: "v2.1",
+    version: "v2.2",
     onetCodes: ["49-9021.00", "49-9071.00"],
-    onetTitles: ["Heating, Air Conditioning, and Refrigeration Mechanics and Installers", "Maintenance and Repair Workers, General"],
+    onetTitles: [
+      "Heating, Air Conditioning, and Refrigeration Mechanics and Installers",
+      "Maintenance and Repair Workers, General",
+    ],
     category: "Installation, Maintenance & Repair",
     metaDirection: "Skilled Trades & Technical Services",
     context: "Own Venture",
@@ -1504,26 +2032,32 @@ export const roleLibrary = [
     preferredCompetencies: [6, 7, 14],
     dominantAnchors: [
       { anchorId: "craft", idealMin: 7, idealMax: 10 },
-      { anchorId: "autonomy", idealMin: 6, idealMax: 10 }
+      { anchorId: "autonomy", idealMin: 6, idealMax: 10 },
     ],
-    significantAnchors: [
-      { anchorId: "security", idealMin: 5, idealMax: 10 }
-    ],
+    significantAnchors: [{ anchorId: "security", idealMin: 5, idealMax: 10 }],
     eligibility: {
       gateType: "soft",
       acceptedCredentials: ["trade_license"],
       acceptedStatuses: ["active", "in_progress"],
-      reason: "Most US states require HVAC and trade licensing to operate commercially."
+      reason:
+        "Most US states require HVAC and trade licensing to operate commercially.",
     },
     transitionCategory: "credentialed",
     domainSpecificityRequired: "high",
-    relevantDomains: ["HVAC", "trades", "mechanical", "installation", "maintenance", "repair"],
+    relevantDomains: [
+      "HVAC",
+      "trades",
+      "mechanical",
+      "installation",
+      "maintenance",
+      "repair",
+    ],
     financialRiskLevel: "medium",
     bridgeDirections: [],
     longerPathOptions: [],
     stretchabilityRequired: "medium",
     transitionPathway: "bridge",
-    d4EvolutionPath: "AI-augmented trades business owner using AI for scheduling, quoting, and customer management while focusing on craft and service quality"
-  }
-
+    d4EvolutionPath:
+      "AI-augmented trades business owner using AI for scheduling, quoting, and customer management while focusing on craft and service quality",
+  },
 ];
