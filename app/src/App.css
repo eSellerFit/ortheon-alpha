@@ -124,6 +124,22 @@
   background: var(--color-accent-bg);
 }
 
+/* Site-level back link on /assessment */
+.assessment-site-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.assessment-site-back:hover {
+  color: var(--color-text);
+}
+
 /* ── Form primitives ────────────────────────────────────────────── */
 .form {
   display: flex;
@@ -475,20 +491,504 @@
 }
 
 /* ── Print / PDF output ─────────────────────────────────────────── */
+
+.result-card,
+.career-map-summary-card,
+.pdf-avoid-break {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+/* ── PDF Report (hidden off-screen layout, captured page-by-page) ─ */
+
+.pdf-report-container {
+  position: fixed;
+  top: 0;
+  left: -9999px;
+  width: 794px;
+  background: #ffffff;
+  pointer-events: none;
+}
+
+.pdf-page {
+  width: 794px;
+  padding: 48px 56px 56px;
+  background: #ffffff;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
+    sans-serif;
+  font-size: 14px;
+  color: #111827;
+  line-height: 1.5;
+}
+
+/* Brand strip */
+.pdf-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.pdf-brand-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #245f73;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pdf-brand-section {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* Page 1 header */
+.pdf-p1-header {
+  margin-bottom: 36px;
+}
+
+.pdf-p1-title {
+  font-size: 30px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 10px;
+  line-height: 1.2;
+}
+
+.pdf-p1-sub {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.6;
+  max-width: 560px;
+}
+
+/* Generic section block */
+.pdf-block {
+  margin-bottom: 32px;
+}
+
+.pdf-block-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* Direction ranked list (page 1) */
+.pdf-dir-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pdf-dir-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 16px;
+  border: 1px solid #dbd8d0;
+  border-radius: 12px;
+  background: #f9f8f6;
+}
+
+.pdf-dir-rank {
+  font-size: 17px;
+  font-weight: 700;
+  color: #245f73;
+  min-width: 28px;
+}
+
+.pdf-dir-info {
+  flex: 1;
+}
+
+.pdf-dir-info strong {
+  display: block;
+  font-size: 14px;
+  color: #111827;
+  margin-bottom: 3px;
+}
+
+.pdf-dir-info span {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.pdf-dir-band {
+  font-size: 11px;
+  font-weight: 600;
+  color: #245f73;
+  background: #e7f1f3;
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* Summary grid (page 1) */
+.pdf-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.pdf-summary-card {
+  padding: 16px;
+  border: 1px solid #dbd8d0;
+  border-radius: 12px;
+  background: #f9f8f6;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.pdf-summary-icon {
+  font-size: 16px;
+  color: #245f73;
+}
+
+.pdf-summary-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pdf-summary-value {
+  font-size: 14px;
+  color: #111827;
+  line-height: 1.4;
+}
+
+/* Page heading for pages 2–4 */
+.pdf-page-heading {
+  margin-bottom: 22px;
+}
+
+.pdf-page-heading h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 6px;
+}
+
+.pdf-page-heading p {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Direction cards (pages 2–3) */
+.pdf-dcard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pdf-dcard {
+  padding: 18px 20px;
+  border: 1px solid #dbd8d0;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.pdf-dcard-adj {
+  padding: 14px 16px;
+  background: #fafaf8;
+}
+
+.pdf-dcard-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.pdf-dcard-title {
+  font-size: 15px;
+  color: #111827;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.pdf-dcard-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: #245f73;
+  background: #e7f1f3;
+  padding: 3px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.pdf-dcard-badge-adj {
+  color: #6b7280;
+  background: #eeece8;
+}
+
+.pdf-dcard-meta {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 10px;
+}
+
+.pdf-dcard-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pdf-dcard-row strong {
+  display: block;
+  font-size: 12px;
+  color: #374151;
+  margin-bottom: 2px;
+}
+
+.pdf-dcard-row p {
+  margin: 0;
+  font-size: 12px;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+/* Signals page (page 4) */
+.pdf-sig-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.pdf-sig-card {
+  padding: 14px 16px;
+  border: 1px solid #e2e0da;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.pdf-sig-card-full {
+  grid-column: 1 / -1;
+}
+
+.pdf-sig-card h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 3px;
+}
+
+.pdf-sig-card p {
+  font-size: 11px;
+  color: #6b7280;
+  margin: 0 0 10px;
+}
+
+.pdf-sig-items {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 7px;
+}
+
+.pdf-sig-items-4col {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.pdf-sig-item {
+  padding: 7px 9px;
+  border: 1px solid #e2e0da;
+  border-radius: 8px;
+  background: #f9f8f6;
+}
+
+.pdf-sig-item span {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 2px;
+}
+
+.pdf-sig-item strong {
+  font-size: 12px;
+  color: #111827;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.pdf-domain-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 8px;
+}
+
+.pdf-domain-chip {
+  display: inline-flex;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #e7f1f3;
+  color: #245f73;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Detail pages (pages 5+) */
+.pdf-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #dbd8d0;
+}
+
+.pdf-detail-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  color: #245f73;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 5px;
+}
+
+.pdf-detail-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.pdf-detail-score-block {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.pdf-detail-score-block span {
+  display: block;
+  font-size: 11px;
+  color: #6b7280;
+  margin-bottom: 3px;
+}
+
+.pdf-detail-score-block strong {
+  font-size: 28px;
+  font-weight: 700;
+  color: #245f73;
+}
+
+.pdf-detail-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.pdf-detail-badge-main {
+  background: #e7f1f3;
+  color: #245f73;
+}
+
+.pdf-detail-badge-secondary {
+  background: #f0f5e8;
+  color: #4a7c4b;
+}
+
+.pdf-detail-badge-flagged {
+  background: #fef3cd;
+  color: #92710a;
+}
+
+.pdf-detail-facts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+  margin-bottom: 16px;
+}
+
+.pdf-detail-fact {
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+}
+
+.pdf-detail-fact span {
+  display: block;
+  font-size: 10px;
+  color: #6b7280;
+  margin-bottom: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+
+.pdf-detail-fact strong {
+  font-size: 13px;
+  color: #111827;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.pdf-detail-salary {
+  font-size: 12px;
+  color: #6b7280;
+  padding: 10px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+
+.pdf-detail-warnings {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 14px;
+}
+
+.pdf-detail-warning {
+  padding: 9px 13px;
+  border-radius: 9px;
+  font-size: 12px;
+  line-height: 1.5;
+  background: #fef9ec;
+  color: #92710a;
+  border: 1px solid #fde9a2;
+}
+
+.pdf-detail-evolution {
+  padding: 12px 16px;
+  border: 1px solid #dbd8d0;
+  border-radius: 10px;
+  background: #f0f5f7;
+  font-size: 13px;
+  color: #374151;
+  line-height: 1.5;
+}
+
+.pdf-detail-evolution strong {
+  color: #245f73;
+}
+
 @media print {
   .results-hero,
   .pdf-exclude {
     display: none !important;
-  }
-
-  .result-card {
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
-
-  .career-map-section {
-    break-inside: avoid;
-    page-break-inside: avoid;
   }
 
   .results-page {

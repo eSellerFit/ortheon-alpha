@@ -533,6 +533,7 @@ function DirectionCard({ node, variant = "primary" }) {
 
   return (
     <article
+      className="pdf-avoid-break"
       style={{
         padding: isAdjacent ? 14 : 20,
         border: "1px solid #dbd8d0",
@@ -663,7 +664,7 @@ function DirectionCards({ title, subtitle, nodes, variant }) {
   const isPrimary = variant === "primary";
 
   return (
-    <div style={{ marginTop: 32 }}>
+    <div style={{ marginTop: 32 }} className={isPrimary ? "pdf-recommended-section" : "pdf-nearby-section"}>
       <div style={{ marginBottom: 16 }}>
         <h4 style={{ margin: "0 0 6px", fontSize: isPrimary ? 20 : 17, color: "#111827" }}>
           {title}
@@ -676,6 +677,7 @@ function DirectionCards({ title, subtitle, nodes, variant }) {
       </div>
 
       <div
+        className="pdf-direction-grid"
         style={{
           display: "grid",
           gridTemplateColumns: isPrimary
@@ -739,6 +741,7 @@ function AssessmentSignals({ careerMap }) {
 
   return (
     <div
+      className="pdf-signals-section"
       style={{
         marginTop: 28,
         padding: 20,
@@ -758,6 +761,7 @@ function AssessmentSignals({ careerMap }) {
       </div>
 
       <div
+        className="pdf-signals-grid"
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(2, minmax(0, 1fr))",

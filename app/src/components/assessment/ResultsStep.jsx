@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import CareerDirectionMap from "./CareerDirectionMap";
+import PdfReport from "./PdfReport";
 import {
   generateCareerMap,
   generateRecommendations,
@@ -401,7 +403,7 @@ function ResultsStep({ assessmentId }) {
   const [errorMessage, setErrorMessage] = useState("");
   const [pdfStatus, setPdfStatus] = useState("idle");
   const hasGeneratedRef = useRef(false);
-  const reportRef = useRef(null);
+  const pdfContainerRef = useRef(null);
 
   useEffect(() => {
     async function loadAndGenerateResults() {
@@ -444,49 +446,76 @@ function ResultsStep({ assessmentId }) {
   }, [assessmentId]);
 
   async function handleDownloadPdf() {
-    if (!reportRef.current) return;
+    console.log("[PDF] export handler running");
+    console.log("[PDF] pdfContainerRef.current:", pdfContainerRef.current);
+
+    if (!pdfContainerRef.current) {
+      console.error("[PDF] pdfContainerRef.current is null — PdfReport not mounted");
+      return;
+    }
 
     setPdfStatus("generating");
 
-    const excluded = reportRef.current.querySelectorAll(".pdf-exclude");
-    excluded.forEach((el) => {
-      el.dataset.pdfPrevDisplay = el.style.display;
-      el.style.display = "none";
-    });
+    const container = pdfContainerRef.current;
+
+    // Save original position so we can restore it after capture
+    const savedLeft = container.style.left;
 
     try {
-      const html2pdfModule = await import("html2pdf.js");
-      const html2pdfFn = html2pdfModule.default ?? html2pdfModule;
+      const html2canvasModule = await import("html2canvas");
+      const html2canvas = html2canvasModule.default ?? html2canvasModule;
+      const { jsPDF } = await import("jspdf");
 
-      await html2pdfFn()
-        .set({
-          margin: [10, 12, 10, 12],
-          filename: "ortheon-career-direction-report.pdf",
-          image: { type: "jpeg", quality: 0.92 },
-          html2canvas: {
-            scale: 2,
-            useCORS: true,
-            logging: false,
-          },
-          jsPDF: {
-            unit: "mm",
-            format: "a4",
-            orientation: "portrait",
-          },
-          pagebreak: { mode: ["css", "legacy"] },
-        })
-        .from(reportRef.current)
-        .save();
+      const pages = Array.from(container.querySelectorAll(".pdf-page"));
+      console.log("[PDF] pages found:", pages.length);
+      if (pages.length === 0) throw new Error("No PDF pages found");
 
+      // Move container into viewport so html2canvas can capture it reliably.
+      // position:fixed means no ancestor can clip it; left:0 puts it on screen.
+      // There is no z-index so it sits under normal page content — no visible flash.
+      container.style.left = "0px";
+      await new Promise((r) => requestAnimationFrame(r));
+      await new Promise((r) => requestAnimationFrame(r));
+
+      const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+      const pdfWidth = pdf.internal.pageSize.getWidth();   // 210 mm
+      const pdfHeight = pdf.internal.pageSize.getHeight(); // 297 mm
+
+      for (let i = 0; i < pages.length; i++) {
+        const page = pages[i];
+        console.log(`[PDF] capturing page ${i + 1} of ${pages.length} — offsetWidth:${page.offsetWidth} offsetHeight:${page.offsetHeight}`);
+
+        const canvas = await html2canvas(page, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: "#ffffff",
+          windowWidth: 1200,
+        });
+
+        const imgData = canvas.toDataURL("image/jpeg", 0.92);
+        const naturalH = (canvas.height / canvas.width) * pdfWidth;
+
+        if (i > 0) pdf.addPage();
+
+        if (naturalH <= pdfHeight) {
+          pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, naturalH);
+        } else {
+          const scale = pdfHeight / naturalH;
+          const scaledW = pdfWidth * scale;
+          pdf.addImage(imgData, "JPEG", (pdfWidth - scaledW) / 2, 0, scaledW, pdfHeight);
+        }
+      }
+
+      pdf.save("ortheon-career-direction-report.pdf");
+      console.log("[PDF] saved successfully");
       setPdfStatus("idle");
     } catch (error) {
-      console.error("PDF generation failed:", error);
+      console.error("[PDF] generation failed:", error);
       setPdfStatus("error");
     } finally {
-      excluded.forEach((el) => {
-        el.style.display = el.dataset.pdfPrevDisplay ?? "";
-        delete el.dataset.pdfPrevDisplay;
-      });
+      // Always restore off-screen position
+      container.style.left = savedLeft;
     }
   }
 
@@ -546,28 +575,31 @@ function ResultsStep({ assessmentId }) {
         )}
       </div>
 
-      <div ref={reportRef}>
-        <CareerDirectionMap careerMap={careerMap} />
+      <CareerDirectionMap careerMap={careerMap} />
 
-        {recommendations.length === 0 ? (
-          <p className="status warning">
-            No recommendations could be generated from the current assessment data.
-          </p>
-        ) : (
-          <div className="results-list">
-            {recommendations.map((recommendation) => (
-              <ResultCard
-                key={recommendation.directionId}
-                recommendation={recommendation}
-              />
-            ))}
-          </div>
-        )}
-
-        <p className="status success pdf-exclude">
-          Results generated and saved.
+      {recommendations.length === 0 ? (
+        <p className="status warning">
+          No recommendations could be generated from the current assessment data.
         </p>
-      </div>
+      ) : (
+        <div className="results-list">
+          {recommendations.map((recommendation) => (
+            <ResultCard
+              key={recommendation.directionId}
+              recommendation={recommendation}
+            />
+          ))}
+        </div>
+      )}
+
+      {createPortal(
+        <PdfReport
+          careerMap={careerMap}
+          recommendations={recommendations}
+          containerRef={pdfContainerRef}
+        />,
+        document.body
+      )}
     </div>
   );
 }
