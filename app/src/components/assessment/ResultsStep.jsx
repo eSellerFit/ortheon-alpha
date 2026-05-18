@@ -10,6 +10,8 @@ import {
   getAssessment,
   saveAssessmentResults,
 } from "../../services/assessmentService";
+import { trackEvent } from "../../utils/analytics";
+import { ANALYTICS_EVENTS } from "../../utils/analyticsEvents";
 
 const ALPHA_REPORT_REVIEW_URL =
   "https://calendar.app.google/y6Ri2VYvBa7iJRCu5";
@@ -400,6 +402,12 @@ function ResultCard({ recommendation }) {
 }
 
 function AlphaReportReview() {
+  function handleAlphaReportReviewClick() {
+    trackEvent(ANALYTICS_EVENTS.ALPHA_REPORT_REVIEW_CLICKED, {
+      source_section: "results_page",
+    });
+  }
+
   return (
     <section className="alpha-review-card pdf-exclude">
       <div className="alpha-review-content">
@@ -428,6 +436,7 @@ function AlphaReportReview() {
         className="alpha-review-button"
         data-analytics-event="alpha_report_review_clicked"
         aria-label="Schedule a 30-minute Ortheon Alpha report review"
+        onClick={handleAlphaReportReviewClick}
       >
         Schedule 30-minute report review
       </a>
@@ -442,6 +451,7 @@ function ResultsStep({ assessmentId }) {
   const [errorMessage, setErrorMessage] = useState("");
   const [pdfStatus, setPdfStatus] = useState("idle");
   const hasGeneratedRef = useRef(false);
+  const hasTrackedResultsViewRef = useRef(false);
   const pdfContainerRef = useRef(null);
 
   useEffect(() => {
@@ -484,12 +494,40 @@ function ResultsStep({ assessmentId }) {
     loadAndGenerateResults();
   }, [assessmentId]);
 
+  useEffect(() => {
+    if (status !== "success" || hasTrackedResultsViewRef.current) {
+      return;
+    }
+
+    hasTrackedResultsViewRef.current = true;
+
+    const nearbyCount =
+      careerMap?.nearbyTrajectories?.length ||
+      careerMap?.nearbyDirections?.length ||
+      careerMap?.nearby?.length ||
+      0;
+
+    trackEvent(ANALYTICS_EVENTS.RESULTS_VIEWED, {
+      direction_count: recommendations.length,
+      has_nearby_trajectories: nearbyCount > 0,
+      source_section: "results_page",
+    });
+  }, [status, recommendations.length, careerMap]);
+
   async function handleDownloadPdf() {
     console.log("[PDF] export handler running");
     console.log("[PDF] pdfContainerRef.current:", pdfContainerRef.current);
 
+    trackEvent(ANALYTICS_EVENTS.PDF_DOWNLOAD_CLICKED, {
+      source_section: "results_page",
+    });
+
     if (!pdfContainerRef.current) {
       console.error("[PDF] pdfContainerRef.current is null — PdfReport not mounted");
+      trackEvent(ANALYTICS_EVENTS.PDF_DOWNLOAD_ERROR, {
+        source_section: "results_page",
+        error_type: "pdf_container_missing",
+      });
       return;
     }
 
@@ -564,9 +602,21 @@ function ResultsStep({ assessmentId }) {
 
       pdf.save("ortheon-career-direction-report.pdf");
       console.log("[PDF] saved successfully");
+
+      trackEvent(ANALYTICS_EVENTS.PDF_DOWNLOAD_SUCCESS, {
+        source_section: "results_page",
+        page_count: pages.length,
+      });
+
       setPdfStatus("idle");
     } catch (error) {
       console.error("[PDF] generation failed:", error);
+
+      trackEvent(ANALYTICS_EVENTS.PDF_DOWNLOAD_ERROR, {
+        source_section: "results_page",
+        error_type: "pdf_generation_error",
+      });
+
       setPdfStatus("error");
     } finally {
       // Always restore off-screen position
