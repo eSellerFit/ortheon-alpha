@@ -2233,7 +2233,15 @@ function sortRecommendationsByScore(recommendations) {
 }
 
 function sortTalentDomainRecommendations(recommendations) {
+  const TIE_THRESHOLD = 2;
+
   return [...recommendations].sort((a, b) => {
+    const scoreDiff = b.scores.total - a.scores.total;
+
+    if (Math.abs(scoreDiff) > TIE_THRESHOLD) {
+      return scoreDiff;
+    }
+
     const priorityA = talentPrimaryPriority[a.directionId] || 99;
     const priorityB = talentPrimaryPriority[b.directionId] || 99;
 
@@ -2241,12 +2249,20 @@ function sortTalentDomainRecommendations(recommendations) {
       return priorityA - priorityB;
     }
 
-    return b.scores.total - a.scores.total;
+    return scoreDiff;
   });
 }
 
 function sortTechnologyDomainRecommendations(recommendations) {
+  const TIE_THRESHOLD = 2;
+
   return [...recommendations].sort((a, b) => {
+    const scoreDiff = b.scores.total - a.scores.total;
+
+    if (Math.abs(scoreDiff) > TIE_THRESHOLD) {
+      return scoreDiff;
+    }
+
     const priorityA = technologyPrimaryPriority[a.directionId] || 99;
     const priorityB = technologyPrimaryPriority[b.directionId] || 99;
 
@@ -2254,7 +2270,7 @@ function sortTechnologyDomainRecommendations(recommendations) {
       return priorityA - priorityB;
     }
 
-    return b.scores.total - a.scores.total;
+    return scoreDiff;
   });
 }
 
