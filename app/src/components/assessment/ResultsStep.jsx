@@ -11,6 +11,9 @@ import {
   saveAssessmentResults,
 } from "../../services/assessmentService";
 
+const ALPHA_REPORT_REVIEW_URL =
+  "https://calendar.app.google/y6Ri2VYvBa7iJRCu5";
+
 const durabilityLabels = {
   D0: "Declining / avoid recommending",
   D1: "Pressured by AI and automation",
@@ -396,6 +399,42 @@ function ResultCard({ recommendation }) {
   );
 }
 
+function AlphaReportReview() {
+  return (
+    <section className="alpha-review-card pdf-exclude">
+      <div className="alpha-review-content">
+        <p className="eyebrow">Optional Alpha report review</p>
+        <h2>Discuss your report with George</h2>
+
+        <p>
+          For the first 10 Alpha users, George is offering a 30-minute report
+          review session.
+        </p>
+
+        <p>
+          This is not a sales call. It is a short conversation to discuss your
+          report and help improve Ortheon.
+        </p>
+
+        <p className="alpha-review-note">
+          Please use the same email you used for the assessment when booking.
+        </p>
+      </div>
+
+      <a
+        href={ALPHA_REPORT_REVIEW_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="alpha-review-button"
+        data-analytics-event="alpha_report_review_clicked"
+        aria-label="Schedule a 30-minute Ortheon Alpha report review"
+      >
+        Schedule 30-minute report review
+      </a>
+    </section>
+  );
+}
+
 function ResultsStep({ assessmentId }) {
   const [status, setStatus] = useState("loading");
   const [recommendations, setRecommendations] = useState([]);
@@ -477,13 +516,22 @@ function ResultsStep({ assessmentId }) {
       await new Promise((r) => requestAnimationFrame(r));
       await new Promise((r) => requestAnimationFrame(r));
 
-      const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
-      const pdfWidth = pdf.internal.pageSize.getWidth();   // 210 mm
+      const pdf = new jsPDF({
+        unit: "mm",
+        format: "a4",
+        orientation: "portrait",
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth(); // 210 mm
       const pdfHeight = pdf.internal.pageSize.getHeight(); // 297 mm
 
       for (let i = 0; i < pages.length; i++) {
         const page = pages[i];
-        console.log(`[PDF] capturing page ${i + 1} of ${pages.length} — offsetWidth:${page.offsetWidth} offsetHeight:${page.offsetHeight}`);
+        console.log(
+          `[PDF] capturing page ${i + 1} of ${
+            pages.length
+          } — offsetWidth:${page.offsetWidth} offsetHeight:${page.offsetHeight}`
+        );
 
         const canvas = await html2canvas(page, {
           scale: 2,
@@ -503,7 +551,14 @@ function ResultsStep({ assessmentId }) {
         } else {
           const scale = pdfHeight / naturalH;
           const scaledW = pdfWidth * scale;
-          pdf.addImage(imgData, "JPEG", (pdfWidth - scaledW) / 2, 0, scaledW, pdfHeight);
+          pdf.addImage(
+            imgData,
+            "JPEG",
+            (pdfWidth - scaledW) / 2,
+            0,
+            scaledW,
+            pdfHeight
+          );
         }
       }
 
@@ -558,6 +613,7 @@ function ResultsStep({ assessmentId }) {
           reality, and the evidence behind the result. You can also download a PDF
           copy for later.
         </p>
+
         <div className="action-row">
           <button
             type="button"
@@ -565,15 +621,20 @@ function ResultsStep({ assessmentId }) {
             onClick={handleDownloadPdf}
             disabled={pdfStatus === "generating"}
           >
-            {pdfStatus === "generating" ? "Preparing PDF…" : "Download PDF Report"}
+            {pdfStatus === "generating"
+              ? "Preparing PDF…"
+              : "Download PDF Report"}
           </button>
         </div>
+
         {pdfStatus === "error" && (
           <p className="status error">
             Couldn't generate PDF. Please try again.
           </p>
         )}
       </div>
+
+      <AlphaReportReview />
 
       <CareerDirectionMap careerMap={careerMap} />
 

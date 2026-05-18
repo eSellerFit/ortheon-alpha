@@ -2074,3 +2074,63 @@
     grid-template-columns: 90px 1fr 30px 36px;
   }
 }
+.alpha-review-card {
+  margin: 24px 0 32px;
+  border: 1px solid #e4e1d8;
+  background: #ffffff;
+  border-radius: 28px;
+  padding: 28px;
+  box-shadow: 0 12px 40px rgba(24, 32, 42, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.alpha-review-content {
+  max-width: 680px;
+}
+
+.alpha-review-content h2 {
+  margin: 6px 0 12px;
+}
+
+.alpha-review-content p {
+  color: #5f6875;
+  line-height: 1.6;
+}
+
+.alpha-review-note {
+  margin-top: 12px;
+  font-size: 0.95rem;
+}
+
+.alpha-review-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  border-radius: 999px;
+  background: #164e5a;
+  color: #ffffff;
+  padding: 13px 20px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.alpha-review-button:hover {
+  background: #0f3f49;
+}
+
+@media (max-width: 760px) {
+  .alpha-review-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .alpha-review-button {
+    width: 100%;
+    text-align: center;
+  }
+}
