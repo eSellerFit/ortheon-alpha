@@ -12,13 +12,13 @@ function isObject(value) {
 }
 
 function asArray(value) {
-  if (!value) return [];
+  if (value === null || value === undefined || value === '') return [];
   if (Array.isArray(value)) return value;
   return [value];
 }
 
 function compact(values) {
-  return values
+  return asArray(values)
     .flatMap((value) => asArray(value))
     .filter((value) => value !== null && value !== undefined && value !== '')
     .map((value) => (typeof value === 'string' ? value.trim() : value))
