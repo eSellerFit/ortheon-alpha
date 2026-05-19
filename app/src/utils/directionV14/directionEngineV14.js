@@ -1,17 +1,24 @@
 // app/src/utils/directionV14/directionEngineV14.js
 // Direction Engine v1.4 — Diagnostic Orchestrator
 //
-// Bundle 1A scope:
+// Bundle 1B scope:
 // - Adapt an existing assessment into the v1.4 evidence model.
 // - Detect career spines.
-// - Build an initial candidate direction set from the current roleLibrary.
-// - Return a diagnostic object.
+// - Build a candidate direction set from current roleLibrary.
+// - Evaluate candidates through eight lenses.
+// - Apply hard gates.
+// - Calibrate directions.
+// - Return diagnostic output.
 // - Do NOT replace the current scoring engine.
 // - Do NOT create user-facing recommendations yet.
 
 import { roleLibrary } from '../../data/roleLibrary.js';
+import { salaryBenchmarks } from '../../data/salaryBenchmarks.js';
 import { adaptAssessmentToEvidenceV14 } from './evidenceAdapterV14.js';
 import { detectCareerSpinesV14 } from './careerSpineDetectorV14.js';
+import { evaluateDirectionLensesV14 } from './directionLensesV14.js';
+import { applyHardGatesV14 } from './directionGatesV14.js';
+import { calibrateDirectionV14 } from './directionCalibrationV14.js';
 
 function normalize(value) {
   if (value === null || value === undefined) return '';
@@ -158,6 +165,10 @@ const SPINE_DIRECTION_HINTS = {
   ]
 };
 
+function getSalaryBenchmark(directionId) {
+  return salaryBenchmarks.find((item) => item.directionId === directionId) || null;
+}
+
 function scoreDirectionAgainstSpines(direction, spines = {}) {
   const directionText = normalize([
     direction.directionLabel,
@@ -210,53 +221,126 @@ function buildCandidateDirectionsV14(spines = {}) {
   return roleLibrary
     .map((direction) => {
       const match = scoreDirectionAgainstSpines(direction, spines);
+      const salaryBenchmark = getSalaryBenchmark(direction.directionId);
 
       return {
-        directionId: direction.directionId,
-        directionLabel: direction.directionLabel,
-        category: direction.category,
-        metaDirection: direction.metaDirection,
-        context: direction.context,
-        aiDurabilityRating: direction.aiDurabilityRating,
-        transitionCategory: direction.transitionCategory,
-        transitionPathway: direction.transitionPathway,
-        financialRiskLevel: direction.financialRiskLevel,
-        bridgeDirections: direction.bridgeDirections || [],
-        longerPathOptions: direction.longerPathOptions || [],
-        candidateScore: match.score,
-        candidateReasons: match.reasons
+        direction,
+        salaryBenchmark,
+        summary: {
+          directionId: direction.directionId,
+          directionLabel: direction.directionLabel,
+          category: direction.category,
+          metaDirection: direction.metaDirection,
+          context: direction.context,
+          aiDurabilityRating: direction.aiDurabilityRating,
+          transitionCategory: direction.transitionCategory,
+          transitionPathway: direction.transitionPathway,
+          financialRiskLevel: direction.financialRiskLevel,
+          bridgeDirections: direction.bridgeDirections || [],
+          longerPathOptions: direction.longerPathOptions || [],
+          candidateScore: match.score,
+          candidateReasons: match.reasons
+        }
       };
     })
-    .filter((candidate) => candidate.candidateScore > 0)
-    .sort((a, b) => b.candidateScore - a.candidateScore);
+    .filter((candidate) => candidate.summary.candidateScore > 0)
+    .sort((a, b) => b.summary.candidateScore - a.summary.candidateScore);
+}
+
+function evaluateCandidateV14(candidate, evidenceModel) {
+  const lensResults = evaluateDirectionLensesV14({
+    candidate: candidate.summary,
+    direction: candidate.direction,
+    salaryBenchmark: candidate.salaryBenchmark,
+    evidenceModel
+  });
+
+  const gates = applyHardGatesV14({
+    direction: candidate.direction,
+    lensResults,
+    evidenceModel
+  });
+
+  const calibration = calibrateDirectionV14({
+    direction: candidate.direction,
+    lensResults,
+    gates,
+    evidenceModel
+  });
+
+  return {
+    ...candidate.summary,
+    lensResults,
+    gates,
+    calibration,
+    finalClassification: calibration.finalClassification,
+    overallLensScore: calibration.overallLensScore,
+    decisionContext: calibration.decisionContext
+  };
+}
+
+function sortCalibratedDirections(a, b) {
+  if (a.calibration.classificationPriority !== b.calibration.classificationPriority) {
+    return a.calibration.classificationPriority - b.calibration.classificationPriority;
+  }
+
+  if (a.overallLensScore !== b.overallLensScore) {
+    return b.overallLensScore - a.overallLensScore;
+  }
+
+  return b.candidateScore - a.candidateScore;
 }
 
 export function generateDirectionDiagnosticsV14(assessment = {}, options = {}) {
   const evidenceModel = adaptAssessmentToEvidenceV14(assessment);
   const careerSpines = detectCareerSpinesV14(evidenceModel);
-  const candidateDirections = buildCandidateDirectionsV14(careerSpines);
+  const candidateDirectionsRaw = buildCandidateDirectionsV14(careerSpines);
 
   const maxCandidates =
     Number.isFinite(options.maxCandidates) && options.maxCandidates > 0
       ? options.maxCandidates
-      : 12;
+      : 20;
+
+  const maxRecommendations =
+    Number.isFinite(options.maxRecommendations) && options.maxRecommendations > 0
+      ? options.maxRecommendations
+      : 5;
+
+  const evaluated = candidateDirectionsRaw
+    .slice(0, maxCandidates)
+    .map((candidate) => evaluateCandidateV14(candidate, evidenceModel))
+    .sort(sortCalibratedDirections);
+
+  const suppressedDirections = evaluated.filter(
+    (item) => item.finalClassification === 'Suppressed'
+  );
+
+  const recommendations = evaluated
+    .filter((item) => item.finalClassification !== 'Suppressed')
+    .slice(0, maxRecommendations)
+    .map((item, index) => ({
+      ...item,
+      rank: index + 1
+    }));
 
   return {
     engineVersion: 'v1.4',
-    stage: 'bundle_1a_diagnostic_foundation',
+    stage: 'bundle_1b_eight_lenses_gates_calibration',
     generatedAt: new Date().toISOString(),
     assessmentId: evidenceModel.assessmentId,
     status: evidenceModel.status,
     evidenceModel,
     careerSpines,
-    candidateDirections: candidateDirections.slice(0, maxCandidates),
-    lensDiagnostics: [],
-    suppressedDirections: [],
-    recommendations: [],
+    candidateDirections: candidateDirectionsRaw
+      .slice(0, maxCandidates)
+      .map((candidate) => candidate.summary),
+    lensDiagnostics: evaluated,
+    suppressedDirections,
+    recommendations,
     notes: [
-      'Bundle 1A creates diagnostic foundation only.',
-      'No existing scoring engine or user-facing results are changed.',
-      'Eight-lens evaluation, hard gates, and calibration will be added in later bundles.'
+      'Bundle 1B adds eight-lens diagnostics, hard gates, and calibration.',
+      'Existing scoring engine and user-facing results are still unchanged.',
+      'v1.4 output is diagnostic only until connected behind a debug page or feature flag.'
     ]
   };
 }
