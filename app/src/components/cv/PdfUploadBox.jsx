@@ -1,11 +1,23 @@
+import { useState } from "react";
 import { useDropzone } from "react-dropzone";
 
+const REJECTED_FILE_MESSAGE =
+  "This file was not accepted as a PDF. On mobile, try selecting the PDF from Files, or paste your CV text manually.";
+
+function looksLikePdf(file) {
+  return (
+    file?.type === "application/pdf" ||
+    /\.pdf$/i.test(file?.name || "")
+  );
+}
+
 function PdfUploadBox({ onFileSelected, disabled = false }) {
+  const [rejectionMessage, setRejectionMessage] = useState("");
+
   const {
     getRootProps,
     getInputProps,
     isDragActive,
-    fileRejections,
     open,
   } = useDropzone({
     accept: {
@@ -16,9 +28,22 @@ function PdfUploadBox({ onFileSelected, disabled = false }) {
     noClick: true,
     noKeyboard: true,
     onDropAccepted: (acceptedFiles) => {
+      setRejectionMessage("");
+
       if (acceptedFiles.length > 0) {
         onFileSelected(acceptedFiles[0]);
       }
+    },
+    onDropRejected: (fileRejections) => {
+      const rejectedFile = fileRejections[0]?.file;
+
+      if (looksLikePdf(rejectedFile)) {
+        setRejectionMessage("");
+        onFileSelected(rejectedFile);
+        return;
+      }
+
+      setRejectionMessage(REJECTED_FILE_MESSAGE);
     },
   });
 
@@ -54,9 +79,9 @@ function PdfUploadBox({ onFileSelected, disabled = false }) {
         </p>
       </div>
 
-      {fileRejections.length > 0 && (
+      {rejectionMessage && (
         <p className="status warning">
-          Please upload a PDF file only.
+          {rejectionMessage}
         </p>
       )}
     </div>
