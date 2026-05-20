@@ -1,675 +1,1657 @@
 export default function OrtheonLandingPage() {
-  const reportItems = [
+  const situations = [
     {
-      title: "Career Direction Map",
-      text: "A visual map showing where you are, which directions are credible now, which need a bridge step, and which are longer-path options.",
-      accent: "#164E5A",
-      tag: "Core output",
+      icon: "01",
+      headline: "You’re applying, but the market is not responding",
+      text: "Automated hiring systems and narrow role filters make it harder to understand where your experience reads as a credible signal.",
+      checks: "market credibility, evidence strength, direction fit.",
     },
     {
-      title: "Credibility Status",
-      text: "Each direction is rated: credible now, bridge path, or longer path — based on your actual profile, not what sounds good.",
-      accent: "#2F7D5C",
-      tag: "Per direction",
+      icon: "02",
+      headline: "Your experience is broad, but hard to position",
+      text: "You have done a lot, but the market needs a clearer signal about what direction you fit now.",
+      checks: "career spine, transferable evidence, positioning clarity.",
     },
     {
-      title: "Financial Reality Signal",
-      text: "Your directions are evaluated against your income floor and transition runway — not just final salary potential.",
-      accent: "#B7791F",
-      tag: "Per direction",
+      icon: "03",
+      headline: "You may need to look wider than the obvious next role",
+      text: "The right direction may be adjacent, independent, credentialed, technical, or non-corporate — not just another version of your last role.",
+      checks: "direct paths, adjacent paths, bridge paths, constraints.",
     },
     {
-      title: "AI Durability Rating",
-      text: "Each direction carries an AI durability signal — so you can see how the role may evolve as AI reshapes market demand.",
-      accent: "#4B5F9E",
-      tag: "Per direction",
+      icon: "04",
+      headline: "You want a direction that can hold up as AI changes work",
+      text: "The next move should not only be possible now. It should still make sense over the next few years.",
+      checks: "AI durability, transition risk, future relevance.",
+    },
+  ];
+
+  const problemQuestions = [
+    "What do I want?",
+    "Where will the market believe me?",
+    "What can I financially afford?",
+    "What paths are realistic under my constraints?",
+    "Which directions are durable enough as AI changes work?",
+  ];
+
+  const directions = [
+    {
+      rank: "1",
+      label: "Business Operations / Delivery Leadership",
+      path: "Direct",
+      credibility: "Credible now",
+      durability: "D3",
+      financial: "Viable",
     },
     {
-      title: "Credibility Actions",
-      text: "Concrete next steps: what evidence, positioning, bridge role, or credential would make each direction more believable to the market.",
-      accent: "#1E2C3A",
-      tag: "Actionable",
+      rank: "2",
+      label: "Digital Operations / Automation Enablement",
+      path: "Adjacent",
+      credibility: "Evidence-backed",
+      durability: "D3",
+      financial: "Bridge-aware",
     },
     {
-      title: "Downloadable Report",
-      text: "Your full Career Direction Report is available online and as a PDF download — save it, print it, or share it with a mentor or advisor.",
-      accent: "#164E5A",
-      tag: "PDF download",
+      rank: "3",
+      label: "Independent Operations Advisory",
+      path: "Bridge-based",
+      credibility: "Needs positioning",
+      durability: "D4",
+      financial: "Runway-sensitive",
     },
+  ];
+
+  const reportSignals = [
+    ["Fit band", "Strong Fit"],
+    ["AI durability", "D3 — Durable"],
+    ["Transition pathway", "Direct"],
+    ["Estimated first-year income", "Viable with current floor"],
+    ["BLS benchmark", "Operations Managers"],
+    ["AI evolution path", "Automation-literate delivery leadership"],
+  ];
+
+  const reportSections = [
+    "Career Direction Report",
+    "Your Career Directions",
+    "Ranked directions",
+    "Key Signals",
+    "Recommended Directions",
+    "Nearby Trajectories",
+    "What Drove These Results",
   ];
 
   const lenses = [
-    { label: "Career evidence", desc: "What does your career history already show the market?" },
-    { label: "Market credibility", desc: "Would hiring managers believe this direction based on your profile?" },
-    { label: "Career anchors", desc: "Does this direction fit what actually matters to you in work?" },
-    { label: "Financial reality", desc: "Can this path work against your income floor and transition runway?" },
-    { label: "Practical constraints", desc: "Is this realistic under your current life and work conditions?" },
-    { label: "Credentials & gates", desc: "Does the path require licenses, certifications, or formal qualifications?" },
-    { label: "AI durability", desc: "How may this direction change as AI reshapes the market?" },
-    { label: "Direction calibration", desc: "Which paths are direct, bridge-based, nearby, or longer-term?" },
-  ];
-
-  const forYouItems = [
-    "You have built a real career, but the next step is no longer obvious.",
-    "You apply to roles where the system says you are a top candidate — and nothing happens.",
-    "You appear qualified on paper, but the market does not always read your profile clearly.",
-    "You are considering a pivot, consulting, advisory work, or entrepreneurship.",
-    "You want to know what is credible now, what needs a bridge step, and what is a longer path.",
-    "You want honest direction — not a personality quiz or generic career coaching.",
+    "Market credibility",
+    "Experience evidence",
+    "Career anchors",
+    "Financial reality",
+    "Practical constraints",
+    "Credentials / gates",
+    "AI durability",
+    "Direction calibration",
   ];
 
   return (
-    <main style={{ minHeight: "100vh", background: "#F8F6F2", color: "#1E2C3A", fontFamily: "'Georgia', 'Times New Roman', serif" }}>
+    <main className="landing-page">
+      <style>{`
+        .landing-page {
+          min-height: 100vh;
+          background: #f4efe6;
+          color: #172330;
+          font-family: "Helvetica Neue", Arial, sans-serif;
+        }
 
-      {/* NAV */}
-      <nav style={{
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        maxWidth: 1200, margin: "0 auto", padding: "24px 32px"
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <img src="/ortheon-logo.png" alt="Ortheon" style={{ width: 36, height: 36, objectFit: "contain" }} />
-          <span style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.02em", color: "#1E2C3A", fontFamily: "'Georgia', serif" }}>
-            Ortheon
-          </span>
-        </div>
-        <a
-          href="#start"
-          style={{
-            background: "#164E5A", color: "white", padding: "10px 22px",
-            borderRadius: 100, fontSize: 14, fontWeight: 500, textDecoration: "none",
-            fontFamily: "'Helvetica Neue', Arial, sans-serif", letterSpacing: "-0.01em",
-            transition: "background 0.2s"
-          }}
-        >
-          Start Free Assessment
-        </a>
-      </nav>
+        .lp-container {
+          width: 100%;
+          max-width: 1200px;
+          margin: 0 auto;
+          padding-left: 32px;
+          padding-right: 32px;
+        }
 
-      {/* HERO */}
-      <section style={{ maxWidth: 1200, margin: "0 auto", padding: "48px 32px 80px" }}>
-        <div style={{
-          display: "grid", gridTemplateColumns: "1fr 1fr", gap: 64,
-          alignItems: "center"
-        }}>
+        .lp-hero {
+          position: relative;
+          overflow: hidden;
+          background:
+            radial-gradient(circle at 82% 12%, rgba(47, 154, 168, 0.16), rgba(47, 154, 168, 0) 34%),
+            linear-gradient(135deg, #172330 0%, #1d2b39 58%, #172330 100%);
+          color: #fff8ea;
+        }
+
+        .lp-nav {
+          position: relative;
+          z-index: 2;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 20px;
+          padding-top: 24px;
+          padding-bottom: 24px;
+        }
+
+        .lp-brand {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          min-width: 0;
+        }
+
+        .lp-brand img {
+          width: 36px;
+          height: 36px;
+          object-fit: contain;
+          flex: 0 0 auto;
+        }
+
+        .lp-brand span {
+          color: #fff8ea;
+          font-family: Georgia, "Times New Roman", serif;
+          font-size: 18px;
+          font-weight: 700;
+          letter-spacing: -0.02em;
+        }
+
+        .lp-nav-cta,
+        .lp-button,
+        .lp-final-cta,
+        .lp-feedback-button {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 999px;
+          font-family: "Helvetica Neue", Arial, sans-serif;
+          font-weight: 800;
+          line-height: 1.2;
+          text-decoration: none;
+          white-space: nowrap;
+        }
+
+        .lp-nav-cta {
+          border: 1px solid rgba(248, 241, 227, 0.28);
+          background: rgba(248, 241, 227, 0.1);
+          color: #fff8ea;
+          padding: 10px 18px;
+          font-size: 14px;
+        }
+
+        .lp-hero-grid {
+          position: relative;
+          z-index: 1;
+          display: grid;
+          grid-template-columns: minmax(0, 0.95fr) minmax(420px, 1.05fr);
+          gap: 56px;
+          align-items: center;
+          padding-top: 48px;
+          padding-bottom: 92px;
+        }
+
+        .lp-kicker,
+        .lp-eyebrow,
+        .lp-report-label {
+          display: inline-flex;
+          align-items: center;
+          gap: 9px;
+          margin: 0 0 22px;
+          font-size: 12px;
+          font-weight: 900;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+        }
+
+        .lp-kicker {
+          border: 1px solid rgba(248, 241, 227, 0.2);
+          border-radius: 999px;
+          background: rgba(248, 241, 227, 0.08);
+          color: rgba(248, 241, 227, 0.84);
+          padding: 8px 14px;
+        }
+
+        .lp-dot {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background: #2f9aa8;
+          box-shadow: 0 0 0 5px rgba(47, 154, 168, 0.16);
+          flex: 0 0 auto;
+        }
+
+        .lp-hero h1 {
+          max-width: 780px;
+          margin: 0 0 28px;
+          color: #fff9ed;
+          font-family: Georgia, "Times New Roman", serif;
+          font-size: clamp(42px, 6vw, 72px);
+          font-weight: 400;
+          letter-spacing: -0.045em;
+          line-height: 1.02;
+        }
+
+        .lp-hero h1 em {
+          color: #7fd2dc;
+          font-style: italic;
+        }
+
+        .lp-hero-sub {
+          max-width: 680px;
+          margin: 0 0 34px;
+          color: rgba(248, 241, 227, 0.82);
+          font-size: 19px;
+          line-height: 1.65;
+        }
+
+        .lp-actions {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .lp-button {
+          min-height: 56px;
+          border: 1px solid transparent;
+          padding: 17px 28px;
+          font-size: 15px;
+          letter-spacing: -0.01em;
+        }
+
+        .lp-button.primary {
+          border-color: rgba(127, 210, 220, 0.46);
+          background: #2f9aa8;
+          color: #061c22;
+          box-shadow: 0 18px 42px rgba(47, 154, 168, 0.24);
+        }
+
+        .lp-button.secondary {
+          border-color: rgba(248, 241, 227, 0.36);
+          background: rgba(248, 241, 227, 0.08);
+          color: #fff8ea;
+        }
+
+        .lp-trust {
+          max-width: 620px;
+          margin: 18px 0 0;
+          color: rgba(248, 241, 227, 0.66);
+          font-size: 14px;
+          line-height: 1.55;
+        }
+
+        .lp-artifact-shell {
+          border: 1px solid rgba(248, 241, 227, 0.16);
+          border-radius: 28px;
+          background: rgba(248, 241, 227, 0.08);
+          padding: 10px;
+          box-shadow: 0 36px 90px rgba(0, 0, 0, 0.32);
+        }
+
+        .lp-artifact {
+          border-radius: 21px;
+          background: #fff8ea;
+          color: #172330;
+          padding: 24px;
+        }
+
+        .lp-artifact-top,
+        .lp-footer {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+        }
+
+        .lp-report-label {
+          margin-bottom: 7px;
+          color: #245f68;
+          font-size: 11px;
+        }
+
+        .lp-artifact-title {
+          margin: 0;
+          color: #172330;
+          font-family: Georgia, "Times New Roman", serif;
+          font-size: 25px;
+          font-weight: 400;
+          letter-spacing: -0.02em;
+        }
+
+        .lp-artifact-pill {
+          flex: 0 0 auto;
+          border-radius: 999px;
+          background: #dff3f4;
+          color: #145460;
+          padding: 7px 11px;
+          font-size: 11px;
+          font-weight: 900;
+        }
+
+        .lp-map {
+          position: relative;
+          display: grid;
+          gap: 14px;
+          margin-top: 22px;
+          border: 1px solid #d9cfbd;
+          border-radius: 18px;
+          background: #ffffff;
+          padding: 18px;
+        }
+
+        .lp-current {
+          position: relative;
+          width: fit-content;
+          border: 1px solid #245f68;
+          border-radius: 14px;
+          background: #eef7f7;
+          padding: 12px 16px;
+        }
+
+        .lp-current span,
+        .lp-path-meta span,
+        .lp-signal-card span,
+        .lp-sample-field span {
+          display: block;
+          margin-bottom: 4px;
+          color: #687280;
+          font-size: 10px;
+          font-weight: 900;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+
+        .lp-current strong {
+          color: #172330;
+          font-size: 14px;
+        }
+
+        .lp-path-stack {
+          display: grid;
+          gap: 10px;
+        }
+
+        .lp-path {
+          position: relative;
+          display: grid;
+          grid-template-columns: 42px 1fr auto;
+          gap: 12px;
+          align-items: center;
+          border: 1px solid #e0d6c8;
+          border-radius: 15px;
+          background: #fffaf1;
+          padding: 13px;
+        }
+
+        .lp-path::before {
+          content: "";
+          position: absolute;
+          left: 32px;
+          top: -11px;
+          width: 2px;
+          height: 11px;
+          background: #a9c7ca;
+        }
+
+        .lp-path:first-child::before {
+          display: none;
+        }
+
+        .lp-path-node {
+          display: inline-flex;
+          width: 34px;
+          height: 34px;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          background: #172330;
+          color: #fff8ea;
+          font-size: 12px;
+          font-weight: 900;
+        }
+
+        .lp-path-title strong {
+          display: block;
+          color: #172330;
+          font-size: 14px;
+          line-height: 1.28;
+        }
+
+        .lp-path-title span {
+          display: block;
+          margin-top: 4px;
+          color: #566170;
+          font-size: 12px;
+        }
+
+        .lp-path-meta {
+          border-radius: 12px;
+          background: #eef7f7;
+          padding: 9px 10px;
+          text-align: right;
+        }
+
+        .lp-path-meta strong,
+        .lp-signal-card strong,
+        .lp-sample-field strong {
+          display: block;
+          color: #172330;
+          font-size: 12px;
+          line-height: 1.25;
+        }
+
+        .lp-signal-grid {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 8px;
+          margin-top: 14px;
+        }
+
+        .lp-signal-card {
+          border: 1px solid #e0d6c8;
+          border-radius: 12px;
+          background: #ffffff;
+          padding: 10px;
+        }
+
+        .lp-section {
+          padding: 84px 0;
+        }
+
+        .lp-section.light {
+          background: #fffaf1;
+        }
+
+        .lp-section.warm {
+          background: #f4efe6;
+        }
+
+        .lp-section.ink {
+          background: #223241;
+          color: #fff8ea;
+        }
+
+        .lp-section.navy {
+          background: #172330;
+          color: #fff8ea;
+        }
+
+        .lp-section-head {
+          max-width: 720px;
+          margin-bottom: 44px;
+        }
+
+        .lp-section-head.center {
+          margin-left: auto;
+          margin-right: auto;
+          text-align: center;
+        }
+
+        .lp-eyebrow {
+          margin-bottom: 14px;
+          color: #245f68;
+          font-size: 13px;
+        }
+
+        .lp-section.ink .lp-eyebrow,
+        .lp-section.navy .lp-eyebrow {
+          color: #7fd2dc;
+        }
+
+        .lp-section h2 {
+          margin: 0 0 16px;
+          color: #172330;
+          font-family: Georgia, "Times New Roman", serif;
+          font-size: 42px;
+          font-weight: 400;
+          letter-spacing: -0.025em;
+          line-height: 1.13;
+        }
+
+        .lp-section.ink h2,
+        .lp-section.navy h2 {
+          color: #fff8ea;
+        }
+
+        .lp-copy {
+          margin: 0;
+          color: #526071;
+          font-size: 17px;
+          line-height: 1.7;
+        }
+
+        .lp-section.ink .lp-copy,
+        .lp-section.navy .lp-copy {
+          color: rgba(248, 241, 227, 0.72);
+        }
+
+        .lp-icp-grid {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 16px;
+        }
+
+        .lp-icp-card {
+          border: 1px solid #cbd8dc;
+          border-radius: 20px;
+          background: #ffffff;
+          padding: 22px;
+          box-shadow: 0 16px 34px rgba(23, 35, 48, 0.06);
+        }
+
+        .lp-icp-top {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          margin-bottom: 18px;
+        }
+
+        .lp-icon {
+          display: inline-flex;
+          width: 38px;
+          height: 38px;
+          align-items: center;
+          justify-content: center;
+          border-radius: 12px;
+          background: #172330;
+          color: #fff8ea;
+          font-size: 12px;
+          font-weight: 900;
+        }
+
+        .lp-mini-line {
+          position: relative;
+          width: 72px;
+          height: 18px;
+        }
+
+        .lp-mini-line::before {
+          content: "";
+          position: absolute;
+          left: 5px;
+          right: 5px;
+          top: 8px;
+          height: 2px;
+          background: #9fc7ca;
+        }
+
+        .lp-mini-line i {
+          position: absolute;
+          top: 4px;
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          background: #2f9aa8;
+        }
+
+        .lp-mini-line i:nth-child(1) {
+          left: 0;
+        }
+
+        .lp-mini-line i:nth-child(2) {
+          left: 30px;
+          background: #b7791f;
+        }
+
+        .lp-mini-line i:nth-child(3) {
+          right: 0;
+          background: #172330;
+        }
+
+        .lp-icp-card h3 {
+          margin: 0 0 10px;
+          color: #172330;
+          font-size: 18px;
+          line-height: 1.28;
+        }
+
+        .lp-icp-card p {
+          margin: 0;
+          color: #526071;
+          font-size: 14px;
+          line-height: 1.62;
+        }
+
+        .lp-checks {
+          margin-top: 16px;
+          border-left: 3px solid #2f9aa8;
+          padding-left: 12px;
+          color: #223241;
+          font-size: 13px;
+          line-height: 1.5;
+        }
+
+        .lp-checks strong {
+          color: #245f68;
+        }
+
+        .lp-question-grid {
+          display: grid;
+          grid-template-columns: repeat(5, minmax(0, 1fr));
+          gap: 12px;
+        }
+
+        .lp-question-card {
+          border: 1px solid rgba(248, 241, 227, 0.16);
+          border-radius: 18px;
+          background: rgba(248, 241, 227, 0.06);
+          padding: 22px;
+        }
+
+        .lp-question-card span {
+          display: inline-flex;
+          width: 32px;
+          height: 32px;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 16px;
+          border-radius: 10px;
+          background: rgba(47, 154, 168, 0.18);
+          color: #7fd2dc;
+          font-size: 12px;
+          font-weight: 900;
+        }
+
+        .lp-question-card h3 {
+          margin: 0;
+          color: #fff8ea;
+          font-size: 16px;
+          line-height: 1.3;
+        }
+
+        .lp-product-grid,
+        .lp-sample-grid,
+        .lp-founder-grid {
+          display: grid;
+          grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+          gap: 56px;
+          align-items: center;
+        }
+
+        .lp-product-panel,
+        .lp-sample-panel {
+          border: 1px solid rgba(248, 241, 227, 0.16);
+          border-radius: 28px;
+          background: rgba(248, 241, 227, 0.08);
+          padding: 10px;
+        }
+
+        .lp-product-map,
+        .lp-sample-report {
+          border-radius: 21px;
+          background: #fff8ea;
+          color: #172330;
+          padding: 24px;
+        }
+
+        .lp-map-grid {
+          display: grid;
+          grid-template-columns: 0.82fr 1.18fr;
+          gap: 18px;
+          align-items: center;
+        }
+
+        .lp-map-origin {
+          border: 1px solid #245f68;
+          border-radius: 18px;
+          background: #eef7f7;
+          padding: 18px;
+        }
+
+        .lp-map-origin span {
+          display: block;
+          margin-bottom: 5px;
+          color: #245f68;
+          font-size: 10px;
+          font-weight: 900;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+
+        .lp-map-origin strong {
+          color: #172330;
+          font-size: 17px;
+          line-height: 1.25;
+        }
+
+        .lp-map-paths {
+          display: grid;
+          gap: 10px;
+        }
+
+        .lp-map-path {
+          border: 1px solid #dfd4c4;
+          border-left: 5px solid #2f9aa8;
+          border-radius: 14px;
+          background: #ffffff;
+          padding: 13px;
+        }
+
+        .lp-map-path.bridge {
+          border-left-color: #b7791f;
+        }
+
+        .lp-map-path.conditional {
+          border-left-color: #6f7f96;
+        }
+
+        .lp-map-path strong {
+          display: block;
+          color: #172330;
+          font-size: 14px;
+          line-height: 1.3;
+        }
+
+        .lp-map-path span {
+          display: block;
+          margin-top: 5px;
+          color: #5b6674;
+          font-size: 12px;
+          line-height: 1.4;
+        }
+
+        .lp-report-sections {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          margin-top: 22px;
+        }
+
+        .lp-report-sections span {
+          border: 1px solid #dfd4c4;
+          border-radius: 999px;
+          background: #fffaf1;
+          color: #334454;
+          padding: 7px 10px;
+          font-size: 12px;
+          font-weight: 800;
+        }
+
+        .lp-report-table {
+          display: grid;
+          gap: 8px;
+          margin-top: 20px;
+        }
+
+        .lp-report-row {
+          display: grid;
+          grid-template-columns: 42px 1fr 0.74fr;
+          gap: 12px;
+          align-items: center;
+          border: 1px solid #dfd4c4;
+          border-radius: 14px;
+          background: #ffffff;
+          padding: 12px;
+        }
+
+        .lp-report-rank {
+          display: inline-flex;
+          width: 34px;
+          height: 34px;
+          align-items: center;
+          justify-content: center;
+          border-radius: 10px;
+          background: #172330;
+          color: #fff8ea;
+          font-size: 12px;
+          font-weight: 900;
+        }
+
+        .lp-report-row strong {
+          display: block;
+          color: #172330;
+          font-size: 14px;
+          line-height: 1.3;
+        }
+
+        .lp-report-row span {
+          display: block;
+          margin-top: 3px;
+          color: #5b6674;
+          font-size: 12px;
+        }
+
+        .lp-report-status {
+          border-radius: 999px;
+          background: #eef7f7;
+          color: #145460;
+          padding: 7px 10px;
+          font-size: 11px;
+          font-weight: 900;
+          text-align: center;
+        }
+
+        .lp-sample-fields {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 10px;
+          margin-top: 20px;
+        }
+
+        .lp-sample-field {
+          border: 1px solid #dfd4c4;
+          border-radius: 13px;
+          background: #ffffff;
+          padding: 12px;
+        }
+
+        .lp-disabled-download {
+          display: inline-flex;
+          width: fit-content;
+          align-items: center;
+          justify-content: center;
+          min-height: 50px;
+          margin-top: 22px;
+          border: 1px solid #d6c6ad;
+          border-radius: 999px;
+          background: #f1e7d4;
+          color: #766042;
+          padding: 14px 20px;
+          font-size: 14px;
+          font-weight: 900;
+        }
+
+        .lp-lens-grid {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 12px;
+        }
+
+        .lp-lens-card {
+          border: 1px solid #cbd8dc;
+          border-radius: 18px;
+          background: #ffffff;
+          padding: 22px;
+          box-shadow: 0 14px 30px rgba(23, 35, 48, 0.05);
+        }
+
+        .lp-lens-card span {
+          display: inline-flex;
+          width: 34px;
+          height: 34px;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 16px;
+          border-radius: 10px;
+          background: #172330;
+          color: #fff8ea;
+          font-size: 12px;
+          font-weight: 900;
+        }
+
+        .lp-lens-card h3 {
+          margin: 0;
+          color: #172330;
+          font-size: 16px;
+          line-height: 1.3;
+        }
+
+        .lp-founder-grid {
+          gap: 72px;
+        }
+
+        .lp-founder-id {
+          display: flex;
+          gap: 28px;
+          align-items: flex-start;
+        }
+
+        .lp-founder-id img {
+          width: 96px;
+          height: 96px;
+          border: 3px solid #ded6c4;
+          border-radius: 50%;
+          object-fit: cover;
+          object-position: center top;
+          flex: 0 0 auto;
+        }
+
+        .lp-founder-id h3 {
+          margin: 0 0 4px;
+          color: #172330;
+          font-family: Georgia, "Times New Roman", serif;
+          font-size: 22px;
+          font-weight: 400;
+        }
+
+        .lp-founder-id p {
+          color: #526071;
+        }
+
+        .lp-quote {
+          margin: 0 0 24px;
+          padding-left: 24px;
+          border-left: 3px solid #2f9aa8;
+          color: #172330;
+          font-family: Georgia, "Times New Roman", serif;
+          font-size: 22px;
+          font-style: italic;
+          line-height: 1.55;
+        }
+
+        .lp-final-panel {
+          max-width: 820px;
+          margin: 0 auto;
+          border-radius: 30px;
+          background: #172330;
+          padding: 58px 52px;
+          text-align: center;
+          box-shadow: 0 30px 80px rgba(23, 35, 48, 0.2);
+        }
+
+        .lp-final-panel h2 {
+          margin: 0 0 16px;
+          color: #fff8ea;
+          font-family: Georgia, "Times New Roman", serif;
+          font-size: 42px;
+          font-weight: 400;
+          letter-spacing: -0.025em;
+          line-height: 1.13;
+        }
+
+        .lp-final-panel p {
+          max-width: 560px;
+          margin: 0 auto 34px;
+          color: rgba(248, 241, 227, 0.7);
+          font-size: 17px;
+          line-height: 1.7;
+        }
+
+        .lp-final-cta {
+          min-height: 54px;
+          background: #fff8ea;
+          color: #145460;
+          padding: 16px 32px;
+          font-size: 15px;
+        }
+
+        .lp-terms {
+          margin-top: 18px;
+          color: rgba(248, 241, 227, 0.44);
+          font-size: 13px;
+          line-height: 1.55;
+        }
+
+        .lp-terms a {
+          color: rgba(248, 241, 227, 0.62);
+        }
+
+        .lp-feedback-form {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .lp-form-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 16px;
+        }
+
+        .lp-field {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .lp-field label {
+          color: #172330;
+          font-size: 12px;
+          font-weight: 900;
+          letter-spacing: 0.02em;
+        }
+
+        .lp-field input,
+        .lp-field textarea {
+          border: 1px solid #cfc4b4;
+          border-radius: 12px;
+          background: #fffaf1;
+          color: #172330;
+          padding: 12px 16px;
+          font: inherit;
+          outline: none;
+        }
+
+        .lp-field textarea {
+          resize: vertical;
+          line-height: 1.6;
+        }
+
+        .lp-feedback-button {
+          border: none;
+          background: #172330;
+          color: #fff8ea;
+          cursor: pointer;
+          padding: 14px 28px;
+          font-size: 15px;
+        }
+
+        .lp-footer {
+          border-top: 1px solid #ded6c4;
+          padding-top: 30px;
+          padding-bottom: 30px;
+        }
+
+        .lp-footer-logo {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .lp-footer-logo img {
+          width: 36px;
+          height: 36px;
+          object-fit: contain;
+        }
+
+        .lp-footer-logo span {
+          color: #172330;
+          font-family: Georgia, "Times New Roman", serif;
+          font-size: 14px;
+          font-weight: 700;
+        }
+
+        .lp-footer-meta {
+          text-align: right;
+          color: #7c8792;
+          font-size: 13px;
+        }
+
+        .lp-footer-links {
+          display: flex;
+          justify-content: flex-end;
+          gap: 22px;
+          margin-top: 8px;
+        }
+
+        .lp-footer-links a {
+          color: #7c8792;
+        }
+
+        @media (max-width: 1080px) {
+          .lp-hero-grid,
+          .lp-product-grid,
+          .lp-sample-grid,
+          .lp-founder-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .lp-hero-grid {
+            gap: 40px;
+          }
+
+          .lp-artifact-shell,
+          .lp-product-panel,
+          .lp-sample-panel {
+            max-width: 720px;
+          }
+
+          .lp-icp-grid,
+          .lp-question-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+        }
+
+        @media (max-width: 860px) {
+          .lp-signal-grid,
+          .lp-lens-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+
+          .lp-map-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .lp-container {
+            padding-left: 20px;
+            padding-right: 20px;
+          }
+
+          .lp-nav {
+            padding-top: 18px;
+            padding-bottom: 18px;
+          }
+
+          .lp-brand img {
+            width: 32px;
+            height: 32px;
+          }
+
+          .lp-brand span {
+            font-size: 16px;
+          }
+
+          .lp-nav-cta {
+            padding: 9px 13px;
+            font-size: 12px;
+          }
+
+          .lp-hero-grid {
+            padding-top: 28px;
+            padding-bottom: 58px;
+          }
+
+          .lp-kicker,
+          .lp-eyebrow {
+            font-size: 11px;
+            line-height: 1.35;
+          }
+
+          .lp-hero h1 {
+            font-size: 38px;
+            letter-spacing: -0.035em;
+            line-height: 1.06;
+          }
+
+          .lp-hero-sub {
+            font-size: 16px;
+            line-height: 1.62;
+          }
+
+          .lp-actions {
+            flex-direction: column;
+            align-items: stretch;
+          }
+
+          .lp-button,
+          .lp-final-cta {
+            width: 100%;
+            min-height: 54px;
+            padding-left: 18px;
+            padding-right: 18px;
+            text-align: center;
+            white-space: normal;
+          }
+
+          .lp-trust {
+            font-size: 13px;
+          }
+
+          .lp-artifact,
+          .lp-product-map,
+          .lp-sample-report {
+            padding: 16px;
+          }
+
+          .lp-artifact-top {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+
+          .lp-path,
+          .lp-report-row {
+            grid-template-columns: auto 1fr;
+            align-items: flex-start;
+          }
+
+          .lp-path-meta,
+          .lp-report-status {
+            grid-column: 2;
+            width: fit-content;
+            text-align: left;
+          }
+
+          .lp-signal-grid,
+          .lp-icp-grid,
+          .lp-question-grid,
+          .lp-sample-fields,
+          .lp-lens-grid,
+          .lp-form-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .lp-section {
+            padding: 60px 0;
+          }
+
+          .lp-section h2,
+          .lp-final-panel h2 {
+            font-size: 31px;
+            line-height: 1.16;
+          }
+
+          .lp-copy {
+            font-size: 15px;
+          }
+
+          .lp-founder-id {
+            flex-direction: column;
+          }
+
+          .lp-final-panel {
+            border-radius: 24px;
+            padding: 42px 24px;
+          }
+
+          .lp-footer {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+
+          .lp-footer-meta {
+            text-align: left;
+          }
+
+          .lp-footer-links {
+            justify-content: flex-start;
+          }
+        }
+      `}</style>
+
+      <section className="lp-hero">
+        <nav className="lp-container lp-nav">
+          <div className="lp-brand">
+            <img src="/ortheon-logo.png" alt="Ortheon" />
+            <span>Ortheon</span>
+          </div>
+          <a className="lp-nav-cta" href="/assessment">
+            Start free assessment
+          </a>
+        </nav>
+
+        <div className="lp-container lp-hero-grid">
           <div>
-            <div style={{
-              display: "inline-flex", alignItems: "center", gap: 8,
-              background: "white", border: "1px solid #E2DED6",
-              borderRadius: 100, padding: "6px 14px", marginBottom: 28
-            }}>
-              <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#2F7D5C" }} />
-              <span style={{
-                fontSize: 12, color: "#5F6875", fontFamily: "'Helvetica Neue', Arial, sans-serif",
-                letterSpacing: "0.04em", textTransform: "uppercase", fontWeight: 500
-              }}>
-                Free during Alpha · No credit card
-              </span>
+            <div className="lp-kicker">
+              <span className="lp-dot" />
+              Career direction report · Free individual assessment
             </div>
 
-            <h1 style={{
-              fontSize: 52, fontWeight: 400, lineHeight: 1.08, letterSpacing: "-0.025em",
-              color: "#1E2C3A", margin: "0 0 12px", fontFamily: "'Georgia', 'Times New Roman', serif"
-            }}>
-              Sending more applications is not the same as
-            </h1>
-            <h1 style={{
-              fontSize: 52, fontWeight: 400, lineHeight: 1.08, letterSpacing: "-0.025em",
-              color: "#164E5A", margin: "0 0 28px", fontFamily: "'Georgia', 'Times New Roman', serif",
-              fontStyle: "italic"
-            }}>
-              moving in the right direction.
+            <h1>
+              A career move is not only about what you want.
+              <br />
+              <em>It’s about where the market can believe you.</em>
             </h1>
 
-            <p style={{
-              fontSize: 18, lineHeight: 1.7, color: "#5F6875", margin: "0 0 36px",
-              fontFamily: "'Helvetica Neue', Arial, sans-serif", fontWeight: 400, maxWidth: 480
-            }}>
-              Ortheon evaluates your next career direction through eight decision lenses — your career evidence, market credibility, anchors, financial reality, constraints, credentials, and AI durability.
+            <p className="lp-hero-sub">
+              Ortheon helps you identify career directions that are credible
+              from your experience, realistic for your financial situation,
+              aligned with what matters to you, and more durable in an
+              AI-shaped market.
             </p>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <a
-                href="#start"
-                style={{
-                  display: "inline-flex", alignItems: "center", justifyContent: "center",
-                  background: "#1E2C3A", color: "white",
-                  padding: "16px 32px", borderRadius: 100,
-                  fontSize: 15, fontWeight: 500, textDecoration: "none",
-                  fontFamily: "'Helvetica Neue', Arial, sans-serif", letterSpacing: "-0.01em",
-                  width: "fit-content"
-                }}
-              >
-                Start My Free Career Direction Assessment →
+            <div className="lp-actions">
+              <a className="lp-button primary" href="/assessment">
+                Start Career Direction Assessment
               </a>
-              <p style={{
-                fontSize: 13, color: "#8A97A5", margin: 0,
-                fontFamily: "'Helvetica Neue', Arial, sans-serif"
-              }}>
-                Complete the assessment and receive your Career Direction Report.
-              </p>
+              <a className="lp-button secondary" href="#sample-report">
+                See Sample Report
+              </a>
             </div>
+
+            <p className="lp-trust">
+              Free individual assessment. No credit card required.
+              <br />
+              Currently in alpha — built with feedback from early users.
+            </p>
           </div>
 
-          {/* HERO CARD — real report preview */}
-          <div style={{
-            background: "white", borderRadius: 24, border: "1px solid #E2DED6",
-            padding: 6, boxShadow: "0 32px 80px rgba(30,44,58,0.10)"
-          }}>
-            <div style={{ background: "#F4F3EF", borderRadius: 20, padding: 20 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+          <div className="lp-artifact-shell" aria-label="Career Direction Map and report preview">
+            <div className="lp-artifact">
+              <div className="lp-artifact-top">
                 <div>
-                  <p style={{
-                    fontSize: 10, fontWeight: 600, letterSpacing: "0.12em",
-                    textTransform: "uppercase", color: "#8A97A5", margin: "0 0 4px",
-                    fontFamily: "'Helvetica Neue', Arial, sans-serif"
-                  }}>Career Direction Map</p>
-                  <p style={{
-                    fontSize: 13, color: "#1E2C3A", margin: 0,
-                    fontFamily: "'Helvetica Neue', Arial, sans-serif", fontWeight: 500
-                  }}>Sample output · anonymized</p>
+                  <p className="lp-report-label">Career Direction Map</p>
+                  <p className="lp-artifact-title">Hybrid map + report preview</p>
                 </div>
-                <span style={{
-                  background: "#E7F1F2", color: "#164E5A", fontSize: 11,
-                  fontWeight: 600, padding: "4px 10px", borderRadius: 100,
-                  fontFamily: "'Helvetica Neue', Arial, sans-serif"
-                }}>Live product</span>
+                <span className="lp-artifact-pill">Anonymized sample</span>
               </div>
 
-              {/* Map preview */}
-              <div style={{
-                background: "white", borderRadius: 16, border: "1px solid #E2DED6",
-                padding: 20, marginBottom: 12
-              }}>
-                {/* You are here */}
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
-                  <div style={{
-                    background: "#E7F1F2", border: "1.5px solid #164E5A", borderRadius: 12,
-                    padding: "8px 16px", textAlign: "center"
-                  }}>
-                    <p style={{ fontSize: 10, color: "#164E5A", margin: "0 0 2px", fontFamily: "sans-serif", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em" }}>You are here</p>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: "#1E2C3A", margin: 0, fontFamily: "sans-serif" }}>Current profile</p>
-                  </div>
-                  <div style={{ width: 1, height: 20, background: "#CBD5E0" }} />
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, width: "100%" }}>
-                    <div style={{ background: "#F0FDF4", border: "1px solid #86EFAC", borderRadius: 10, padding: "10px 12px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2F7D5C" }} />
-                        <span style={{ fontSize: 10, color: "#2F7D5C", fontWeight: 600, fontFamily: "sans-serif" }}>Credible now</span>
+              <div className="lp-map">
+                <div className="lp-current">
+                  <span>Current profile / You are here</span>
+                  <strong>Senior Operations Manager · Tech-enabled operations</strong>
+                </div>
+
+                <div className="lp-path-stack">
+                  {directions.map((direction) => (
+                    <div className="lp-path" key={direction.label}>
+                      <span className="lp-path-node">{direction.rank}</span>
+                      <div className="lp-path-title">
+                        <strong>{direction.label}</strong>
+                        <span>
+                          Credibility: {direction.credibility} · AI durability: {direction.durability}
+                        </span>
                       </div>
-                      <p style={{ fontSize: 12, fontWeight: 600, color: "#1E2C3A", margin: "0 0 2px", fontFamily: "sans-serif" }}>HR & People Ops</p>
-                      <p style={{ fontSize: 11, color: "#5F6875", margin: 0, fontFamily: "sans-serif" }}>Score 93</p>
-                    </div>
-                    <div style={{ background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: 10, padding: "10px 12px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#B7791F" }} />
-                        <span style={{ fontSize: 10, color: "#B7791F", fontWeight: 600, fontFamily: "sans-serif" }}>Bridge path</span>
+                      <div className="lp-path-meta">
+                        <span>Transition path</span>
+                        <strong>{direction.path}</strong>
                       </div>
-                      <p style={{ fontSize: 12, fontWeight: 600, color: "#1E2C3A", margin: "0 0 2px", fontFamily: "sans-serif" }}>Workforce Planning</p>
-                      <p style={{ fontSize: 11, color: "#5F6875", margin: 0, fontFamily: "sans-serif" }}>Score 98</p>
                     </div>
-                  </div>
+                  ))}
                 </div>
               </div>
 
-              {/* Signal strip */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-                {[
-                  { label: "AI Durability", value: "D2 — Viable", color: "#164E5A", bg: "#E7F1F2" },
-                  { label: "Income signal", value: "$88,000 est.", color: "#1E2C3A", bg: "#F4F3EF" },
-                  { label: "Transition", value: "Direct path", color: "#2F7D5C", bg: "#F0FDF4" },
-                ].map(s => (
-                  <div key={s.label} style={{ background: s.bg, borderRadius: 10, padding: "8px 10px" }}>
-                    <p style={{ fontSize: 9, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "#8A97A5", margin: "0 0 3px", fontFamily: "sans-serif" }}>{s.label}</p>
-                    <p style={{ fontSize: 12, fontWeight: 600, color: s.color, margin: 0, fontFamily: "sans-serif" }}>{s.value}</p>
-                  </div>
-                ))}
+              <div className="lp-signal-grid">
+                <div className="lp-signal-card">
+                  <span>Credibility</span>
+                  <strong>Evidence-backed</strong>
+                </div>
+                <div className="lp-signal-card">
+                  <span>AI durability</span>
+                  <strong>D3-D4 range</strong>
+                </div>
+                <div className="lp-signal-card">
+                  <span>Financial reality</span>
+                  <strong>Income-floor aware</strong>
+                </div>
+                <div className="lp-signal-card">
+                  <span>Transition path</span>
+                  <strong>Direct / adjacent / bridge</strong>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* IS THIS FOR YOU */}
-      <section style={{ background: "white", padding: "80px 0" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px" }}>
-          <div style={{ maxWidth: 560, marginBottom: 48 }}>
-            <p style={{
-              fontSize: 11, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase",
-              color: "#164E5A", margin: "0 0 12px", fontFamily: "'Helvetica Neue', Arial, sans-serif"
-            }}>Is this for you?</p>
-            <h2 style={{
-              fontSize: 38, fontWeight: 400, letterSpacing: "-0.02em", lineHeight: 1.15,
-              color: "#1E2C3A", margin: "0 0 16px", fontFamily: "'Georgia', serif"
-            }}>
-              Built for people making a serious career direction decision.
-            </h2>
-            <p style={{
-              fontSize: 17, lineHeight: 1.7, color: "#5F6875", margin: 0,
-              fontFamily: "'Helvetica Neue', Arial, sans-serif"
-            }}>
-              Ortheon is not for finding any next job. It is for understanding which directions are credible, realistic, and worth pursuing — and which ones need more groundwork first.
+      <section className="lp-section light">
+        <div className="lp-container">
+          <div className="lp-section-head">
+            <p className="lp-eyebrow">
+              <span className="lp-dot" />
+              Who this is for
+            </p>
+            <h2>Built for people whose next move is no longer obvious.</h2>
+            <p className="lp-copy">
+              Ortheon is for people making a serious career direction decision,
+              especially when ability, market credibility, financial reality,
+              constraints, and AI durability all need to be considered together.
             </p>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
-            {forYouItems.map((item, i) => (
-              <div key={i} style={{
-                background: "#F8F6F2", border: "1px solid #E2DED6", borderRadius: 20,
-                padding: "28px 24px"
-              }}>
-                <div style={{ width: 32, height: 2, background: "#164E5A", borderRadius: 2, marginBottom: 20 }} />
-                <p style={{
-                  fontSize: 15, lineHeight: 1.65, color: "#1E2C3A", margin: 0,
-                  fontFamily: "'Helvetica Neue', Arial, sans-serif"
-                }}>{item}</p>
-              </div>
+          <div className="lp-icp-grid">
+            {situations.map((situation) => (
+              <article className="lp-icp-card" key={situation.headline}>
+                <div className="lp-icp-top">
+                  <span className="lp-icon">{situation.icon}</span>
+                  <span className="lp-mini-line" aria-hidden="true">
+                    <i />
+                    <i />
+                    <i />
+                  </span>
+                </div>
+                <h3>{situation.headline}</h3>
+                <p>{situation.text}</p>
+                <div className="lp-checks">
+                  <strong>Ortheon checks:</strong> {situation.checks}
+                </div>
+              </article>
             ))}
           </div>
         </div>
       </section>
 
-      {/* WHAT YOU RECEIVE */}
-      <section style={{ padding: "80px 0" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "0.8fr 1.2fr", gap: 64, alignItems: "start" }}>
-            <div style={{ position: "sticky", top: 32 }}>
-              <p style={{
-                fontSize: 11, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase",
-                color: "#164E5A", margin: "0 0 12px", fontFamily: "'Helvetica Neue', Arial, sans-serif"
-              }}>What you receive</p>
-              <h2 style={{
-                fontSize: 38, fontWeight: 400, letterSpacing: "-0.02em", lineHeight: 1.15,
-                color: "#1E2C3A", margin: "0 0 20px", fontFamily: "'Georgia', serif"
-              }}>
-                A structured report, not a list of job titles.
-              </h2>
-              <p style={{
-                fontSize: 17, lineHeight: 1.7, color: "#5F6875", margin: 0,
-                fontFamily: "'Helvetica Neue', Arial, sans-serif"
-              }}>
-                Your report shows how your profile reads across several career directions — including credibility status, financial signal, AI durability, and transition path.
+      <section className="lp-section ink">
+        <div className="lp-container">
+          <div className="lp-section-head">
+            <p className="lp-eyebrow">
+              <span className="lp-dot" />
+              The decision problem
+            </p>
+            <h2>Most career advice skips the part the market cares about.</h2>
+            <p className="lp-copy">
+              The real decision is not one question. It is five at once: desire,
+              market belief, financial reality, practical constraints, and
+              durability as AI changes work.
+            </p>
+          </div>
+
+          <div className="lp-question-grid">
+            {problemQuestions.map((question, index) => (
+              <article className="lp-question-card" key={question}>
+                <span>{index + 1}</span>
+                <h3>{question}</h3>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="lp-section navy">
+        <div className="lp-container">
+          <div className="lp-product-grid">
+            <div>
+              <p className="lp-eyebrow">
+                <span className="lp-dot" />
+                Career Direction Map
+              </p>
+              <h2>A map of credible, adjacent, bridge-based, and conditional paths.</h2>
+              <p className="lp-copy">
+                The map is not a subway diagram or a personality chart. It is a
+                compact decision artifact showing where your current profile
+                sits and how different paths relate to your evidence, financial
+                reality, AI durability, and transition risk.
               </p>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-              {reportItems.map((item) => (
-                <div key={item.title} style={{
-                  background: "white", border: "1px solid #E2DED6", borderRadius: 20,
-                  padding: "24px", overflow: "hidden"
-                }}>
-                  <div style={{ width: 40, height: 3, background: item.accent, borderRadius: 2, marginBottom: 20 }} />
-                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8, marginBottom: 12 }}>
-                    <h3 style={{
-                      fontSize: 16, fontWeight: 600, color: "#1E2C3A", margin: 0,
-                      fontFamily: "'Helvetica Neue', Arial, sans-serif", letterSpacing: "-0.01em"
-                    }}>{item.title}</h3>
-                    <span style={{
-                      fontSize: 10, color: "#8A97A5", background: "#F4F3EF",
-                      padding: "3px 8px", borderRadius: 100, whiteSpace: "nowrap", flexShrink: 0,
-                      fontFamily: "'Helvetica Neue', Arial, sans-serif", fontWeight: 500
-                    }}>{item.tag}</span>
+            <div className="lp-product-panel">
+              <div className="lp-product-map">
+                <div className="lp-map-grid">
+                  <div className="lp-map-origin">
+                    <span>Current profile / You are here</span>
+                    <strong>Senior Operations Manager</strong>
                   </div>
-                  <p style={{
-                    fontSize: 14, lineHeight: 1.65, color: "#5F6875", margin: 0,
-                    fontFamily: "'Helvetica Neue', Arial, sans-serif"
-                  }}>{item.text}</p>
+                  <div className="lp-map-paths">
+                    <div className="lp-map-path">
+                      <strong>Direct path</strong>
+                      <span>Business Operations / Delivery Leadership · credible now · financially viable</span>
+                    </div>
+                    <div className="lp-map-path">
+                      <strong>Adjacent path</strong>
+                      <span>Digital Operations / Automation Enablement · strong evidence with positioning</span>
+                    </div>
+                    <div className="lp-map-path bridge">
+                      <strong>Bridge-based path</strong>
+                      <span>Independent Operations Advisory · needs offer clarity and runway</span>
+                    </div>
+                    <div className="lp-map-path conditional">
+                      <strong>Conditional / longer-term path</strong>
+                      <span>Operations Technology Strategy · stronger technical proof needed</span>
+                    </div>
+                  </div>
                 </div>
-              ))}
+
+                <div className="lp-signal-grid">
+                  <div className="lp-signal-card">
+                    <span>Credibility</span>
+                    <strong>Market-believable evidence</strong>
+                  </div>
+                  <div className="lp-signal-card">
+                    <span>Financial fit</span>
+                    <strong>Income-floor aware</strong>
+                  </div>
+                  <div className="lp-signal-card">
+                    <span>AI durability</span>
+                    <strong>D3-D4 signal</strong>
+                  </div>
+                  <div className="lp-signal-card">
+                    <span>Transition path</span>
+                    <strong>Direct / adjacent / bridge</strong>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* REAL REPORT PREVIEW */}
-      <section style={{ background: "#1E2C3A", padding: "80px 0" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px" }}>
-          <div style={{ maxWidth: 560, marginBottom: 48 }}>
-            <p style={{
-              fontSize: 11, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase",
-              color: "#7DBDC8", margin: "0 0 12px", fontFamily: "'Helvetica Neue', Arial, sans-serif"
-            }}>Real report</p>
-            <h2 style={{
-              fontSize: 38, fontWeight: 400, letterSpacing: "-0.02em", lineHeight: 1.15,
-              color: "white", margin: "0 0 16px", fontFamily: "'Georgia', serif"
-            }}>
-              This is what the output actually looks like.
-            </h2>
-            <p style={{
-              fontSize: 17, lineHeight: 1.7, color: "rgba(255,255,255,0.6)", margin: 0,
-              fontFamily: "'Helvetica Neue', Arial, sans-serif"
-            }}>
-              Anonymized screenshots from a real Career Direction Report — generated by the live product.
-            </p>
-          </div>
+      <section id="sample-report" className="lp-section warm">
+        <div className="lp-container">
+          <div className="lp-sample-grid">
+            <div>
+              <p className="lp-eyebrow">
+                <span className="lp-dot" />
+                Sample report
+              </p>
+              <h2>Sample Career Direction Report</h2>
+              <p className="lp-copy">
+                Users receive a structured report, not just a list of roles.
+                It shows ranked directions, key signals, recommended directions,
+                nearby trajectories, what drove the results, and the practical
+                details behind each path.
+              </p>
+              <span className="lp-disabled-download" aria-disabled="true">
+                Download sample report — coming next
+              </span>
+            </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-            {/* Direction card preview */}
-            <div style={{
-              background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)",
-              borderRadius: 20, padding: 24
-            }}>
-              <p style={{
-                fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase",
-                color: "#7DBDC8", margin: "0 0 16px", fontFamily: "sans-serif"
-              }}>Direction card</p>
-              <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: 14, padding: 20 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
-                  <div>
-                    <p style={{ fontSize: 10, color: "#7DBDC8", margin: "0 0 6px", fontFamily: "sans-serif", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em" }}>1st Direction</p>
-                    <p style={{ fontSize: 15, fontWeight: 600, color: "white", margin: 0, fontFamily: "sans-serif" }}>Talent Acquisition / People Ops</p>
-                  </div>
-                  <div style={{ textAlign: "right" }}>
-                    <p style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", margin: "0 0 2px", fontFamily: "sans-serif" }}>Total score</p>
-                    <p style={{ fontSize: 28, fontWeight: 700, color: "white", margin: 0, fontFamily: "sans-serif" }}>93</p>
-                  </div>
+            <div className="lp-sample-panel">
+              <div className="lp-sample-report">
+                <p className="lp-report-label">Career Direction Report</p>
+                <p className="lp-artifact-title">Your Career Directions</p>
+
+                <div className="lp-report-sections">
+                  {reportSections.map((section) => (
+                    <span key={section}>{section}</span>
+                  ))}
                 </div>
-                <div style={{ display: "inline-block", background: "#E7F1F2", borderRadius: 8, padding: "6px 12px", marginBottom: 16 }}>
-                  <p style={{ fontSize: 12, fontWeight: 600, color: "#164E5A", margin: 0, fontFamily: "sans-serif" }}>Credible now</p>
-                  <p style={{ fontSize: 11, color: "#164E5A", opacity: 0.7, margin: 0, fontFamily: "sans-serif" }}>Direct transition with existing background</p>
+
+                <div className="lp-report-table">
+                  {directions.map((direction) => (
+                    <div className="lp-report-row" key={direction.label}>
+                      <span className="lp-report-rank">#{direction.rank}</span>
+                      <div>
+                        <strong>{direction.label}</strong>
+                        <span>{direction.path} · {direction.credibility}</span>
+                      </div>
+                      <span className="lp-report-status">{direction.durability}</span>
+                    </div>
+                  ))}
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                  {[
-                    { label: "Fit band", value: "Strong Fit" },
-                    { label: "AI Durability", value: "D2 — Viable" },
-                    { label: "Transition", value: "Direct path" },
-                    { label: "Est. income", value: "$88,000" },
-                  ].map(f => (
-                    <div key={f.label} style={{ background: "rgba(255,255,255,0.06)", borderRadius: 8, padding: "8px 10px" }}>
-                      <p style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", margin: "0 0 3px", fontFamily: "sans-serif", textTransform: "uppercase", letterSpacing: "0.08em" }}>{f.label}</p>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: "white", margin: 0, fontFamily: "sans-serif" }}>{f.value}</p>
+
+                <div className="lp-sample-fields">
+                  {reportSignals.map(([label, value]) => (
+                    <div className="lp-sample-field" key={label}>
+                      <span>{label}</span>
+                      <strong>{value}</strong>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
-
-            {/* What drove results */}
-            <div style={{
-              background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)",
-              borderRadius: 20, padding: 24
-            }}>
-              <p style={{
-                fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase",
-                color: "#7DBDC8", margin: "0 0 16px", fontFamily: "sans-serif"
-              }}>What drove these results</p>
-              <div style={{ display: "grid", gap: 10 }}>
-                <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: 14, padding: 16 }}>
-                  <p style={{ fontSize: 12, fontWeight: 600, color: "white", margin: "0 0 8px", fontFamily: "sans-serif" }}>Career anchors</p>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                    {["Autonomy / Independence", "General Managerial", "Service"].map(a => (
-                      <span key={a} style={{
-                        background: "rgba(255,255,255,0.1)", borderRadius: 100,
-                        padding: "3px 10px", fontSize: 11, color: "rgba(255,255,255,0.75)", fontFamily: "sans-serif"
-                      }}>{a}</span>
-                    ))}
-                  </div>
-                </div>
-                <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: 14, padding: 16 }}>
-                  <p style={{ fontSize: 12, fontWeight: 600, color: "white", margin: "0 0 8px", fontFamily: "sans-serif" }}>CV / credibility signals</p>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                    {["Human Resources", "Operations", "Consulting", "Technology"].map(a => (
-                      <span key={a} style={{
-                        background: "rgba(22,78,90,0.5)", borderRadius: 100,
-                        padding: "3px 10px", fontSize: 11, color: "#7DBDC8", fontFamily: "sans-serif"
-                      }}>{a}</span>
-                    ))}
-                  </div>
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                  <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: 10, padding: 12 }}>
-                    <p style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", margin: "0 0 3px", fontFamily: "sans-serif", textTransform: "uppercase" }}>Seniority</p>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: "white", margin: 0, fontFamily: "sans-serif" }}>Executive</p>
-                  </div>
-                  <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: 10, padding: 12 }}>
-                    <p style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", margin: "0 0 3px", fontFamily: "sans-serif", textTransform: "uppercase" }}>Runway</p>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: "white", margin: 0, fontFamily: "sans-serif" }}>5 months</p>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
 
-      {/* HOW IT WORKS */}
-      <section style={{ background: "#EEF2F5", padding: "80px 0" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px" }}>
-          <div style={{ textAlign: "center", maxWidth: 600, margin: "0 auto 56px" }}>
-            <p style={{
-              fontSize: 11, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase",
-              color: "#164E5A", margin: "0 0 12px", fontFamily: "'Helvetica Neue', Arial, sans-serif"
-            }}>How it works</p>
-            <h2 style={{
-              fontSize: 38, fontWeight: 400, letterSpacing: "-0.02em", lineHeight: 1.15,
-              color: "#1E2C3A", margin: "0 0 16px", fontFamily: "'Georgia', serif"
-            }}>
-              Each direction is evaluated through eight decision lenses.
-            </h2>
-            <p style={{
-              fontSize: 17, lineHeight: 1.7, color: "#5F6875", margin: 0,
-              fontFamily: "'Helvetica Neue', Arial, sans-serif"
-            }}>
-              Ortheon does not match your CV to job titles. It tests possible directions through multiple lenses and calibrates results based on how the signals work together.
+      <section className="lp-section light">
+        <div className="lp-container">
+          <div className="lp-section-head center">
+            <p className="lp-eyebrow">
+              <span className="lp-dot" />
+              Method
+            </p>
+            <h2>Each direction is evaluated through the lenses that shape a real move.</h2>
+            <p className="lp-copy">
+              Ortheon does not match your CV to job titles. It evaluates
+              possible directions through credibility, evidence, anchors,
+              financial reality, constraints, credentials, AI durability, and
+              calibration.
             </p>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
-            {lenses.map((lens, i) => (
-              <div key={lens.label} style={{
-                background: "white", borderRadius: 20, padding: 24
-              }}>
-                <div style={{
-                  width: 36, height: 36, borderRadius: 10, background: "#1E2C3A",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  marginBottom: 20, fontSize: 13, fontWeight: 600, color: "white",
-                  fontFamily: "'Helvetica Neue', Arial, sans-serif"
-                }}>{i + 1}</div>
-                <h3 style={{
-                  fontSize: 15, fontWeight: 600, color: "#1E2C3A", margin: "0 0 10px",
-                  fontFamily: "'Helvetica Neue', Arial, sans-serif", letterSpacing: "-0.01em"
-                }}>{lens.label}</h3>
-                <p style={{
-                  fontSize: 13, lineHeight: 1.6, color: "#5F6875", margin: 0,
-                  fontFamily: "'Helvetica Neue', Arial, sans-serif"
-                }}>{lens.desc}</p>
-              </div>
+          <div className="lp-lens-grid">
+            {lenses.map((lens, index) => (
+              <article className="lp-lens-card" key={lens}>
+                <span>{index + 1}</span>
+                <h3>{lens}</h3>
+              </article>
             ))}
           </div>
         </div>
       </section>
 
-      {/* FOUNDER */}
-      <section style={{ background: "white", padding: "80px 0" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "center" }}>
-            <div style={{ display: "flex", gap: 32, alignItems: "flex-start" }}>
-              <img
-                src="/gio.jpg"
-                alt="George Chakhidze"
-                style={{
-                  width: 96, height: 96, borderRadius: "50%", objectFit: "cover",
-                  objectPosition: "center top", flexShrink: 0,
-                  border: "3px solid #E2DED6"
-                }}
-              />
+      <section className="lp-section warm">
+        <div className="lp-container">
+          <div className="lp-founder-grid">
+            <div className="lp-founder-id">
+              <img src="/gio.jpg" alt="George Chakhidze" />
               <div>
-                <p style={{
-                  fontSize: 11, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase",
-                  color: "#164E5A", margin: "0 0 8px", fontFamily: "'Helvetica Neue', Arial, sans-serif"
-                }}>Built by</p>
-                <h3 style={{
-                  fontSize: 22, fontWeight: 400, color: "#1E2C3A", margin: "0 0 4px",
-                  fontFamily: "'Georgia', serif", letterSpacing: "-0.01em"
-                }}>George Chakhidze</h3>
-                <p style={{
-                  fontSize: 14, color: "#8A97A5", margin: 0,
-                  fontFamily: "'Helvetica Neue', Arial, sans-serif"
-                }}>Talent & Workforce Systems · New York</p>
+                <p className="lp-eyebrow">
+                  <span className="lp-dot" />
+                  Built by
+                </p>
+                <h3>George Chakhidze</h3>
+                <p>Talent & Workforce Systems · New York</p>
               </div>
             </div>
 
             <div>
-              <p style={{
-                fontSize: 11, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase",
-                color: "#164E5A", margin: "0 0 20px", fontFamily: "'Helvetica Neue', Arial, sans-serif"
-              }}>Why this exists</p>
-              <blockquote style={{
-                fontSize: 22, fontWeight: 400, lineHeight: 1.55, color: "#1E2C3A",
-                fontFamily: "'Georgia', serif", fontStyle: "italic",
-                borderLeft: "3px solid #164E5A", paddingLeft: 24, margin: "0 0 24px"
-              }}>
-                "I spent 18 years on the other side of the hiring table. Recruiting operations, succession planning, workforce decisions — at PepsiCo, Abbott, Kelly, and as co-founder of a workforce marketplace."
+              <p className="lp-eyebrow">
+                <span className="lp-dot" />
+                Why this exists
+              </p>
+              <blockquote className="lp-quote">
+                “I spent 18 years on the other side of the hiring table.
+                Recruiting operations, succession planning, workforce decisions
+                — at PepsiCo, Abbott, Kelly, and as co-founder of a workforce
+                marketplace.”
               </blockquote>
-              <p style={{
-                fontSize: 17, lineHeight: 1.7, color: "#5F6875", margin: 0,
-                fontFamily: "'Helvetica Neue', Arial, sans-serif"
-              }}>
-                I built Ortheon because the tools candidates use to make career decisions are far less rigorous than the ones organizations use to evaluate them.
+              <p className="lp-copy">
+                I built Ortheon because the tools candidates use to make career
+                decisions are far less rigorous than the ones organizations use
+                to evaluate them.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section id="start" style={{ padding: "80px 0" }}>
-        <div style={{ maxWidth: 800, margin: "0 auto", padding: "0 32px" }}>
-          <div style={{
-            background: "#1E2C3A", borderRadius: 32, padding: "64px 56px",
-            textAlign: "center", boxShadow: "0 32px 80px rgba(30,44,58,0.18)"
-          }}>
-            <h2 style={{
-              fontSize: 42, fontWeight: 400, letterSpacing: "-0.025em", lineHeight: 1.1,
-              color: "white", margin: "0 0 20px", fontFamily: "'Georgia', serif"
-            }}>
-              Start your free Career Direction Assessment.
-            </h2>
-            <p style={{
-              fontSize: 17, lineHeight: 1.7, color: "rgba(255,255,255,0.65)",
-              margin: "0 auto 36px", maxWidth: 500,
-              fontFamily: "'Helvetica Neue', Arial, sans-serif"
-            }}>
-              Receive your Career Direction Map, credibility status, financial signal, AI durability ratings, and the evidence behind the result.
+      <section id="start" className="lp-section light">
+        <div className="lp-container">
+          <div className="lp-final-panel">
+            <h2>Start your Career Direction Assessment.</h2>
+            <p>
+              Receive your Career Direction Map, credibility status, financial
+              signal, AI durability ratings, and the evidence behind the result.
             </p>
-            <a
-              href="/assessment"
-              style={{
-                display: "inline-flex", alignItems: "center",
-                background: "white", color: "#164E5A",
-                padding: "16px 36px", borderRadius: 100,
-                fontSize: 15, fontWeight: 600, textDecoration: "none",
-                fontFamily: "'Helvetica Neue', Arial, sans-serif", letterSpacing: "-0.01em"
-              }}
-            >
-              Start My Free Career Direction Assessment →
+            <a className="lp-final-cta" href="/assessment">
+              Start Career Direction Assessment
             </a>
-            <p style={{
-              fontSize: 13, color: "rgba(255,255,255,0.4)", margin: "20px 0 0",
-              fontFamily: "'Helvetica Neue', Arial, sans-serif"
-            }}>
-              Free during Alpha. No credit card required.
-            </p>
-            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", margin: "8px 0 0", fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>
-              By starting the assessment you agree to our <a href="/terms" style={{ color: "rgba(255,255,255,0.5)" }}>Terms of Use</a> and <a href="/privacy" style={{ color: "rgba(255,255,255,0.5)" }}>Privacy Policy</a>.
-            </p>
+            <div className="lp-terms">
+              Free individual assessment. No credit card required.
+              <br />
+              By starting the assessment you agree to our{" "}
+              <a href="/terms">Terms of Use</a> and{" "}
+              <a href="/privacy">Privacy Policy</a>.
+            </div>
           </div>
         </div>
       </section>
 
-      {/* FEEDBACK FORM */}
-      <section style={{ background: "white", padding: "80px 0" }}>
-        <div style={{ maxWidth: 800, margin: "0 auto", padding: "0 32px" }}>
-          <div style={{ marginBottom: 40 }}>
-            <p style={{
-              fontSize: 11, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase",
-              color: "#164E5A", margin: "0 0 12px", fontFamily: "'Helvetica Neue', Arial, sans-serif"
-            }}>Feedback</p>
-            <h2 style={{
-              fontSize: 38, fontWeight: 400, letterSpacing: "-0.02em", lineHeight: 1.15,
-              color: "#1E2C3A", margin: "0 0 16px", fontFamily: "'Georgia', serif"
-            }}>
-              Something unclear or missing? Let us know.
-            </h2>
-            <p style={{
-              fontSize: 17, lineHeight: 1.7, color: "#5F6875", margin: 0,
-              fontFamily: "'Helvetica Neue', Arial, sans-serif"
-            }}>
-              Ortheon is in Alpha. If something feels off, inaccurate, or useful, send it directly to George. Every message is read.
+      <section className="lp-section warm">
+        <div className="lp-container" style={{ maxWidth: 864 }}>
+          <div className="lp-section-head">
+            <p className="lp-eyebrow">
+              <span className="lp-dot" />
+              Feedback
+            </p>
+            <h2>Something unclear or missing? Let us know.</h2>
+            <p className="lp-copy">
+              Ortheon is in alpha. If something feels off, inaccurate, or
+              useful, send it directly to George. Every message is read.
             </p>
           </div>
 
           <form
             action="https://formspree.io/f/mjglnnql"
             method="POST"
-            style={{ display: "flex", flexDirection: "column", gap: 16 }}
+            className="lp-feedback-form"
           >
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label style={{
-                  fontSize: 12, fontWeight: 600, color: "#1E2C3A",
-                  fontFamily: "'Helvetica Neue', Arial, sans-serif", letterSpacing: "0.02em"
-                }}>Name</label>
-                <input
-                  type="text"
-                  name="name"
-                  placeholder="Your name"
-                  style={{
-                    background: "#F8F6F2", border: "1px solid #E2DED6",
-                    borderRadius: 12, padding: "12px 16px",
-                    fontSize: 15, color: "#1E2C3A", outline: "none",
-                    fontFamily: "'Helvetica Neue', Arial, sans-serif"
-                  }}
-                />
+            <div className="lp-form-grid">
+              <div className="lp-field">
+                <label>Name</label>
+                <input type="text" name="name" placeholder="Your name" />
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label style={{
-                  fontSize: 12, fontWeight: 600, color: "#1E2C3A",
-                  fontFamily: "'Helvetica Neue', Arial, sans-serif", letterSpacing: "0.02em"
-                }}>Email</label>
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="your@email.com"
-                  style={{
-                    background: "#F8F6F2", border: "1px solid #E2DED6",
-                    borderRadius: 12, padding: "12px 16px",
-                    fontSize: 15, color: "#1E2C3A", outline: "none",
-                    fontFamily: "'Helvetica Neue', Arial, sans-serif"
-                  }}
-                />
+              <div className="lp-field">
+                <label>Email</label>
+                <input type="email" name="email" placeholder="your@email.com" />
               </div>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <label style={{
-                fontSize: 12, fontWeight: 600, color: "#1E2C3A",
-                fontFamily: "'Helvetica Neue', Arial, sans-serif", letterSpacing: "0.02em"
-              }}>Message</label>
-              <textarea
-                name="message"
-                placeholder="What was unclear, missing, or useful?"
-                rows={5}
-                style={{
-                  background: "#F8F6F2", border: "1px solid #E2DED6",
-                  borderRadius: 12, padding: "12px 16px",
-                  fontSize: 15, color: "#1E2C3A", outline: "none",
-                  fontFamily: "'Helvetica Neue', Arial, sans-serif",
-                  resize: "vertical", lineHeight: 1.6
-                }}
-              />
+            <div className="lp-field">
+              <label>Message</label>
+              <textarea name="message" placeholder="What was unclear, missing, or useful?" rows={5} />
             </div>
 
             <div>
-              <button
-                type="submit"
-                style={{
-                  background: "#1E2C3A", color: "white",
-                  border: "none", borderRadius: 100,
-                  padding: "14px 32px", fontSize: 15, fontWeight: 500,
-                  fontFamily: "'Helvetica Neue', Arial, sans-serif",
-                  cursor: "pointer", letterSpacing: "-0.01em"
-                }}
-              >
+              <button className="lp-feedback-button" type="submit">
                 Send Feedback →
               </button>
             </div>
@@ -677,28 +1659,21 @@ export default function OrtheonLandingPage() {
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer style={{ borderTop: "1px solid #E2DED6", padding: "32px 0" }}>
-        <div style={{
-          maxWidth: 1200, margin: "0 auto", padding: "0 32px",
-          display: "flex", alignItems: "center", justifyContent: "space-between"
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <img src="/ortheon-logo.png" alt="Ortheon" style={{ width: 36, height: 36, objectFit: "contain" }} />
-            <span style={{ fontSize: 14, fontWeight: 600, color: "#1E2C3A", fontFamily: "'Georgia', serif" }}>Ortheon</span>
+      <footer>
+        <div className="lp-container lp-footer">
+          <div className="lp-footer-logo">
+            <img src="/ortheon-logo.png" alt="Ortheon" />
+            <span>Ortheon</span>
           </div>
-          <div>
-            <p style={{ fontSize: 13, color: "#8A97A5", margin: 0, fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>
-              © 2026 eSellerFit LLC · ortheon.app
-            </p>
-            <div style={{ display: "flex", gap: 24, marginTop: 8 }}>
-              <a href="/terms" style={{ fontSize: 13, color: "#8A97A5", textDecoration: "none", fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>Terms of Use</a>
-              <a href="/privacy" style={{ fontSize: 13, color: "#8A97A5", textDecoration: "none", fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>Privacy Policy</a>
+          <div className="lp-footer-meta">
+            <p>© 2026 eSellerFit LLC · ortheon.app</p>
+            <div className="lp-footer-links">
+              <a href="/terms">Terms of Use</a>
+              <a href="/privacy">Privacy Policy</a>
             </div>
           </div>
         </div>
       </footer>
-
     </main>
   );
 }
