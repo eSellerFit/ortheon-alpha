@@ -741,6 +741,126 @@ function DirectionV14Debug() {
             </div>
           </SectionCard>
 
+          <SectionCard title="Matching Engine v1 foundation diagnostics">
+            {diagnostic.matchingEngineV1Foundation ? (
+              <>
+                <div style={styles.summaryGrid}>
+                  <div>
+                    <p style={styles.mutedLabel}>Diagnostic mode</p>
+                    <strong>
+                      {diagnostic.matchingEngineV1Foundation.diagnosticOnly
+                        ? "debug-only"
+                        : "unknown"}
+                    </strong>
+                  </div>
+                  <div>
+                    <p style={styles.mutedLabel}>Evidence signals</p>
+                    <strong>
+                      {
+                        diagnostic.matchingEngineV1Foundation.evidenceSignals
+                          .length
+                      }
+                    </strong>
+                  </div>
+                  <div>
+                    <p style={styles.mutedLabel}>
+                      Recommendation candidates
+                    </p>
+                    <strong>
+                      {
+                        diagnostic.matchingEngineV1Foundation
+                          .recommendationCandidates.length
+                      }
+                    </strong>
+                  </div>
+                  <div>
+                    <p style={styles.mutedLabel}>Report QA</p>
+                    <strong>
+                      {diagnostic.matchingEngineV1Foundation.reportQaResult
+                        .passed
+                        ? "passed"
+                        : "blocked"}
+                    </strong>
+                  </div>
+                </div>
+
+                <div style={styles.foundationGrid}>
+                  <div style={styles.foundationPanel}>
+                    <h3 style={styles.smallTitle}>CandidateProfile</h3>
+                    <p style={styles.debugLine}>
+                      Assessment:{" "}
+                      {formatText(
+                        diagnostic.matchingEngineV1Foundation.candidateProfile
+                          .assessmentId
+                      )}
+                    </p>
+                    <p style={styles.debugLine}>
+                      Current role:{" "}
+                      {formatText(
+                        diagnostic.matchingEngineV1Foundation.candidateProfile
+                          .cvProfile.currentRole
+                      )}
+                    </p>
+                    <p style={styles.debugLine}>
+                      Missing inputs:{" "}
+                      {
+                        diagnostic.matchingEngineV1Foundation.candidateProfile
+                          .missingInputs.length
+                      }
+                    </p>
+                    <p style={styles.debugLine}>
+                      AI treatment:{" "}
+                      {formatText(
+                        diagnostic.matchingEngineV1Foundation.candidateProfile
+                          .aiDigitalSignals.treatment
+                      )}
+                    </p>
+                  </div>
+
+                  <div style={styles.foundationPanel}>
+                    <h3 style={styles.smallTitle}>ReportQAResult</h3>
+                    <p style={styles.debugLine}>
+                      Blocking issues:{" "}
+                      {
+                        diagnostic.matchingEngineV1Foundation.reportQaResult
+                          .blockingIssues.length
+                      }
+                    </p>
+                    <p style={styles.debugLine}>
+                      Warnings:{" "}
+                      {
+                        diagnostic.matchingEngineV1Foundation.reportQaResult
+                          .warnings.length
+                      }
+                    </p>
+                    <p style={styles.debugLine}>
+                      Required fix:{" "}
+                      {formatText(
+                        diagnostic.matchingEngineV1Foundation.reportQaResult
+                          .requiredFix
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                <details style={styles.details}>
+                  <summary>Foundation QA details</summary>
+                  <pre style={styles.jsonBox}>
+                    {JSON.stringify(
+                      diagnostic.matchingEngineV1Foundation.reportQaResult,
+                      null,
+                      2
+                    )}
+                  </pre>
+                </details>
+              </>
+            ) : (
+              <p style={styles.emptyText}>
+                Matching Engine v1 foundation diagnostics are not available.
+              </p>
+            )}
+          </SectionCard>
+
           <SectionCard title="Career spine detection">
             <div style={styles.columns}>
               <div>
@@ -1003,6 +1123,24 @@ const styles = {
     display: "grid",
     gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
     gap: 12,
+  },
+  foundationGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    gap: 12,
+    marginTop: 14,
+  },
+  foundationPanel: {
+    border: "1px solid #e5eaf1",
+    borderRadius: 14,
+    padding: 12,
+    background: "#f8fafc",
+  },
+  debugLine: {
+    margin: "6px 0",
+    color: "#344054",
+    fontSize: 13,
+    lineHeight: 1.45,
   },
   mutedLabel: {
     margin: "0 0 4px",

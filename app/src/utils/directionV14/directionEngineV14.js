@@ -19,6 +19,7 @@ import { detectCareerSpinesV14 } from './careerSpineDetectorV14.js';
 import { evaluateDirectionLensesV14 } from './directionLensesV14.js';
 import { applyHardGatesV14 } from './directionGatesV14.js';
 import { calibrateDirectionV14 } from './directionCalibrationV14.js';
+import { buildMatchingEngineFoundationDiagnostics } from '../matchingEngineV1/foundationDiagnostics.js';
 
 function normalize(value) {
   if (value === null || value === undefined) return '';
@@ -323,7 +324,7 @@ export function generateDirectionDiagnosticsV14(assessment = {}, options = {}) {
       rank: index + 1
     }));
 
-  return {
+  const diagnostics = {
     engineVersion: 'v1.4',
     stage: 'bundle_1b_eight_lenses_gates_calibration',
     generatedAt: new Date().toISOString(),
@@ -342,6 +343,14 @@ export function generateDirectionDiagnosticsV14(assessment = {}, options = {}) {
       'Existing scoring engine and user-facing results are still unchanged.',
       'v1.4 output is diagnostic only until connected behind a debug page or feature flag.'
     ]
+  };
+
+  return {
+    ...diagnostics,
+    matchingEngineV1Foundation: buildMatchingEngineFoundationDiagnostics({
+      assessment,
+      directionDiagnostics: diagnostics
+    })
   };
 }
 

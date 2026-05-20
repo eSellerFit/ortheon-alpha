@@ -1,0 +1,180 @@
+// app/src/utils/matchingEngineV1/reportQa.js
+// Structural QA checks for Matching Engine v1 foundation diagnostics.
+//
+// Bundle 1 scope:
+// - Validate internal recommendation object integrity.
+// - Do not render user-facing recommendations.
+// - Do not score.
+
+import { PATH_TYPES } from "./constants.js";
+
+function createIssue({
+  code,
+  severity = "blocking",
+  recommendation,
+  requiredFix,
+  qaNote,
+} = {}) {
+  return {
+    code,
+    severity,
+    recommendationIdsAffected: [
+      recommendation?.familyId,
+      recommendation?.legacyDirectionId,
+      recommendation?.displayLabel,
+    ].filter(Boolean),
+    requiredFix,
+    qaNotes: qaNote,
+  };
+}
+
+function hasNamedBridge(recommendation = {}) {
+  if (!recommendation.bridge) return false;
+  if (typeof recommendation.bridge === "string") return recommendation.bridge.trim().length > 0;
+  if (recommendation.bridge.label) return true;
+  if (Array.isArray(recommendation.bridge.options)) {
+    return recommendation.bridge.options.length > 0;
+  }
+  return false;
+}
+
+function hasNamedCondition(recommendation = {}) {
+  if (!recommendation.condition) return false;
+  if (typeof recommendation.condition === "string") {
+    return recommendation.condition.trim().length > 0;
+  }
+  return Boolean(recommendation.condition.label);
+}
+
+function hasCredentialCheck(recommendation = {}) {
+  return Boolean(recommendation.credentialGate?.checked);
+}
+
+function hasEvidenceMapping(recommendation = {}) {
+  return Array.isArray(recommendation.evidenceMapping) && recommendation.evidenceMapping.length > 0;
+}
+
+export function runReportQa({ recommendationCandidates = [] } = {}) {
+  const blockingIssues = [];
+  const warnings = [];
+
+  recommendationCandidates.forEach((recommendation) => {
+    if (!recommendation.familyId) {
+      blockingIssues.push(
+        createIssue({
+          code: "missing_family_id",
+          recommendation,
+          requiredFix:
+            "Attach a canonical family_id before this recommendation can be displayed.",
+          qaNote:
+            "Bundle 1 intentionally does not fake canonical IDs from legacy role-library IDs.",
+        })
+      );
+    }
+
+    if (
+      recommendation.pathType === PATH_TYPES.BRIDGE_BASED &&
+      !hasNamedBridge(recommendation)
+    ) {
+      blockingIssues.push(
+        createIssue({
+          code: "bridge_based_path_missing_bridge",
+          recommendation,
+          requiredFix: "Name the bridge step or suppress this path.",
+          qaNote: "Bridge-based recommendations must explain the bridge.",
+        })
+      );
+    }
+
+    if (
+      recommendation.pathType === PATH_TYPES.CONDITIONAL &&
+      !hasNamedCondition(recommendation)
+    ) {
+      blockingIssues.push(
+        createIssue({
+          code: "conditional_path_missing_condition",
+          recommendation,
+          requiredFix: "Name the condition or suppress this path.",
+          qaNote: "Conditional recommendations must name the condition.",
+        })
+      );
+    }
+
+    const looksCredentialed =
+      recommendation.credentialGate?.status &&
+      recommendation.credentialGate.status !== "unknown";
+
+    if (looksCredentialed && !hasCredentialCheck(recommendation)) {
+      blockingIssues.push(
+        createIssue({
+          code: "credentialed_path_missing_credential_check",
+          recommendation,
+          requiredFix:
+            "Run and attach credential/license gate status before display.",
+          qaNote: "Credentialed paths require an explicit credential check.",
+        })
+      );
+    }
+
+    if (recommendation.displayLabel && !recommendation.familyId) {
+      blockingIssues.push(
+        createIssue({
+          code: "display_only_composite_recommendation",
+          recommendation,
+          requiredFix:
+            "Separate display label from canonical family classification.",
+          qaNote:
+            "A display label cannot replace evidence-backed family mapping.",
+        })
+      );
+    }
+
+    if (
+      recommendation.pathType === PATH_TYPES.ADJACENT &&
+      !hasEvidenceMapping(recommendation)
+    ) {
+      blockingIssues.push(
+        createIssue({
+          code: "weak_nearby_trajectory_without_evidence",
+          recommendation,
+          requiredFix:
+            "Attach evidence mapping for the nearby trajectory or suppress it.",
+          qaNote:
+            "Nearby should mean evidence-supported, not merely imaginable.",
+        })
+      );
+    }
+
+    if (recommendation.pathType !== PATH_TYPES.SUPPRESSED && !hasEvidenceMapping(recommendation)) {
+      warnings.push(
+        createIssue({
+          code: "recommendation_missing_evidence_mapping",
+          severity: "warning",
+          recommendation,
+          requiredFix: "Attach supporting EvidenceSignal records.",
+          qaNote:
+            "This may be acceptable for early diagnostics but should not ship.",
+        })
+      );
+    }
+  });
+
+  const passed = blockingIssues.length === 0;
+
+  return {
+    objectType: "ReportQAResult",
+    passed,
+    blockingIssues,
+    warnings,
+    recommendationIdsAffected: [
+      ...blockingIssues,
+      ...warnings,
+    ].flatMap((issue) => issue.recommendationIdsAffected || []),
+    requiredFix: passed
+      ? null
+      : "Resolve blocking recommendation object issues before display.",
+    qaNotes: passed
+      ? "No blocking structural QA issues found."
+      : "Structural QA found blocking issues. This output is diagnostic-only.",
+  };
+}
