@@ -786,6 +786,56 @@ function DirectionV14Debug() {
 
                 <div style={styles.foundationGrid}>
                   <div style={styles.foundationPanel}>
+                    <h3 style={styles.smallTitle}>Canonical registry</h3>
+                    <p style={styles.debugLine}>
+                      Version:{" "}
+                      {formatText(
+                        diagnostic.matchingEngineV1Foundation.registryVersion
+                      )}
+                    </p>
+                    <p style={styles.debugLine}>
+                      Canonical families:{" "}
+                      {
+                        diagnostic.matchingEngineV1Foundation
+                          .canonicalFamilyCount
+                      }
+                    </p>
+                  </div>
+
+                  <div style={styles.foundationPanel}>
+                    <h3 style={styles.smallTitle}>Legacy mapping status</h3>
+                    <p style={styles.debugLine}>
+                      Mapped candidates:{" "}
+                      {
+                        diagnostic.matchingEngineV1Foundation
+                          .mappedCandidateCount
+                      }
+                    </p>
+                    <p style={styles.debugLine}>
+                      Unmapped candidates:{" "}
+                      {
+                        diagnostic.matchingEngineV1Foundation
+                          .unmappedCandidateCount
+                      }
+                    </p>
+                    <p style={styles.debugLine}>
+                      Composite mappings:{" "}
+                      {
+                        diagnostic.matchingEngineV1Foundation
+                          .compositeMappingCount
+                      }
+                    </p>
+                    <p style={styles.debugLine}>
+                      Weak mappings:{" "}
+                      {
+                        diagnostic.matchingEngineV1Foundation.weakMappingCount
+                      }
+                    </p>
+                  </div>
+                </div>
+
+                <div style={styles.foundationGrid}>
+                  <div style={styles.foundationPanel}>
                     <h3 style={styles.smallTitle}>CandidateProfile</h3>
                     <p style={styles.debugLine}>
                       Assessment:{" "}

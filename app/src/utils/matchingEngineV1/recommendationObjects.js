@@ -3,10 +3,12 @@
 //
 // Bundle 1 scope:
 // - Normalize internal objects.
-// - Do not map legacy role IDs to canonical family IDs without explicit mapping.
+// - Use only explicit conservative legacy-to-canonical mappings.
 // - Do not score.
 
 import { CONFIDENCE_LABELS, PATH_TYPES } from "./constants.js";
+import { getCanonicalFamilyById } from "./familyRegistry.js";
+import { getLegacyDirectionFamilyMapping } from "./legacyDirectionFamilyMap.js";
 
 function asArray(value) {
   if (value === null || value === undefined || value === "") return [];
@@ -94,6 +96,8 @@ export function createRecommendationCandidate({
   primaryFamilyId = null,
   supportingFamilyIds = [],
   legacyDirectionId = null,
+  canonicalMappingConfidence = "none",
+  canonicalMappingNotes = null,
   pathType = PATH_TYPES.CONDITIONAL,
   evidenceMapping = [],
   levelBandResult = createLevelBandResult(),
@@ -113,6 +117,8 @@ export function createRecommendationCandidate({
     primaryFamilyId,
     supportingFamilyIds,
     legacyDirectionId,
+    canonicalMappingConfidence,
+    canonicalMappingNotes,
     pathType,
     evidenceMapping,
     levelBandResult,
@@ -144,6 +150,27 @@ export function createDisplayRecommendation({
     bridge: candidate.bridge ?? null,
     condition: candidate.condition ?? null,
     confidence: candidate.confidence ?? CONFIDENCE_LABELS.NEEDS_VALIDATION,
+  };
+}
+
+function getCanonicalMappingForDiagnostic(item = {}) {
+  const mapping = getLegacyDirectionFamilyMapping(item.directionId);
+  const primaryFamily =
+    mapping.primaryFamilyId && mapping.mappingConfidence === "exact"
+      ? getCanonicalFamilyById(mapping.primaryFamilyId)
+      : null;
+
+  const validSupportingFamilyIds = (mapping.supportingFamilyIds || []).filter(
+    (familyId) => Boolean(getCanonicalFamilyById(familyId))
+  );
+
+  return {
+    mapping,
+    familyId: primaryFamily?.familyId ?? null,
+    familyName: primaryFamily?.familyName ?? item?.directionLabel ?? null,
+    spine: primaryFamily?.spineName ?? item?.category ?? null,
+    primaryFamilyId: primaryFamily?.familyId ?? null,
+    supportingFamilyIds: validSupportingFamilyIds,
   };
 }
 
@@ -220,6 +247,7 @@ export function recommendationCandidateFromV14Diagnostic({
   const credentialGate = getCredentialGateFromDiagnostic(item);
   const bridge = getBridgeFromDiagnostic(item);
   const condition = getConditionFromDiagnostic(item);
+  const canonicalMapping = getCanonicalMappingForDiagnostic(item);
 
   const levelBandResult = createLevelBandResult({
     nativeLevelBand: item?.category ?? null,
@@ -233,13 +261,16 @@ export function recommendationCandidateFromV14Diagnostic({
   });
 
   return createRecommendationCandidate({
-    familyId: item?.familyId ?? null,
-    familyName: item?.familyName ?? item?.directionLabel ?? null,
-    spine: item?.category ?? null,
+    familyId: item?.familyId ?? canonicalMapping.familyId,
+    familyName: item?.familyName ?? canonicalMapping.familyName,
+    spine: canonicalMapping.spine,
     displayLabel: item?.directionLabel ?? null,
-    primaryFamilyId: item?.familyId ?? null,
-    supportingFamilyIds: [],
+    primaryFamilyId: item?.familyId ?? canonicalMapping.primaryFamilyId,
+    supportingFamilyIds: canonicalMapping.supportingFamilyIds,
     legacyDirectionId: item?.directionId ?? null,
+    canonicalMappingConfidence:
+      canonicalMapping.mapping.mappingConfidence ?? "none",
+    canonicalMappingNotes: canonicalMapping.mapping.notes ?? null,
     pathType,
     evidenceMapping,
     levelBandResult,

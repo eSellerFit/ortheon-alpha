@@ -7,6 +7,7 @@
 // - Do not score.
 
 import { PATH_TYPES } from "./constants.js";
+import { hasCanonicalFamilyId } from "./familyRegistry.js";
 
 function createIssue({
   code,
@@ -59,7 +60,27 @@ export function runReportQa({ recommendationCandidates = [] } = {}) {
   const warnings = [];
 
   recommendationCandidates.forEach((recommendation) => {
-    if (!recommendation.familyId) {
+    const hasFamilyId = Boolean(recommendation.familyId);
+    const familyIdIsKnown = hasFamilyId
+      ? hasCanonicalFamilyId(recommendation.familyId)
+      : false;
+    const isCompositeMapping =
+      recommendation.canonicalMappingConfidence === "composite";
+    const isWeakMapping = recommendation.canonicalMappingConfidence === "weak";
+
+    if (hasFamilyId && !familyIdIsKnown) {
+      blockingIssues.push(
+        createIssue({
+          code: "unknown_family_id",
+          recommendation,
+          requiredFix:
+            "Use a canonical family_id that exists in the compact family registry.",
+          qaNote: "Canonical family IDs must validate against the registry.",
+        })
+      );
+    }
+
+    if (!hasFamilyId) {
       blockingIssues.push(
         createIssue({
           code: "missing_family_id",
@@ -68,6 +89,36 @@ export function runReportQa({ recommendationCandidates = [] } = {}) {
             "Attach a canonical family_id before this recommendation can be displayed.",
           qaNote:
             "Bundle 1 intentionally does not fake canonical IDs from legacy role-library IDs.",
+        })
+      );
+    }
+
+    if (isCompositeMapping) {
+      warnings.push(
+        createIssue({
+          code: "canonical_mapping_composite",
+          severity: "warning",
+          recommendation,
+          requiredFix:
+            "Resolve composite mapping before this can become a clean displayed recommendation.",
+          qaNote:
+            recommendation.canonicalMappingNotes ||
+            "Legacy direction maps to multiple possible canonical families.",
+        })
+      );
+    }
+
+    if (isWeakMapping) {
+      warnings.push(
+        createIssue({
+          code: "canonical_mapping_weak",
+          severity: "warning",
+          recommendation,
+          requiredFix:
+            "Require stronger evidence or a more explicit canonical mapping.",
+          qaNote:
+            recommendation.canonicalMappingNotes ||
+            "Legacy direction has only weak canonical mapping confidence.",
         })
       );
     }
@@ -116,7 +167,7 @@ export function runReportQa({ recommendationCandidates = [] } = {}) {
       );
     }
 
-    if (recommendation.displayLabel && !recommendation.familyId) {
+    if (recommendation.displayLabel && !familyIdIsKnown) {
       blockingIssues.push(
         createIssue({
           code: "display_only_composite_recommendation",
