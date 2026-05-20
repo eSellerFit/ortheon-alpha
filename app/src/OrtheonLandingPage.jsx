@@ -34,6 +34,27 @@ export default function OrtheonLandingPage() {
     "Which directions are durable enough as AI changes work?",
   ];
 
+  const howSteps = [
+    {
+      number: "1",
+      title: "Upload your CV",
+      text: "Ortheon extracts career evidence, domain signals, seniority, and transferable patterns.",
+      signal: "Evidence intake",
+    },
+    {
+      number: "2",
+      title: "Answer a few reality-check questions",
+      text: "You provide career anchors, financial floor, constraints, risk tolerance, and transition preferences.",
+      signal: "Reality inputs",
+    },
+    {
+      number: "3",
+      title: "Get your Career Direction Report",
+      text: "Ortheon shows market-credible directions, bridge paths, financial reality checks, AI durability, and practical next validation steps.",
+      signal: "Direction report",
+    },
+  ];
+
   const directions = [
     {
       rank: "1",
@@ -831,20 +852,122 @@ export default function OrtheonLandingPage() {
           padding: 12px;
         }
 
-        .lp-disabled-download {
+        .lp-sample-download {
           display: inline-flex;
           width: fit-content;
           align-items: center;
           justify-content: center;
           min-height: 50px;
           margin-top: 22px;
-          border: 1px solid #d6c6ad;
+          border: 1px solid rgba(47, 154, 168, 0.45);
           border-radius: 999px;
-          background: #f1e7d4;
-          color: #766042;
+          background: #2f9aa8;
+          color: #061c22;
           padding: 14px 20px;
           font-size: 14px;
           font-weight: 900;
+          text-decoration: none;
+          box-shadow: 0 14px 32px rgba(47, 154, 168, 0.2);
+        }
+
+        .lp-how-grid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 16px;
+        }
+
+        .lp-how-card {
+          position: relative;
+          border: 1px solid #cbd8dc;
+          border-radius: 20px;
+          background: #ffffff;
+          padding: 24px;
+          box-shadow: 0 16px 34px rgba(23, 35, 48, 0.06);
+        }
+
+        .lp-how-card::after {
+          content: "";
+          position: absolute;
+          top: 42px;
+          right: -17px;
+          width: 17px;
+          height: 2px;
+          background: #9fc7ca;
+        }
+
+        .lp-how-card:last-child::after {
+          display: none;
+        }
+
+        .lp-how-top {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          margin-bottom: 18px;
+        }
+
+        .lp-how-number {
+          display: inline-flex;
+          width: 42px;
+          height: 42px;
+          align-items: center;
+          justify-content: center;
+          border-radius: 14px;
+          background: #172330;
+          color: #fff8ea;
+          font-size: 13px;
+          font-weight: 900;
+        }
+
+        .lp-how-signal {
+          border-radius: 999px;
+          background: #e9f4f5;
+          color: #245f68;
+          padding: 6px 9px;
+          font-size: 10px;
+          font-weight: 900;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+
+        .lp-how-card h3 {
+          margin: 0 0 10px;
+          color: #172330;
+          font-size: 18px;
+          line-height: 1.3;
+        }
+
+        .lp-how-card p {
+          margin: 0;
+          color: #526071;
+          font-size: 14px;
+          line-height: 1.65;
+        }
+
+        .lp-how-visual {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 6px;
+          margin-top: 18px;
+        }
+
+        .lp-how-visual span {
+          height: 6px;
+          border-radius: 999px;
+          background: #dce9eb;
+        }
+
+        .lp-how-visual span:nth-child(1) {
+          background: #2f9aa8;
+        }
+
+        .lp-how-visual span:nth-child(2) {
+          background: #b7791f;
+        }
+
+        .lp-how-visual span:nth-child(3) {
+          background: #172330;
         }
 
         .lp-lens-grid {
@@ -1191,11 +1314,21 @@ export default function OrtheonLandingPage() {
 
           .lp-signal-grid,
           .lp-icp-grid,
+          .lp-how-grid,
           .lp-question-grid,
           .lp-sample-fields,
           .lp-lens-grid,
           .lp-form-grid {
             grid-template-columns: 1fr;
+          }
+
+          .lp-how-card::after {
+            display: none;
+          }
+
+          .lp-sample-download {
+            width: 100%;
+            text-align: center;
           }
 
           .lp-section {
@@ -1378,6 +1511,41 @@ export default function OrtheonLandingPage() {
         </div>
       </section>
 
+      <section className="lp-section warm">
+        <div className="lp-container">
+          <div className="lp-section-head">
+            <p className="lp-eyebrow">
+              <span className="lp-dot" />
+              How it works
+            </p>
+            <h2>Three inputs, one structured career direction report.</h2>
+            <p className="lp-copy">
+              The process is built like a diagnostic: gather evidence, add the
+              reality constraints, then return a report that separates credible
+              directions from bridge paths and longer-term options.
+            </p>
+          </div>
+
+          <div className="lp-how-grid">
+            {howSteps.map((step) => (
+              <article className="lp-how-card" key={step.title}>
+                <div className="lp-how-top">
+                  <span className="lp-how-number">{step.number}</span>
+                  <span className="lp-how-signal">{step.signal}</span>
+                </div>
+                <h3>{step.title}</h3>
+                <p>{step.text}</p>
+                <div className="lp-how-visual" aria-hidden="true">
+                  <span />
+                  <span />
+                  <span />
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="lp-section ink">
         <div className="lp-container">
           <div className="lp-section-head">
@@ -1487,9 +1655,14 @@ export default function OrtheonLandingPage() {
                 nearby trajectories, what drove the results, and the practical
                 details behind each path.
               </p>
-              <span className="lp-disabled-download" aria-disabled="true">
-                Download sample report — coming next
-              </span>
+              <a
+                className="lp-sample-download"
+                href="/sample-career-direction-report.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Download Sample Career Direction Report
+              </a>
             </div>
 
             <div className="lp-sample-panel">
