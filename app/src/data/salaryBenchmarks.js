@@ -1,6 +1,6 @@
 // src/data/salaryBenchmarks.js
 // Ortheon Salary Benchmarks v2.2 — Domain-Gated Master
-// 57 entries matching roleLibrary.js v2.2
+// 60 entries matching roleLibrary.js v2.2
 // Primary source: BLS OEWS May 2024 where available.
 // All figures USD annual. BLS covers employed workers only.
 // Fractional/Own Venture = estimated 12-month average including ramp-up.
@@ -8,7 +8,7 @@
 
 export const salaryBenchmarks = [
   // ============================================================
-  // BUSINESS & FINANCE — 15 entries
+  // BUSINESS & FINANCE — 17 entries
   // ============================================================
 
   {
@@ -427,7 +427,79 @@ export const salaryBenchmarks = [
       currency: "USD",
       market: "US_national",
       notes:
-        "BLS range: compliance officer $79,290 to financial risk specialist $106,000. Financial services sector commands highest premium.",
+        "BLS range: Compliance Officer $79,290 to Financial Risk Specialist $106,000. Compliance / regulatory operations benchmark emphasizes controls, policy, audit, and regulatory evidence.",
+    },
+  },
+
+  {
+    directionId: "BF-17-E",
+    version: "v2.2",
+    lastUpdated: "2026-05-18",
+    validUntil: "2027-05-15",
+    dataQuality: "bls_validated",
+    sources: [
+      {
+        name: "BLS OEWS May 2024",
+        url: "https://www.bls.gov/ooh/business-and-financial/financial-analysts.htm",
+        occupationCode: "13-2054",
+        occupationTitle: "Financial Risk Specialists",
+        medianAnnualWage: 106000,
+        pulledAt: "2026-05-11",
+      },
+      {
+        name: "BLS OEWS May 2024",
+        url: "https://www.bls.gov/ooh/business-and-financial/compliance-officers.htm",
+        occupationCode: "13-1041",
+        occupationTitle: "Compliance Officers",
+        medianAnnualWage: 79290,
+        pulledAt: "2026-05-11",
+      },
+    ],
+    financialPathway: {
+      months1to3: 100000,
+      months4to6: 120000,
+      months7to12: 145000,
+      avg12month: 125000,
+      currency: "USD",
+      market: "US_national",
+      notes:
+        "Enterprise risk management benchmark blends Financial Risk Specialist and Compliance Officer data. Director-level ERM roles can exceed national medians in regulated sectors.",
+    },
+  },
+
+  {
+    directionId: "BF-18-E",
+    version: "v2.2",
+    lastUpdated: "2026-05-18",
+    validUntil: "2027-05-15",
+    dataQuality: "estimated",
+    sources: [
+      {
+        name: "BLS OEWS May 2024",
+        url: "https://www.bls.gov/ooh/business-and-financial/compliance-officers.htm",
+        occupationCode: "13-1041",
+        occupationTitle: "Compliance Officers",
+        medianAnnualWage: 79290,
+        pulledAt: "2026-05-11",
+      },
+      {
+        name: "BLS OEWS May 2024",
+        url: "https://www.bls.gov/ooh/computer-and-information-technology/information-security-analysts.htm",
+        occupationCode: "15-1212",
+        occupationTitle: "Information Security Analysts",
+        medianAnnualWage: 120360,
+        pulledAt: "2026-05-18",
+      },
+    ],
+    financialPathway: {
+      months1to3: 105000,
+      months4to6: 125000,
+      months7to12: 150000,
+      avg12month: 130000,
+      currency: "USD",
+      market: "US_national",
+      notes:
+        "No mature BLS category exists for AI governance. Estimate blends compliance, privacy/data governance, and information security benchmarks for enterprise governance roles.",
     },
   },
 
@@ -1095,7 +1167,7 @@ export const salaryBenchmarks = [
   },
 
   // ============================================================
-  // TECHNOLOGY EXECUTIVE — 5 entries
+  // TECHNOLOGY EXECUTIVE — 6 entries
   // ============================================================
 
   {
@@ -1267,6 +1339,42 @@ export const salaryBenchmarks = [
       market: "US_national",
       notes:
         "Enterprise architecture / platform modernization benchmark blends senior systems architecture and technology management compensation.",
+    },
+  },
+
+  {
+    directionId: "TE-6-E",
+    version: "v2.2",
+    lastUpdated: "2026-05-18",
+    validUntil: "2027-05-15",
+    dataQuality: "estimated",
+    sources: [
+      {
+        name: "BLS OEWS May 2024",
+        url: "https://www.bls.gov/ooh/computer-and-information-technology/information-security-analysts.htm",
+        occupationCode: "15-1212",
+        occupationTitle: "Information Security Analysts",
+        medianAnnualWage: 120360,
+        pulledAt: "2026-05-18",
+      },
+      {
+        name: "BLS OEWS May 2024",
+        url: "https://www.bls.gov/ooh/management/computer-and-information-systems-managers.htm",
+        occupationCode: "11-3021",
+        occupationTitle: "Computer and Information Systems Managers",
+        medianAnnualWage: 169510,
+        pulledAt: "2026-05-18",
+      },
+    ],
+    financialPathway: {
+      months1to3: 130000,
+      months4to6: 155000,
+      months7to12: 190000,
+      avg12month: 165000,
+      currency: "USD",
+      market: "US_national",
+      notes:
+        "Security leadership benchmark blends Information Security Analyst and Computer and Information Systems Manager data. CISO / cyber risk leadership varies significantly by company scale and regulatory exposure.",
     },
   },
 

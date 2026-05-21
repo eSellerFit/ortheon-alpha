@@ -94,6 +94,12 @@ export const CAREER_MAP_METADATA = {
     ],
   },
 
+  "TE-6-E": {
+    mapQuadrant: "corporate_operational",
+    mapCluster: "technology_executive",
+    mapTags: ["information_security", "cyber_risk", "security_governance", "ciso", "grc"],
+  },
+
   // ============================================================
   // Existing Management directions
   // ============================================================
@@ -184,6 +190,24 @@ export const CAREER_MAP_METADATA = {
     mapQuadrant: "corporate_operational",
     mapCluster: "people_operations",
     mapTags: ["total_rewards", "compensation", "benefits", "pay_equity"],
+  },
+
+  "BF-9-E": {
+    mapQuadrant: "corporate_operational",
+    mapCluster: "regulated_professional",
+    mapTags: ["compliance", "regulatory", "controls", "audit", "policy"],
+  },
+
+  "BF-17-E": {
+    mapQuadrant: "corporate_operational",
+    mapCluster: "regulated_professional",
+    mapTags: ["enterprise_risk", "operational_risk", "governance", "internal_controls"],
+  },
+
+  "BF-18-E": {
+    mapQuadrant: "corporate_operational",
+    mapCluster: "regulated_professional",
+    mapTags: ["ai_governance", "data_governance", "privacy", "model_risk", "responsible_ai"],
   },
 
   "BF-7-IF": {

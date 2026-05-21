@@ -1,6 +1,6 @@
 // src/data/roleLibrary.js
 // Ortheon Role Library v2.2 — Domain-Gated Master
-// 57 directions across 11 direction families
+// 60 directions across 11 direction families
 // financialPathway is NOT here — see salaryBenchmarks.js
 // Last validated: May 18, 2026
 
@@ -17,7 +17,7 @@
 
 export const roleLibrary = [
   // ============================================================
-  // BUSINESS & FINANCE (BF) — 15 directions
+  // BUSINESS & FINANCE (BF) — 17 directions
   // ============================================================
 
   {
@@ -428,7 +428,7 @@ export const roleLibrary = [
     stretchabilityRequired: "medium",
     transitionPathway: "direct",
     d4EvolutionPath:
-      "AI-augmented total rewards leader using AI for benchmarking and pay analytics while focusing on rewards strategy, equity judgment, and governance",
+      "Total rewards leader using market pay tools and benchmarking while focusing on rewards strategy, equity judgment, and plan design",
   },
 
   {
@@ -518,10 +518,10 @@ export const roleLibrary = [
     onetCodes: ["13-1041.00", "13-2054.00"],
     onetTitles: ["Compliance Officers", "Financial Risk Specialists"],
     category: "Business & Finance",
-    metaDirection: "Compliance & Risk Operations",
+    metaDirection: "Compliance & Regulatory Operations",
     context: "Enterprise",
     contextCode: "E",
-    directionLabel: "Compliance / Risk Operations — Enterprise",
+    directionLabel: "Compliance / Regulatory Operations — Enterprise",
     aiDurabilityRating: "D2",
     aiExposureSource: "Anthropic Economic Index 2026",
     requiredCompetencies: [7, 9, 1, 4],
@@ -534,24 +534,117 @@ export const roleLibrary = [
       { anchorId: "management", idealMin: 4, idealMax: 9 },
       { anchorId: "challenge", idealMin: 4, idealMax: 8 },
     ],
-    transitionCategory: "open_transition",
-    domainSpecificityRequired: "medium",
+    transitionCategory: "domain_heavy",
+    domainSpecificityRequired: "high",
     relevantDomains: [
       "compliance",
-      "risk",
-      "legal",
+      "regulatory compliance",
+      "compliance operations",
       "regulatory",
+      "controls",
+      "internal controls",
       "audit",
-      "finance",
-      "governance",
+      "policy",
+      "ethics",
+      "legal risk",
     ],
     financialRiskLevel: "low",
     bridgeDirections: [],
-    longerPathOptions: [],
-    stretchabilityRequired: "low",
+    longerPathOptions: ["BF-17-E", "BF-18-E"],
+    stretchabilityRequired: "medium",
     transitionPathway: "direct",
     d4EvolutionPath:
-      "AI-augmented compliance officer using AI for regulatory monitoring and audit trails while focusing on risk judgment and governance leadership",
+      "AI-augmented compliance leader using AI for regulatory monitoring, control testing, and audit trails while focusing on policy judgment, ethics, and compliance operations",
+  },
+
+  {
+    directionId: "BF-17-E",
+    version: "v2.2",
+    onetCodes: ["13-2054.00", "13-1041.00"],
+    onetTitles: ["Financial Risk Specialists", "Compliance Officers"],
+    category: "Business & Finance",
+    metaDirection: "Enterprise Risk Management",
+    context: "Enterprise",
+    contextCode: "E",
+    directionLabel: "Enterprise Risk Management — Enterprise",
+    aiDurabilityRating: "D2",
+    aiExposureSource: "Anthropic Economic Index 2026",
+    requiredCompetencies: [7, 9, 8, 4],
+    preferredCompetencies: [1, 10, 12, 6],
+    dominantAnchors: [
+      { anchorId: "security", idealMin: 7, idealMax: 10 },
+      { anchorId: "technical", idealMin: 6, idealMax: 10 },
+    ],
+    significantAnchors: [
+      { anchorId: "management", idealMin: 5, idealMax: 10 },
+      { anchorId: "challenge", idealMin: 5, idealMax: 10 },
+    ],
+    transitionCategory: "domain_heavy",
+    domainSpecificityRequired: "high",
+    relevantDomains: [
+      "enterprise risk",
+      "risk management",
+      "operational risk",
+      "internal controls",
+      "risk governance",
+      "board risk",
+      "executive risk",
+      "audit",
+      "risk committee",
+      "risk framework",
+    ],
+    financialRiskLevel: "low",
+    bridgeDirections: ["BF-9-E"],
+    longerPathOptions: ["BF-18-E"],
+    stretchabilityRequired: "medium",
+    transitionPathway: "direct",
+    d4EvolutionPath:
+      "AI-augmented enterprise risk leader using AI for risk sensing, scenario analysis, and control monitoring while focusing on governance judgment and executive risk decisions",
+  },
+
+  {
+    directionId: "BF-18-E",
+    version: "v2.2",
+    onetCodes: ["13-1041.00", "15-1212.00"],
+    onetTitles: ["Compliance Officers", "Information Security Analysts"],
+    category: "Business & Finance",
+    metaDirection: "Privacy, Data Governance & AI Governance",
+    context: "Enterprise",
+    contextCode: "E",
+    directionLabel: "Privacy / Data Governance / AI Governance — Enterprise",
+    aiDurabilityRating: "D3",
+    aiExposureSource: "Anthropic Economic Index 2026",
+    requiredCompetencies: [7, 9, 4, 1],
+    preferredCompetencies: [8, 20, 10, 12],
+    dominantAnchors: [
+      { anchorId: "security", idealMin: 7, idealMax: 10 },
+      { anchorId: "technical", idealMin: 6, idealMax: 10 },
+    ],
+    significantAnchors: [
+      { anchorId: "impact", idealMin: 5, idealMax: 10 },
+      { anchorId: "management", idealMin: 4, idealMax: 9 },
+    ],
+    transitionCategory: "domain_heavy",
+    domainSpecificityRequired: "high",
+    relevantDomains: [
+      "ai governance",
+      "ai risk",
+      "responsible ai",
+      "model risk",
+      "data governance",
+      "privacy",
+      "privacy compliance",
+      "data protection",
+      "policy controls",
+      "ai policy",
+    ],
+    financialRiskLevel: "low",
+    bridgeDirections: ["BF-9-E", "BF-17-E", "TE-6-E"],
+    longerPathOptions: [],
+    stretchabilityRequired: "medium",
+    transitionPathway: "direct",
+    d4EvolutionPath:
+      "AI governance leader using AI-assisted controls and monitoring while focusing on privacy, data governance, responsible AI, model risk, and adoption oversight",
   },
 
   {
@@ -1623,7 +1716,7 @@ export const roleLibrary = [
   },
 
   // ============================================================
-  // TECHNOLOGY EXECUTIVE (TE) — 5 directions
+  // TECHNOLOGY EXECUTIVE (TE) — 6 directions
   // ============================================================
 
   {
@@ -1693,13 +1786,13 @@ export const roleLibrary = [
     transitionCategory: "domain_heavy",
     domainSpecificityRequired: "high",
     relevantDomains: [
-      "AI",
-      "generative AI",
-      "LLM",
-      "machine learning",
-      "digital transformation",
-      "technology",
-      "automation",
+      "ai strategy",
+      "ai transformation",
+      "ai adoption",
+      "generative ai deployment",
+      "llm deployment",
+      "machine learning deployment",
+      "automation strategy",
     ],
     financialRiskLevel: "low",
     bridgeDirections: ["CM-5-IF", "CM-7-ST"],
@@ -1707,7 +1800,7 @@ export const roleLibrary = [
     stretchabilityRequired: "medium",
     transitionPathway: "direct",
     d4EvolutionPath:
-      "This IS a D4 executive path — leading AI adoption, AI governance, and operating-model transformation across organizations",
+      "This IS a D4 executive path — leading AI adoption, deployment strategy, and operating-model transformation across organizations",
   },
 
   {
@@ -1834,6 +1927,52 @@ export const roleLibrary = [
     transitionPathway: "direct",
     d4EvolutionPath:
       "AI-augmented architecture leader using AI for codebase analysis, modernization planning, and dependency mapping while focusing on systems judgment and governance",
+  },
+
+  {
+    directionId: "TE-6-E",
+    version: "v2.2",
+    onetCodes: ["15-1212.00", "11-3021.00"],
+    onetTitles: ["Information Security Analysts", "Computer and Information Systems Managers"],
+    category: "Technology Executive",
+    metaDirection: "Information Security & Cyber Risk",
+    context: "Enterprise",
+    contextCode: "E",
+    directionLabel: "Information Security & Cyber Risk Leadership — Enterprise",
+    aiDurabilityRating: "D3",
+    aiExposureSource: "Anthropic Economic Index 2026",
+    requiredCompetencies: [7, 9, 18, 4],
+    preferredCompetencies: [10, 12, 1, 20],
+    dominantAnchors: [
+      { anchorId: "security", idealMin: 7, idealMax: 10 },
+      { anchorId: "technical", idealMin: 7, idealMax: 10 },
+    ],
+    significantAnchors: [
+      { anchorId: "management", idealMin: 5, idealMax: 10 },
+      { anchorId: "challenge", idealMin: 5, idealMax: 10 },
+    ],
+    transitionCategory: "domain_heavy",
+    domainSpecificityRequired: "high",
+    relevantDomains: [
+      "cybersecurity",
+      "information security",
+      "security governance",
+      "security operations",
+      "cyber risk",
+      "ciso",
+      "cso",
+      "grc",
+      "incident response",
+      "security compliance",
+      "security architecture",
+    ],
+    financialRiskLevel: "low",
+    bridgeDirections: ["BF-17-E", "BF-18-E", "TE-5-E"],
+    longerPathOptions: [],
+    stretchabilityRequired: "medium",
+    transitionPathway: "direct",
+    d4EvolutionPath:
+      "AI-augmented security leader using AI for detection, control monitoring, and cyber risk analysis while focusing on security governance, executive risk decisions, and resilience",
   },
 
   // ============================================================

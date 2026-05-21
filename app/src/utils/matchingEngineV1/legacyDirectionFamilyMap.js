@@ -18,7 +18,9 @@ const mappings = [
   ["BF-16-E", "exact", "PO-06", [], "Total Rewards / Compensation & Benefits maps cleanly to Compensation, Benefits & Total Rewards."],
   ["BF-7-IF", "composite", null, ["IP-01", "FB-01"], "Small business advisory can be advisory practice or service business depending evidence."],
   ["BF-8-IF", "exact", "MP-05", [], "Career / outplacement strategy maps to workforce development / adult learning / career services."],
-  ["BF-9-E", "composite", null, ["RC-01", "RC-02"], "Compliance / risk operations blends compliance and enterprise risk."],
+  ["BF-9-E", "exact", "RC-01", [], "Compliance / Regulatory Operations maps cleanly to Compliance & Regulatory Operations."],
+  ["BF-17-E", "exact", "RC-02", [], "Enterprise Risk Management maps cleanly to Enterprise Risk Management."],
+  ["BF-18-E", "exact", "RC-03", [], "Privacy / Data Governance / AI Governance maps cleanly to Privacy, Data Governance & AI Governance."],
   ["BF-10-IF", "exact", "MG-02", [], "Corporate communications / PR maps to Brand & Communications."],
   ["BF-11-OV", "exact", "FC-02", [], "Financial planning / wealth management practice maps to Financial Advisory & Wealth Management."],
 
@@ -51,6 +53,7 @@ const mappings = [
   ["TE-3-E", "exact", "DX-01", [], "Technology strategy / digital transformation maps to Digital Transformation Program Leadership."],
   ["TE-4-IF", "composite", null, ["IP-01", "PT-02", "IT-01"], "Fractional CTO / technical advisory blends advisory practice and technology leadership."],
   ["TE-5-E", "composite", null, ["IT-03", "IT-04", "PT-02"], "Enterprise architecture / platform modernization blends infrastructure, systems, and engineering leadership."],
+  ["TE-6-E", "exact", "IT-02", [], "Information Security & Cyber Risk Leadership maps cleanly to Information Security & Risk."],
 
   ["ED-3-IF", "composite", null, ["PO-05", "IP-01"], "Corporate training & L&D independent blends L&D leadership and advisory practice."],
   ["ED-4-IF", "composite", null, ["PO-05", "IP-01"], "Instructional design / e-learning is closest to L&D plus advisory practice."],
