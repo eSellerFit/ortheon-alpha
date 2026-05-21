@@ -1,15 +1,16 @@
 // src/utils/foundationAdapter/liveRecommendationAdapter.js
-// Adapter layer for Phase 2E: foundation-selected recommendations → live report shape.
+// Adapter layer for Phase 2E/2G: foundation-selected recommendations → live report shape.
 //
 // When FOUNDATION_LIVE_SELECTION_ENABLED is false (default), all calls fall through
 // to scoring.js unchanged. No foundation engine code is imported or executed.
 //
 // When the flag is enabled:
-// - generateDirectionDiagnosticsV14 is loaded via dynamic import (not bundled
-//   into the normal live path).
-// - Only foundationSelectedRecommendations.selectedRecommendations is used
-//   (clean display-safe lane). Bridge, needs-confirmation, and hidden bridge
-//   candidates are never exposed.
+// - generateDirectionDiagnosticsV14 is loaded via dynamic import.
+// - A strict live quality gate (Phase 2G) filters candidates before adaptation.
+// - False-positive family blocks prevent tech/commercial/marketing directions from
+//   appearing when there is no explicit supporting evidence.
+// - Workforce/people profiles get priority calibration toward WI-01, PO-03, PO-01/02/04/05.
+// - showableBridgeRecommendations are used for conservative fallback widening.
 // - On any failure or too-few results, falls back to scoring.js automatically.
 
 import {
@@ -22,8 +23,10 @@ import {
   FOUNDATION_LIVE_SELECTION_ENABLED,
   FOUNDATION_MIN_LIVE_COUNT,
 } from "./featureFlags.js";
+import { applyLiveQualityGate, buildLiveProfile } from "./liveQualityGate.js";
+import { sanitizeFoundationCareerMap } from "./foundationCareerMapAdapter.js";
 
-// ── Fit band derivation ────────────────────────────────────────────────────
+// ── Fit band derivation ────────────────────────────────────────────────────────
 
 function deriveFitBandFromLensScore(score, financialFlag) {
   const total = Number(score) || 0;
@@ -38,17 +41,22 @@ function deriveFitBandFromLensScore(score, financialFlag) {
   return "Bridge Required";
 }
 
-// ── Financial flag mapping ─────────────────────────────────────────────────
+// ── Financial flag mapping ─────────────────────────────────────────────────────
 
 function mapFinancialFlag(financialRealityLevel) {
   if (financialRealityLevel === "not_viable_now") return "financially_risky";
-  if (financialRealityLevel === "financially_constrained") return "financially_constrained";
+  if (financialRealityLevel === "financially_constrained")
+    return "financially_constrained";
   return null;
 }
 
-// ── TransitionLabel reconstruction ────────────────────────────────────────
+// ── TransitionLabel reconstruction ────────────────────────────────────────────
 
-function buildTransitionLabelFromFoundation(candidate, sourceDiagnostic, hasBridges) {
+function buildTransitionLabelFromFoundation(
+  candidate,
+  sourceDiagnostic,
+  hasBridges
+) {
   const classification = candidate.recommendedDisplayClassification;
   const transitionCategory = sourceDiagnostic.transitionCategory;
   const transitionPathway = sourceDiagnostic.transitionPathway;
@@ -120,7 +128,7 @@ function buildTransitionLabelFromFoundation(candidate, sourceDiagnostic, hasBrid
   };
 }
 
-// ── Bridge/longer-path resolution from role library ───────────────────────
+// ── Bridge/longer-path resolution from role library ───────────────────────────
 
 function resolveBridgeIds(directionIds) {
   if (!Array.isArray(directionIds)) return [];
@@ -128,27 +136,28 @@ function resolveBridgeIds(directionIds) {
   return directionIds
     .map((id) => {
       const found = roleLibrary.find((r) => r.directionId === id);
-      return found ? { directionId: id, directionLabel: found.directionLabel } : null;
+      return found
+        ? { directionId: id, directionLabel: found.directionLabel }
+        : null;
     })
     .filter(Boolean);
 }
 
-// ── Core adapter: one foundation candidate → live recommendation shape ────
+// ── Core adapter: one foundation candidate → live recommendation shape ─────────
 
-function adaptCandidateToLiveShape(candidate, assessment) {
+function adaptCandidateToLiveShape(candidate, assessment, liveProfile) {
   const directionId = candidate.legacyDirectionId;
   if (!directionId) return null;
 
   const fullDirection = roleLibrary.find((r) => r.directionId === directionId);
   if (!fullDirection) return null;
 
-  const salaryEntry = salaryBenchmarks.find((s) => s.directionId === directionId) || null;
+  const salaryEntry =
+    salaryBenchmarks.find((s) => s.directionId === directionId) || null;
   const financialPathway = salaryEntry?.financialPathway || null;
 
   const sourceDiagnostic = candidate.sourceDiagnostic || {};
 
-  // overallLensScore is on the candidate directly (from displaySafeSelector buildSelectedCandidate)
-  // and also mirrored inside sourceDiagnostic. Prefer the top-level value.
   const lensScore =
     candidate.overallLensScore ?? sourceDiagnostic.overallLensScore ?? 0;
 
@@ -167,7 +176,8 @@ function adaptCandidateToLiveShape(candidate, assessment) {
   const annualFloor =
     (Number(assessment?.financialReality?.minimumMonthlyIncome) || 0) * 12;
   const avg12month = Number(financialPathway?.avg12month) || 0;
-  const ratio = annualFloor > 0 ? Number((avg12month / annualFloor).toFixed(2)) : 1;
+  const ratio =
+    annualFloor > 0 ? Number((avg12month / annualFloor).toFixed(2)) : 1;
 
   const cvConfidence =
     assessment?.cvProfile?.cvSource === "claude_parsed" ? "full" : "low";
@@ -175,10 +185,12 @@ function adaptCandidateToLiveShape(candidate, assessment) {
   return {
     rank: candidate.rank,
     directionId,
-    directionLabel: candidate.displayLabel || fullDirection.directionLabel,
+    directionLabel:
+      candidate.displayLabel || fullDirection.directionLabel,
     category: fullDirection.category || null,
     metaDirection: fullDirection.metaDirection || null,
-    context: sourceDiagnostic.context || fullDirection.context || null,
+    context:
+      sourceDiagnostic.context || fullDirection.context || null,
     contextCode: fullDirection.contextCode || null,
     onetCodes: fullDirection.onetCodes || [],
     onetTitles: fullDirection.onetTitles || [],
@@ -186,9 +198,13 @@ function adaptCandidateToLiveShape(candidate, assessment) {
     aiExposureSource: fullDirection.aiExposureSource || null,
 
     transitionCategory:
-      sourceDiagnostic.transitionCategory || fullDirection.transitionCategory || null,
+      sourceDiagnostic.transitionCategory ||
+      fullDirection.transitionCategory ||
+      null,
     transitionPathway:
-      sourceDiagnostic.transitionPathway || fullDirection.transitionPathway || null,
+      sourceDiagnostic.transitionPathway ||
+      fullDirection.transitionPathway ||
+      null,
     transitionLabel,
     transitionFlags: [],
     stretchabilityRequired: fullDirection.stretchabilityRequired || null,
@@ -239,23 +255,38 @@ function adaptCandidateToLiveShape(candidate, assessment) {
     roleLibraryVersion: fullDirection.version || null,
 
     _foundationSource: {
-      engineVersion: "liveAdapter-2E",
+      engineVersion: "liveAdapter-2G",
       legacyDirectionId: directionId,
       familyId: candidate.familyId || null,
+      familyName: candidate.familyName || null,
+      familySpineId: candidate.familySpineId || null,
       recommendedDisplayClassification:
         candidate.recommendedDisplayClassification || null,
       overallLensScore: lensScore,
       candidateScore:
-        candidate.candidateScore ?? sourceDiagnostic.candidateScore ?? null,
+        candidate.candidateScore ??
+        sourceDiagnostic.candidateScore ??
+        null,
+    },
+    _foundationLiveGate: {
+      status: candidate._gateStatus || "unknown",
+      reasons: candidate._gateReasons || [],
+      originalRank: candidate.rank || null,
+      familyId: candidate.familyId || null,
+      familyName: candidate.familyName || null,
+      familySpineId: candidate.familySpineId || null,
+      alignmentMatchType: candidate.alignmentMatchType || null,
+      displaySafeStatus: candidate.displaySafeStatus || null,
+      canonicalMappingConfidence:
+        candidate.canonicalMappingConfidence || null,
+      widenedFromBridge: candidate._widenedFromBridge || false,
     },
   };
 }
 
-// ── Foundation live path (only runs when flag is true) ─────────────────────
+// ── Foundation live path (only runs when flag is true) ─────────────────────────
 
 async function runFoundationPath(assessment) {
-  // Dynamic import keeps the v1.4 diagnostics engine out of the normal
-  // live bundle when the flag is false.
   const { generateDirectionDiagnosticsV14 } = await import(
     "../directionV14/directionEngineV14.js"
   );
@@ -265,23 +296,54 @@ async function runFoundationPath(assessment) {
     maxRecommendations: 7,
   });
 
-  const selectedRecommendations =
+  const foundationResult =
     diagnostics?.matchingEngineV1Foundation
-      ?.foundationSelectedRecommendations?.selectedRecommendations;
+      ?.foundationSelectedRecommendations;
+
+  const selectedRecommendations = foundationResult?.selectedRecommendations;
+  const showableBridges =
+    foundationResult?.showableBridgeRecommendations || [];
 
   if (
     !Array.isArray(selectedRecommendations) ||
-    selectedRecommendations.length < FOUNDATION_MIN_LIVE_COUNT
+    selectedRecommendations.length === 0
   ) {
     console.warn(
-      "[liveAdapter] Foundation returned too few candidates — falling back to scoring.js.",
-      { count: selectedRecommendations?.length ?? 0 }
+      "[liveAdapter] Foundation returned no candidates — falling back to scoring.js."
     );
     return null;
   }
 
-  const adapted = selectedRecommendations
-    .map((candidate) => adaptCandidateToLiveShape(candidate, assessment))
+  const { passed, rejected, profile } = applyLiveQualityGate(
+    selectedRecommendations,
+    showableBridges,
+    assessment,
+    FOUNDATION_MIN_LIVE_COUNT
+  );
+
+  console.log(
+    "[liveAdapter] Quality gate result:",
+    {
+      passed: passed.length,
+      rejected: rejected.length,
+      workforceProfile: profile.workforce.isWorkforce,
+      workforceStrength: profile.workforce.strength,
+      techExec: profile.techExec.isTechExec,
+    }
+  );
+
+  if (passed.length < FOUNDATION_MIN_LIVE_COUNT) {
+    console.warn(
+      "[liveAdapter] Quality gate returned too few candidates — falling back to scoring.js.",
+      { passedCount: passed.length, rejectedCount: rejected.length }
+    );
+    return null;
+  }
+
+  const adapted = passed
+    .map((candidate) =>
+      adaptCandidateToLiveShape(candidate, assessment, profile)
+    )
     .filter(Boolean);
 
   if (adapted.length < FOUNDATION_MIN_LIVE_COUNT) {
@@ -295,7 +357,7 @@ async function runFoundationPath(assessment) {
   return adapted;
 }
 
-// ── Public API ─────────────────────────────────────────────────────────────
+// ── Public API ─────────────────────────────────────────────────────────────────
 
 export async function generateLiveRecommendations(assessment) {
   if (!FOUNDATION_LIVE_SELECTION_ENABLED) {
@@ -316,5 +378,16 @@ export async function generateLiveRecommendations(assessment) {
 }
 
 export function generateLiveCareerMap(assessment, recommendations) {
-  return generateCareerMap(assessment, recommendations);
+  const baseMap = generateCareerMap(assessment, recommendations);
+
+  if (
+    Array.isArray(recommendations) &&
+    recommendations.length > 0 &&
+    recommendations[0]?._foundationSource
+  ) {
+    const liveProfile = buildLiveProfile(assessment);
+    return sanitizeFoundationCareerMap(baseMap, liveProfile);
+  }
+
+  return baseMap;
 }
