@@ -6,7 +6,12 @@
 // - Do not render user-facing recommendations.
 // - Do not score.
 
-import { PATH_TYPES } from "./constants.js";
+import {
+  ALIGNMENT_SEVERITIES,
+  ALIGNMENT_STATUSES,
+  PATH_TYPES,
+  SPINE_MATCH_TYPES,
+} from "./constants.js";
 import { hasCanonicalFamilyId } from "./familyRegistry.js";
 
 function createIssue({
@@ -55,9 +60,27 @@ function hasEvidenceMapping(recommendation = {}) {
   return Array.isArray(recommendation.evidenceMapping) && recommendation.evidenceMapping.length > 0;
 }
 
-export function runReportQa({ recommendationCandidates = [] } = {}) {
+const AI_TECHNOLOGY_SPINE_IDS = new Set([
+  "product_technology",
+  "it_enterprise_systems",
+  "digital_transformation_ai",
+  "data_analytics_bi",
+]);
+
+export function runReportQa({
+  candidateProfile = {},
+  evidenceSignals = [],
+  recommendationCandidates = [],
+} = {}) {
   const blockingIssues = [];
   const warnings = [];
+  const profilePrimarySpineIds = new Set(
+    (candidateProfile.primaryCareerSpines || []).flatMap(
+      (spine) => spine.canonicalSpineIds || []
+    )
+  );
+
+  void evidenceSignals;
 
   recommendationCandidates.forEach((recommendation) => {
     const hasFamilyId = Boolean(recommendation.familyId);
@@ -205,6 +228,115 @@ export function runReportQa({ recommendationCandidates = [] } = {}) {
           requiredFix: "Attach supporting EvidenceSignal records.",
           qaNote:
             "This may be acceptable for early diagnostics but should not ship.",
+        })
+      );
+    }
+
+    const alignment = recommendation.alignmentResult;
+
+    if (!alignment) {
+      warnings.push(
+        createIssue({
+          code: "family_alignment_missing",
+          severity: "warning",
+          recommendation,
+          requiredFix:
+            "Run family-to-profile alignment before QA-signing recommendations.",
+          qaNote: "Bundle 1C expects every RecommendationCandidate to carry alignmentResult.",
+        })
+      );
+      return;
+    }
+
+    const isPrimaryPath = recommendation.pathType === PATH_TYPES.DIRECT;
+    const alignmentIssue =
+      alignment.alignmentSeverity === ALIGNMENT_SEVERITIES.BLOCKING
+        ? blockingIssues
+        : warnings;
+
+    if (
+      alignment.alignmentStatus === ALIGNMENT_STATUSES.COMPOSITE_UNRESOLVED
+    ) {
+      blockingIssues.push(
+        createIssue({
+          code: "composite_mapping_not_display_safe",
+          recommendation,
+          requiredFix:
+            "Resolve a primary canonical family before display.",
+          qaNote:
+            "Composite mappings can be diagnostic evidence but are not display-ready recommendations.",
+        })
+      );
+    }
+
+    if (
+      isPrimaryPath &&
+      alignment.matchType !== SPINE_MATCH_TYPES.PRIMARY &&
+      alignment.matchType !== SPINE_MATCH_TYPES.COMPOSITE &&
+      alignment.matchType !== SPINE_MATCH_TYPES.UNMAPPED
+    ) {
+      alignmentIssue.push(
+        createIssue({
+          code: "primary_recommendation_outside_primary_spine",
+          severity: alignment.alignmentSeverity,
+          recommendation,
+          requiredFix:
+            "Downgrade, bridge, condition, or suppress the recommendation before display.",
+          qaNote:
+            "Primary recommendations must match the candidate's primary career spine or have strong override evidence.",
+        })
+      );
+    }
+
+    if (
+      isPrimaryPath &&
+      alignment.matchType === SPINE_MATCH_TYPES.CROSS_SPINE &&
+      !alignment.overrideEvidence?.hasStrongOverride
+    ) {
+      blockingIssues.push(
+        createIssue({
+          code: "primary_cross_spine_without_override",
+          recommendation,
+          requiredFix:
+            "Suppress or downgrade this Primary recommendation unless explicit ownership evidence is added.",
+          qaNote:
+            "The family spine is outside the detected profile and no strong override evidence was found.",
+        })
+      );
+    }
+
+    if (
+      isPrimaryPath &&
+      [SPINE_MATCH_TYPES.SECONDARY, SPINE_MATCH_TYPES.WEAK].includes(
+        alignment.matchType
+      )
+    ) {
+      blockingIssues.push(
+        createIssue({
+          code: "secondary_or_weak_spine_used_as_primary",
+          recommendation,
+          requiredFix:
+            "Use Adjacent, Bridge-based, or Conditional treatment instead of Primary.",
+          qaNote:
+            "Secondary or weak career spine evidence cannot justify an automatic Primary recommendation.",
+        })
+      );
+    }
+
+    if (
+      isPrimaryPath &&
+      AI_TECHNOLOGY_SPINE_IDS.has(alignment.familySpineId) &&
+      !profilePrimarySpineIds.has(alignment.familySpineId) &&
+      !alignment.overrideEvidence?.hasStrongOverride
+    ) {
+      blockingIssues.push(
+        createIssue({
+          code: "ai_technology_primary_without_ai_technology_spine",
+          recommendation,
+          requiredFix:
+            "Require explicit AI or technology ownership evidence, or downgrade/suppress.",
+          qaNote:
+            "AI/technology families cannot become Primary for a non-AI/non-technology profile from broad vocabulary alone.",
         })
       );
     }

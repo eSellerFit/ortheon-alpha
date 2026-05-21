@@ -7,14 +7,11 @@
 // - Do not score.
 
 import { CONFIDENCE_LABELS, PATH_TYPES } from "./constants.js";
-import { getCanonicalFamilyById } from "./familyRegistry.js";
+import {
+  getCanonicalFamilyById,
+  getCanonicalFamilyRef,
+} from "./familyRegistry.js";
 import { getLegacyDirectionFamilyMapping } from "./legacyDirectionFamilyMap.js";
-
-function asArray(value) {
-  if (value === null || value === undefined || value === "") return [];
-  if (Array.isArray(value)) return value;
-  return [value];
-}
 
 function mapV14Classification(classification) {
   if (classification === "Primary") return PATH_TYPES.DIRECT;
@@ -92,9 +89,13 @@ export function createRecommendationCandidate({
   familyId = null,
   familyName = null,
   spine = null,
+  familyRef = null,
+  familySpineId = null,
+  familySpineName = null,
   displayLabel = null,
   primaryFamilyId = null,
   supportingFamilyIds = [],
+  supportingFamilyRefs = [],
   legacyDirectionId = null,
   canonicalMappingConfidence = "none",
   canonicalMappingNotes = null,
@@ -105,6 +106,7 @@ export function createRecommendationCandidate({
   condition = null,
   credentialGate = { checked: false, status: "unknown" },
   suppressionReason = null,
+  alignmentResult = null,
   confidence = CONFIDENCE_LABELS.NEEDS_VALIDATION,
   sourceDiagnostic = null,
 } = {}) {
@@ -113,9 +115,13 @@ export function createRecommendationCandidate({
     familyId,
     familyName,
     spine,
+    familyRef,
+    familySpineId,
+    familySpineName,
     displayLabel,
     primaryFamilyId,
     supportingFamilyIds,
+    supportingFamilyRefs,
     legacyDirectionId,
     canonicalMappingConfidence,
     canonicalMappingNotes,
@@ -126,6 +132,7 @@ export function createRecommendationCandidate({
     condition,
     credentialGate,
     suppressionReason,
+    alignmentResult,
     confidence,
     sourceDiagnostic,
   };
@@ -144,6 +151,8 @@ export function createDisplayRecommendation({
     displayLabel: displayLabel ?? candidate.displayLabel ?? candidate.familyName ?? null,
     primaryFamilyId: candidate.primaryFamilyId ?? candidate.familyId ?? null,
     supportingFamilyIds: candidate.supportingFamilyIds || [],
+    familyRef: candidate.familyRef ?? null,
+    supportingFamilyRefs: candidate.supportingFamilyRefs || [],
     pathType: candidate.pathType ?? null,
     levelBandResult: candidate.levelBandResult ?? null,
     evidenceMapping: candidate.evidenceMapping || [],
@@ -163,14 +172,24 @@ function getCanonicalMappingForDiagnostic(item = {}) {
   const validSupportingFamilyIds = (mapping.supportingFamilyIds || []).filter(
     (familyId) => Boolean(getCanonicalFamilyById(familyId))
   );
+  const familyRef = primaryFamily
+    ? getCanonicalFamilyRef(primaryFamily.familyId)
+    : null;
+  const supportingFamilyRefs = validSupportingFamilyIds.map((familyId) =>
+    getCanonicalFamilyRef(familyId)
+  );
 
   return {
     mapping,
     familyId: primaryFamily?.familyId ?? null,
     familyName: primaryFamily?.familyName ?? item?.directionLabel ?? null,
     spine: primaryFamily?.spineName ?? item?.category ?? null,
+    familyRef,
+    familySpineId: primaryFamily?.spineId ?? null,
+    familySpineName: primaryFamily?.spineName ?? null,
     primaryFamilyId: primaryFamily?.familyId ?? null,
     supportingFamilyIds: validSupportingFamilyIds,
+    supportingFamilyRefs,
   };
 }
 
@@ -216,23 +235,58 @@ function getConditionFromDiagnostic(item = {}) {
   return null;
 }
 
-function getEvidenceMapping(item = {}, evidenceSignals = []) {
-  const directionId = item.directionId;
-  const text = [
-    item.directionLabel,
-    item.category,
-    item.context,
-    item.metaDirection,
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
+const GENERIC_EVIDENCE_TERMS = new Set([
+  "enterprise",
+  "leadership",
+  "leader",
+  "business",
+  "strategy",
+  "management",
+  "operations",
+  "transformation",
+]);
+
+function getEvidenceTermsForMapping(canonicalMapping = {}) {
+  const familyRefs = [
+    canonicalMapping.familyRef,
+    ...(canonicalMapping.supportingFamilyRefs || []),
+  ].filter(Boolean);
+
+  return [
+    ...familyRefs.flatMap((familyRef) => [
+      familyRef.familyName,
+      familyRef.spineName,
+      ...String(familyRef.familyName || "")
+        .split(/\W+/)
+        .filter((term) => term.length > 3)
+        .filter((term) => !GENERIC_EVIDENCE_TERMS.has(term.toLowerCase())),
+    ]),
+  ].filter(Boolean);
+}
+
+function getEvidenceMapping(canonicalMapping = {}, evidenceSignals = []) {
+  const evidenceTerms = getEvidenceTermsForMapping(canonicalMapping);
+
+  if (evidenceTerms.length === 0) {
+    return [];
+  }
 
   return evidenceSignals
     .filter((signal) => {
-      if (signal.relatedFamilyIds?.includes(directionId)) return true;
-      return asArray(signal.falsePositiveRisk).some((risk) =>
-        text.includes(String(risk).replaceAll("_", " "))
+      const signalText = [
+        signal.summary,
+        signal.domain,
+        signal.raw?.roleTitles,
+        signal.raw?.senioritySignal,
+        signal.raw?.leadershipScope,
+      ]
+        .flat()
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return evidenceTerms.some((term) =>
+        signalText.includes(String(term).toLowerCase())
       );
     })
     .slice(0, 6);
@@ -243,11 +297,11 @@ export function recommendationCandidateFromV14Diagnostic({
   evidenceSignals = [],
 } = {}) {
   const pathType = mapV14Classification(item?.finalClassification);
-  const evidenceMapping = getEvidenceMapping(item, evidenceSignals);
   const credentialGate = getCredentialGateFromDiagnostic(item);
   const bridge = getBridgeFromDiagnostic(item);
   const condition = getConditionFromDiagnostic(item);
   const canonicalMapping = getCanonicalMappingForDiagnostic(item);
+  const evidenceMapping = getEvidenceMapping(canonicalMapping, evidenceSignals);
 
   const levelBandResult = createLevelBandResult({
     nativeLevelBand: item?.category ?? null,
@@ -264,9 +318,13 @@ export function recommendationCandidateFromV14Diagnostic({
     familyId: item?.familyId ?? canonicalMapping.familyId,
     familyName: item?.familyName ?? canonicalMapping.familyName,
     spine: canonicalMapping.spine,
+    familyRef: canonicalMapping.familyRef,
+    familySpineId: canonicalMapping.familySpineId,
+    familySpineName: canonicalMapping.familySpineName,
     displayLabel: item?.directionLabel ?? null,
     primaryFamilyId: item?.familyId ?? canonicalMapping.primaryFamilyId,
     supportingFamilyIds: canonicalMapping.supportingFamilyIds,
+    supportingFamilyRefs: canonicalMapping.supportingFamilyRefs,
     legacyDirectionId: item?.directionId ?? null,
     canonicalMappingConfidence:
       canonicalMapping.mapping.mappingConfidence ?? "none",

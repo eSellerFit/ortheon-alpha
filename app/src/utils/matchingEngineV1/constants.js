@@ -42,6 +42,39 @@ export const CONFIDENCE_LABELS = {
   NEEDS_VALIDATION: "needs_validation",
 };
 
+export const ALIGNMENT_STATUSES = {
+  ALIGNED: "aligned",
+  RELATED: "related",
+  CROSS_SPINE: "cross_spine",
+  WEAK_SPINE: "weak_spine",
+  UNMAPPED: "unmapped",
+  COMPOSITE_UNRESOLVED: "composite_unresolved",
+};
+
+export const ALIGNMENT_SEVERITIES = {
+  NONE: "none",
+  INFO: "info",
+  WARNING: "warning",
+  BLOCKING: "blocking",
+};
+
+export const ALIGNMENT_ACTIONS = {
+  ALLOW: "allow",
+  ALLOW_ADJACENT: "allow_adjacent",
+  DOWNGRADE_TO_ADJACENT: "downgrade_to_adjacent",
+  REQUIRE_BRIDGE_OR_CONDITION: "require_bridge_or_condition",
+  BLOCK_DISPLAY: "block_display",
+};
+
+export const SPINE_MATCH_TYPES = {
+  PRIMARY: "primary_spine",
+  SECONDARY: "secondary_spine",
+  WEAK: "weak_spine",
+  CROSS_SPINE: "cross_spine",
+  UNMAPPED: "unmapped",
+  COMPOSITE: "composite",
+};
+
 export const EVIDENCE_SIGNAL_TYPES = {
   DIRECT_OWNERSHIP: "direct_ownership",
   SUPPORTING: "supporting",

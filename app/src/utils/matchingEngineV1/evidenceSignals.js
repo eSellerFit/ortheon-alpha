@@ -259,37 +259,14 @@ function buildFinancialAndConstraintSignals(candidateProfile = {}) {
   return signals;
 }
 
-function attachDiagnosticFamilyHints(signals = [], directionDiagnostics = {}) {
-  const legacyDirectionIds = [
-    ...(directionDiagnostics.recommendations || []),
-    ...(directionDiagnostics.suppressedDirections || []),
-  ]
-    .map((item) => item.directionId)
-    .filter(Boolean);
-
-  if (legacyDirectionIds.length === 0) {
-    return signals;
-  }
-
-  return signals.map((signal) => ({
-    ...signal,
-    relatedFamilyIds: signal.relatedFamilyIds?.length
-      ? signal.relatedFamilyIds
-      : legacyDirectionIds.slice(0, 5),
-  }));
-}
-
 export function buildEvidenceSignals({
   candidateProfile = {},
-  directionDiagnostics = {},
 } = {}) {
-  const signals = [
+  return [
     ...buildCareerEvidenceSignals(candidateProfile),
     ...buildCompetencyEvidenceSignals(candidateProfile),
     ...buildCredentialEvidenceSignals(candidateProfile),
     ...buildAiEvidenceSignals(candidateProfile),
     ...buildFinancialAndConstraintSignals(candidateProfile),
   ];
-
-  return attachDiagnosticFamilyHints(signals, directionDiagnostics);
 }

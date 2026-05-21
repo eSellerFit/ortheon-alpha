@@ -8,6 +8,7 @@
 
 import { buildCandidateProfile } from "./candidateProfileAdapter.js";
 import { buildEvidenceSignals } from "./evidenceSignals.js";
+import { evaluateFamilyAlignment } from "./familyAlignment.js";
 import { recommendationCandidateFromV14Diagnostic } from "./recommendationObjects.js";
 import { runReportQa } from "./reportQa.js";
 import {
@@ -27,7 +28,6 @@ export function buildMatchingEngineFoundationDiagnostics({
 
   const evidenceSignals = buildEvidenceSignals({
     candidateProfile,
-    directionDiagnostics,
   });
 
   const diagnosticItems = [
@@ -35,14 +35,27 @@ export function buildMatchingEngineFoundationDiagnostics({
     ...(directionDiagnostics.suppressedDirections || []),
   ];
 
-  const recommendationCandidates = diagnosticItems.map((item) =>
-    recommendationCandidateFromV14Diagnostic({
+  const recommendationCandidates = diagnosticItems.map((item) => {
+    const recommendationCandidate = recommendationCandidateFromV14Diagnostic({
       item,
       evidenceSignals,
-    })
-  );
+    });
 
-  const reportQaResult = runReportQa({ recommendationCandidates });
+    return {
+      ...recommendationCandidate,
+      alignmentResult: evaluateFamilyAlignment({
+        candidateProfile,
+        evidenceSignals,
+        recommendationCandidate,
+      }),
+    };
+  });
+
+  const reportQaResult = runReportQa({
+    candidateProfile,
+    evidenceSignals,
+    recommendationCandidates,
+  });
   const mappedCandidateCount = recommendationCandidates.filter(
     (candidate) => Boolean(candidate.familyId)
   ).length;
@@ -53,6 +66,25 @@ export function buildMatchingEngineFoundationDiagnostics({
     (candidate) => candidate.canonicalMappingConfidence === "weak"
   ).length;
   const unmappedCandidateCount = recommendationCandidates.length - mappedCandidateCount;
+  const alignedCandidateCount = recommendationCandidates.filter(
+    (candidate) => candidate.alignmentResult?.alignmentStatus === "aligned"
+  ).length;
+  const crossSpineCandidateCount = recommendationCandidates.filter(
+    (candidate) => candidate.alignmentResult?.matchType === "cross_spine"
+  ).length;
+  const primaryCrossSpineCandidateCount = recommendationCandidates.filter(
+    (candidate) =>
+      candidate.pathType === "Direct" &&
+      candidate.alignmentResult?.matchType === "cross_spine"
+  ).length;
+  const familyAlignmentBlockingCount = recommendationCandidates.filter(
+    (candidate) =>
+      candidate.alignmentResult?.alignmentSeverity === "blocking"
+  ).length;
+  const familyAlignmentWarningCount = recommendationCandidates.filter(
+    (candidate) =>
+      candidate.alignmentResult?.alignmentSeverity === "warning"
+  ).length;
 
   return {
     objectType: "MatchingEngineV1FoundationDiagnostics",
@@ -65,6 +97,11 @@ export function buildMatchingEngineFoundationDiagnostics({
     unmappedCandidateCount,
     compositeMappingCount,
     weakMappingCount,
+    alignedCandidateCount,
+    crossSpineCandidateCount,
+    primaryCrossSpineCandidateCount,
+    familyAlignmentBlockingCount,
+    familyAlignmentWarningCount,
     candidateProfile,
     evidenceSignals,
     recommendationCandidates,

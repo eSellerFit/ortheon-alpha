@@ -11,6 +11,10 @@ export function getCanonicalFamilyById(familyId) {
   return directionFamilyRegistryById[String(familyId).trim()] || null;
 }
 
+export function getCanonicalFamilyRef(familyId) {
+  return normalizeCanonicalFamilyRef(familyId);
+}
+
 export function hasCanonicalFamilyId(familyId) {
   return Boolean(getCanonicalFamilyById(familyId));
 }
@@ -18,6 +22,35 @@ export function hasCanonicalFamilyId(familyId) {
 export function getCanonicalFamiliesBySpine(spineId) {
   if (!spineId) return [];
   return directionFamilyRegistryV1.filter((family) => family.spineId === spineId);
+}
+
+export function getCanonicalFamilySpine(familyId) {
+  const family = getCanonicalFamilyById(familyId);
+  if (!family) return null;
+
+  return {
+    spineId: family.spineId,
+    spineName: family.spineName,
+  };
+}
+
+export function familyBelongsToSpine(familyId, spineId) {
+  const family = getCanonicalFamilyById(familyId);
+  if (!family || !spineId) return false;
+  return family.spineId === spineId;
+}
+
+export function getFamilyIdsBySpine(spineId) {
+  return getCanonicalFamiliesBySpine(spineId).map((family) => family.familyId);
+}
+
+export function getFamiliesBySpineIds(spineIds = []) {
+  const spineSet = new Set((spineIds || []).filter(Boolean));
+  if (spineSet.size === 0) return [];
+
+  return directionFamilyRegistryV1.filter((family) =>
+    spineSet.has(family.spineId)
+  );
 }
 
 export function normalizeCanonicalFamilyRef(familyId) {
@@ -46,8 +79,13 @@ export function getCanonicalFamilyCount() {
 
 export const familyRegistry = {
   getCanonicalFamilyById,
+  getCanonicalFamilyRef,
   hasCanonicalFamilyId,
   getCanonicalFamiliesBySpine,
+  getCanonicalFamilySpine,
+  familyBelongsToSpine,
+  getFamilyIdsBySpine,
+  getFamiliesBySpineIds,
   normalizeCanonicalFamilyRef,
   getCanonicalFamilyCount,
 };

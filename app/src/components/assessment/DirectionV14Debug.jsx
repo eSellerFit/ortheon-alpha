@@ -624,6 +624,12 @@ function getClassificationTone(classification) {
   return "neutral";
 }
 
+function getFoundationCandidate(diagnostic, directionId) {
+  return diagnostic.matchingEngineV1Foundation?.recommendationCandidates?.find(
+    (candidate) => candidate.legacyDirectionId === directionId
+  );
+}
+
 function DirectionV14Debug() {
   const [selectedKey, setSelectedKey] = useState(SAMPLE_PROFILES[0].key);
   const [showRawJson, setShowRawJson] = useState(false);
@@ -836,6 +842,51 @@ function DirectionV14Debug() {
 
                 <div style={styles.foundationGrid}>
                   <div style={styles.foundationPanel}>
+                    <h3 style={styles.smallTitle}>Family alignment</h3>
+                    <p style={styles.debugLine}>
+                      Aligned candidates:{" "}
+                      {
+                        diagnostic.matchingEngineV1Foundation
+                          .alignedCandidateCount
+                      }
+                    </p>
+                    <p style={styles.debugLine}>
+                      Cross-spine candidates:{" "}
+                      {
+                        diagnostic.matchingEngineV1Foundation
+                          .crossSpineCandidateCount
+                      }
+                    </p>
+                    <p style={styles.debugLine}>
+                      Primary cross-spine candidates:{" "}
+                      {
+                        diagnostic.matchingEngineV1Foundation
+                          .primaryCrossSpineCandidateCount
+                      }
+                    </p>
+                  </div>
+
+                  <div style={styles.foundationPanel}>
+                    <h3 style={styles.smallTitle}>Alignment QA</h3>
+                    <p style={styles.debugLine}>
+                      Alignment blocking issues:{" "}
+                      {
+                        diagnostic.matchingEngineV1Foundation
+                          .familyAlignmentBlockingCount
+                      }
+                    </p>
+                    <p style={styles.debugLine}>
+                      Alignment warnings:{" "}
+                      {
+                        diagnostic.matchingEngineV1Foundation
+                          .familyAlignmentWarningCount
+                      }
+                    </p>
+                  </div>
+                </div>
+
+                <div style={styles.foundationGrid}>
+                  <div style={styles.foundationPanel}>
                     <h3 style={styles.smallTitle}>CandidateProfile</h3>
                     <p style={styles.debugLine}>
                       Assessment:{" "}
@@ -969,62 +1020,102 @@ function DirectionV14Debug() {
 
           <SectionCard title="Final calibrated recommendations">
             <div style={styles.directionList}>
-              {diagnostic.recommendations.map((item) => (
-                <article key={item.directionId} style={styles.directionCard}>
-                  <div style={styles.directionHeader}>
-                    <div>
-                      <p style={styles.rank}>#{item.rank}</p>
-                      <h3 style={styles.directionTitle}>
-                        {item.directionLabel}
-                      </h3>
-                      <p style={styles.directionMeta}>
-                        {item.category} · {item.context} · AI{" "}
-                        {item.aiDurabilityRating}
-                      </p>
+              {diagnostic.recommendations.map((item) => {
+                const foundationCandidate = getFoundationCandidate(
+                  diagnostic,
+                  item.directionId
+                );
+                const alignment = foundationCandidate?.alignmentResult;
+
+                return (
+                  <article key={item.directionId} style={styles.directionCard}>
+                    <div style={styles.directionHeader}>
+                      <div>
+                        <p style={styles.rank}>#{item.rank}</p>
+                        <h3 style={styles.directionTitle}>
+                          {item.directionLabel}
+                        </h3>
+                        <p style={styles.directionMeta}>
+                          {item.category} · {item.context} · AI{" "}
+                          {item.aiDurabilityRating}
+                        </p>
+                      </div>
+
+                      <Pill tone={getClassificationTone(item.finalClassification)}>
+                        {item.finalClassification}
+                      </Pill>
                     </div>
 
-                    <Pill tone={getClassificationTone(item.finalClassification)}>
-                      {item.finalClassification}
-                    </Pill>
-                  </div>
-
-                  <div style={styles.scoreGrid}>
-                    <span>Overall: {item.overallLensScore}</span>
-                    <span>Candidate: {item.candidateScore}</span>
-                    <span>Context: {formatText(item.decisionContext)}</span>
-                  </div>
-
-                  {item.calibration.reasons.length > 0 && (
-                    <ul style={styles.reasonList}>
-                      {item.calibration.reasons.map((reason) => (
-                        <li key={reason}>{reason}</li>
-                      ))}
-                    </ul>
-                  )}
-
-                  {item.gates.hardGateFlags.length > 0 && (
-                    <div style={styles.flagBox}>
-                      <strong>Gate flags:</strong>{" "}
-                      {item.gates.hardGateFlags
-                        .map((flag) => flag.flag)
-                        .join(", ")}
+                    <div style={styles.scoreGrid}>
+                      <span>Overall: {item.overallLensScore}</span>
+                      <span>Candidate: {item.candidateScore}</span>
+                      <span>Context: {formatText(item.decisionContext)}</span>
                     </div>
-                  )}
 
-                  <details style={styles.details}>
-                    <summary>Eight-lens diagnostics</summary>
-                    <div style={styles.lensGrid}>
-                      {Object.entries(item.lensResults).map(([key, value]) => (
-                        <div key={key} style={styles.lensItem}>
-                          <strong>{formatText(key)}</strong>
-                          <span>Level: {formatText(value?.level)}</span>
-                          <span>Score: {formatText(value?.score)}</span>
+                    {foundationCandidate && (
+                      <div style={styles.alignmentBox}>
+                        <strong>Family alignment:</strong>{" "}
+                        {formatText(alignment?.alignmentStatus)} ·{" "}
+                        {formatText(alignment?.recommendedAction)}
+                        <div style={styles.debugLine}>
+                          Canonical family:{" "}
+                          {formatText(
+                            foundationCandidate.familyId ||
+                              foundationCandidate.canonicalMappingConfidence
+                          )}
+                          {foundationCandidate.familyName
+                            ? ` · ${foundationCandidate.familyName}`
+                            : ""}
                         </div>
-                      ))}
-                    </div>
-                  </details>
-                </article>
-              ))}
+                        <div style={styles.debugLine}>
+                          Family spine:{" "}
+                          {formatText(
+                            alignment?.familySpineName ||
+                              foundationCandidate.familySpineName
+                          )}
+                        </div>
+                        {alignment?.reasons?.length > 0 && (
+                          <ul style={styles.reasonList}>
+                            {alignment.reasons.map((reason) => (
+                              <li key={reason}>{reason}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    )}
+
+                    {item.calibration.reasons.length > 0 && (
+                      <ul style={styles.reasonList}>
+                        {item.calibration.reasons.map((reason) => (
+                          <li key={reason}>{reason}</li>
+                        ))}
+                      </ul>
+                    )}
+
+                    {item.gates.hardGateFlags.length > 0 && (
+                      <div style={styles.flagBox}>
+                        <strong>Gate flags:</strong>{" "}
+                        {item.gates.hardGateFlags
+                          .map((flag) => flag.flag)
+                          .join(", ")}
+                      </div>
+                    )}
+
+                    <details style={styles.details}>
+                      <summary>Eight-lens diagnostics</summary>
+                      <div style={styles.lensGrid}>
+                        {Object.entries(item.lensResults).map(([key, value]) => (
+                          <div key={key} style={styles.lensItem}>
+                            <strong>{formatText(key)}</strong>
+                            <span>Level: {formatText(value?.level)}</span>
+                            <span>Score: {formatText(value?.score)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  </article>
+                );
+              })}
             </div>
           </SectionCard>
 
@@ -1284,6 +1375,15 @@ const styles = {
     background: "#fff8e6",
     color: "#7a4b00",
     fontSize: 13,
+  },
+  alignmentBox: {
+    marginTop: 12,
+    padding: 10,
+    borderRadius: 12,
+    background: "#f0f7ff",
+    color: "#18416c",
+    fontSize: 13,
+    border: "1px solid #c7ddf4",
   },
   details: {
     marginTop: 12,
