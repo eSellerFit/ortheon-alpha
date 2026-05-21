@@ -7,6 +7,7 @@
 // - Do not feed scoring or live report recommendations.
 
 import { buildCandidateProfile } from "./candidateProfileAdapter.js";
+import { buildCandidateGenerationGapDiagnostics } from "./candidateGenerationGapDiagnostics.js";
 import { resolveCompositeFamilyMapping } from "./compositeFamilyResolver.js";
 import { buildDisplaySafeCandidateSelection } from "./displaySafeSelector.js";
 import { buildEvidenceSignals } from "./evidenceSignals.js";
@@ -78,6 +79,13 @@ export function buildMatchingEngineFoundationDiagnostics({
   });
   const selectionSummary =
     displaySafeCandidateSelection.selectionSummary || {};
+  const candidateGenerationGapDiagnostics =
+    buildCandidateGenerationGapDiagnostics({
+      candidateProfile,
+      recommendationCandidates,
+      displaySafeSelection: displaySafeCandidateSelection,
+    });
+  const gapSummary = candidateGenerationGapDiagnostics.gapSummary || {};
   const mappedCandidateCount = recommendationCandidates.filter(
     (candidate) => Boolean(candidate.familyId)
   ).length;
@@ -164,11 +172,19 @@ export function buildMatchingEngineFoundationDiagnostics({
     displaySafePrimaryCount: selectionSummary.displaySafePrimaryCount ?? 0,
     displaySafeAdjacentCount: selectionSummary.displaySafeAdjacentCount ?? 0,
     displaySafeBridgeCount: selectionSummary.displaySafeBridgeCount ?? 0,
+    primarySpineCoverageGapCount:
+      gapSummary.primarySpineCoverageGapCount ?? 0,
+    secondarySpineCoverageGapCount:
+      gapSummary.secondarySpineCoverageGapCount ?? 0,
+    missingPrimaryFamilyCount: gapSummary.missingPrimaryFamilyCount ?? 0,
+    generatedUnsafeCandidateCount:
+      gapSummary.generatedUnsafeCandidateCount ?? 0,
     candidateProfile,
     evidenceSignals,
     recommendationCandidates,
     reportQaResult,
     displaySafeCandidateSelection,
+    candidateGenerationGapDiagnostics,
     notes: [
       "Foundation diagnostics are internal/debug-only.",
       "Canonical family IDs are not faked from legacy role-library IDs.",

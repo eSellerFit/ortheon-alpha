@@ -1064,6 +1064,141 @@ function DirectionV14Debug() {
                   </details>
                 </div>
 
+                <div style={styles.foundationPanelWide}>
+                  <h3 style={styles.smallTitle}>
+                    Candidate generation gap diagnostics
+                  </h3>
+                  <div style={styles.summaryGrid}>
+                    <div>
+                      <p style={styles.mutedLabel}>Primary spine gaps</p>
+                      <strong>
+                        {
+                          diagnostic.matchingEngineV1Foundation
+                            .primarySpineCoverageGapCount
+                        }
+                      </strong>
+                    </div>
+                    <div>
+                      <p style={styles.mutedLabel}>Secondary spine gaps</p>
+                      <strong>
+                        {
+                          diagnostic.matchingEngineV1Foundation
+                            .secondarySpineCoverageGapCount
+                        }
+                      </strong>
+                    </div>
+                    <div>
+                      <p style={styles.mutedLabel}>Missing primary families</p>
+                      <strong>
+                        {
+                          diagnostic.matchingEngineV1Foundation
+                            .missingPrimaryFamilyCount
+                        }
+                      </strong>
+                    </div>
+                    <div>
+                      <p style={styles.mutedLabel}>Generated unsafe</p>
+                      <strong>
+                        {
+                          diagnostic.matchingEngineV1Foundation
+                            .generatedUnsafeCandidateCount
+                        }
+                      </strong>
+                    </div>
+                  </div>
+
+                  <div style={styles.selectionGrid}>
+                    <div>
+                      <h4 style={styles.tinyTitle}>Primary spine coverage</h4>
+                      {diagnostic.matchingEngineV1Foundation
+                        .candidateGenerationGapDiagnostics.primarySpineCoverage
+                        .map((coverage) => (
+                          <div
+                            key={`primary-gap-${coverage.spineId}`}
+                            style={styles.gapItem}
+                          >
+                            <strong>{coverage.spineName}</strong>
+                            <span>{formatText(coverage.coverageStatus)}</span>
+                            <small>
+                              Display-safe families:{" "}
+                              {coverage.displaySafeFamilyIds.join(", ") || "none"}
+                            </small>
+                            <small>
+                              Missing:{" "}
+                              {coverage.missingFamilyIds.join(", ") || "none"}
+                            </small>
+                          </div>
+                        ))}
+                    </div>
+
+                    <div>
+                      <h4 style={styles.tinyTitle}>Secondary spine coverage</h4>
+                      {diagnostic.matchingEngineV1Foundation
+                        .candidateGenerationGapDiagnostics
+                        .secondarySpineCoverage.length === 0 ? (
+                        <p style={styles.emptyText}>
+                          No secondary spine coverage items.
+                        </p>
+                      ) : (
+                        diagnostic.matchingEngineV1Foundation
+                          .candidateGenerationGapDiagnostics
+                          .secondarySpineCoverage.map((coverage) => (
+                            <div
+                              key={`secondary-gap-${coverage.spineId}`}
+                              style={styles.gapItem}
+                            >
+                              <strong>{coverage.spineName}</strong>
+                              <span>{formatText(coverage.coverageStatus)}</span>
+                              <small>
+                                Display-safe families:{" "}
+                                {coverage.displaySafeFamilyIds.join(", ") ||
+                                  "none"}
+                              </small>
+                              <small>
+                                Missing:{" "}
+                                {coverage.missingFamilyIds.join(", ") || "none"}
+                              </small>
+                            </div>
+                          ))
+                      )}
+                    </div>
+                  </div>
+
+                  <details style={styles.details}>
+                    <summary>Generated but unsafe candidates</summary>
+                    <div style={styles.directionList}>
+                      {diagnostic.matchingEngineV1Foundation
+                        .candidateGenerationGapDiagnostics
+                        .unsafeGeneratedCandidates.map((candidate) => (
+                          <div
+                            key={`unsafe-${candidate.legacyDirectionId}`}
+                            style={styles.blockedSelectionItem}
+                          >
+                            <strong>{candidate.displayLabel}</strong>
+                            <span>{candidate.familyId || "unmapped"}</span>
+                            <small>
+                              {candidate.blockingReasons?.join(" | ") ||
+                                "No blocking reason recorded."}
+                            </small>
+                          </div>
+                        ))}
+                    </div>
+                  </details>
+
+                  <details style={styles.details}>
+                    <summary>Display-safe family coverage</summary>
+                    <pre style={styles.jsonBox}>
+                      {JSON.stringify(
+                        diagnostic.matchingEngineV1Foundation
+                          .candidateGenerationGapDiagnostics
+                          .displaySafeFamilyCoverage,
+                        null,
+                        2
+                      )}
+                    </pre>
+                  </details>
+                </div>
+
                 <div style={styles.foundationGrid}>
                   <div style={styles.foundationPanel}>
                     <h3 style={styles.smallTitle}>CandidateProfile</h3>
@@ -1538,6 +1673,17 @@ const styles = {
     background: "#fffafa",
     color: "#7f1d1d",
     fontSize: 13,
+  },
+  gapItem: {
+    display: "grid",
+    gap: 4,
+    padding: 10,
+    border: "1px solid #dce4ef",
+    borderRadius: 12,
+    background: "#ffffff",
+    color: "#344054",
+    fontSize: 13,
+    marginBottom: 8,
   },
   spineItem: {
     display: "grid",
