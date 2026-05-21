@@ -444,7 +444,7 @@ function AlphaReportReview() {
   );
 }
 
-function ResultsStep({ assessmentId }) {
+function ResultsStep({ assessmentId, forceRegenerate = false, disableResultSave = false }) {
   const [status, setStatus] = useState("loading");
   const [recommendations, setRecommendations] = useState([]);
   const [careerMap, setCareerMap] = useState(null);
@@ -462,6 +462,10 @@ function ResultsStep({ assessmentId }) {
 
       hasGeneratedRef.current = true;
 
+      if (forceRegenerate) {
+        console.log("[ResultsStep] forceRegenerate=true — using freshly generated result.");
+      }
+
       try {
         setStatus("loading");
         setErrorMessage("");
@@ -473,11 +477,15 @@ function ResultsStep({ assessmentId }) {
           generatedRecommendations
         );
 
-        await saveAssessmentResults(
-          assessmentId,
-          generatedRecommendations,
-          generatedCareerMap
-        );
+        if (!disableResultSave) {
+          await saveAssessmentResults(
+            assessmentId,
+            generatedRecommendations,
+            generatedCareerMap
+          );
+        } else {
+          console.log("[ResultsStep] disableResultSave=true — saveAssessmentResults skipped.");
+        }
 
         setRecommendations(generatedRecommendations);
         setCareerMap(generatedCareerMap);

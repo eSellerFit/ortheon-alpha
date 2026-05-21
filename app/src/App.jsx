@@ -1,5 +1,6 @@
 import AssessmentFlow from "./pages/AssessmentFlow";
 import CareerMapPreview from "./components/assessment/CareerMapPreview";
+import DebugResultReplay from "./pages/DebugResultReplay";
 import DirectionV14Debug from "./components/assessment/DirectionV14Debug";
 import OrtheonLandingPage from "./OrtheonLandingPage";
 import PrivacyPolicy from "./PrivacyPolicy";
@@ -15,6 +16,13 @@ function App() {
     hash.includes("debug/direction-v14")
   ) {
     return <DirectionV14Debug />;
+  }
+
+  const debugResultMatch =
+    path.match(/\/debug\/result\/([^/]+)/) ||
+    hash.match(/debug\/result\/([^/]+)/);
+  if (debugResultMatch) {
+    return <DebugResultReplay assessmentId={debugResultMatch[1]} />;
   }
 
   if (path.includes("/map-preview") || hash.includes("map-preview")) {
