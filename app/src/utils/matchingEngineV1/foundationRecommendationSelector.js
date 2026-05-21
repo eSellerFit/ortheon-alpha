@@ -6,6 +6,8 @@
 // - Preserve raw v1.4 recommendations for comparison.
 // - Do not feed scoring, live results, or reports.
 
+import { evaluateBridgeVisibility } from "./bridgeVisibilityGate.js";
+
 const DISPLAY_SAFE_STATUSES = new Set([
   "display_safe",
   "display_safe_with_warning",
@@ -136,7 +138,13 @@ function enrichSelectedCandidate(selected = {}, candidateIndex) {
       sourceCandidate.compositeResolutionResult?.resolutionStatus ?? null,
     compositeResolutionConfidence:
       sourceCandidate.compositeResolutionResult?.resolutionConfidence ?? null,
+    evidenceMapping: sourceCandidate.evidenceMapping || [],
+    bridge: sourceCandidate.bridge ?? null,
+    condition: sourceCandidate.condition ?? null,
+    alignmentOverrideEvidence:
+      sourceCandidate.alignmentResult?.overrideEvidence ?? null,
     sourcePathType: sourceCandidate.pathType ?? null,
+    sourceDiagnostic: sourceCandidate.sourceDiagnostic ?? null,
     selectionReasons: [
       selectionReasonForMapping(sourceCandidate),
       ...(selected.reasons || []),
@@ -189,6 +197,7 @@ function buildBlockedExclusions(displaySafeSelection = {}) {
 export function buildFoundationSelectedRecommendations({
   displaySafeSelection = {},
   recommendationCandidates = [],
+  candidateProfile = {},
 } = {}) {
   const candidateIndex = buildCandidateIndex(recommendationCandidates);
   const displaySafeCandidates = (displaySafeSelection.displaySafeCandidates || [])
@@ -208,6 +217,27 @@ export function buildFoundationSelectedRecommendations({
   );
   const bridgeOrConditionalRecommendations = withRanks(
     conditionalSelection.candidates.sort(compareCandidates)
+  );
+  const gatedBridgeCandidates = bridgeOrConditionalRecommendations.map(
+    (candidate) => ({
+      ...candidate,
+      bridgeVisibilityResult: evaluateBridgeVisibility({
+        candidate,
+        candidateProfile,
+      }),
+    })
+  );
+  const showableBridgeRecommendations = gatedBridgeCandidates.filter(
+    (candidate) =>
+      candidate.bridgeVisibilityResult.status === "show_bridge"
+  );
+  const needsConfirmationBridgeRecommendations = gatedBridgeCandidates.filter(
+    (candidate) =>
+      candidate.bridgeVisibilityResult.status === "needs_user_confirmation"
+  );
+  const hiddenBridgeCandidates = gatedBridgeCandidates.filter(
+    (candidate) =>
+      candidate.bridgeVisibilityResult.status === "hide_bridge"
   );
   const excludedCandidates = [
     ...buildBlockedExclusions(displaySafeSelection),
@@ -233,11 +263,19 @@ export function buildFoundationSelectedRecommendations({
       ).length,
       bridgeOrConditionalRecommendationCount:
         bridgeOrConditionalRecommendations.length,
+      showableBridgeRecommendationCount: showableBridgeRecommendations.length,
+      needsConfirmationBridgeRecommendationCount:
+        needsConfirmationBridgeRecommendations.length,
+      hiddenBridgeCandidateCount: hiddenBridgeCandidates.length,
       excludedCandidateCount: excludedCandidates.length,
     },
+    showableBridgeRecommendations,
+    needsConfirmationBridgeRecommendations,
+    hiddenBridgeCandidates,
     notes: [
       "Foundation-selected recommendations are debug-only.",
       "Blocked, unmapped, weak, and unresolved composite candidates are excluded.",
+      "Only show_bridge candidates are a bridge visibility lane candidate for future live review.",
       "Raw v1.4 recommendations remain unchanged for comparison.",
     ],
   };

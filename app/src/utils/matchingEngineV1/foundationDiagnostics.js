@@ -117,6 +117,7 @@ export function buildMatchingEngineFoundationDiagnostics({
     buildFoundationSelectedRecommendations({
       displaySafeSelection: foundationSelectionDisplaySafeCandidateSelection,
       recommendationCandidates: foundationSelectionCandidates,
+      candidateProfile,
     });
   const selectionSummary =
     displaySafeCandidateSelection.selectionSummary || {};

@@ -398,6 +398,15 @@ export function recommendationCandidateFromV14Diagnostic({
       finalClassification: item?.finalClassification ?? null,
       overallLensScore: item?.overallLensScore ?? null,
       candidateScore: item?.candidateScore ?? null,
+      context: item?.context ?? null,
+      decisionContext: item?.decisionContext ?? null,
+      transitionCategory: item?.transitionCategory ?? null,
+      transitionPathway: item?.transitionPathway ?? null,
+      financialRealityLevel:
+        item?.lensResults?.financialRealityResult?.level ?? null,
+      practicalConstraintsLevel:
+        item?.lensResults?.practicalConstraintsResult?.level ?? null,
+      hardGateFlags: item?.gates?.hardGateFlags || [],
     },
   });
 }

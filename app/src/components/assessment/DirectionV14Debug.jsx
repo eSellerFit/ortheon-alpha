@@ -1775,18 +1775,24 @@ function DirectionV14Debug() {
                     </strong>
                   </div>
                   <div>
-                    <p style={styles.mutedLabel}>Bridge / excluded</p>
+                    <p style={styles.mutedLabel}>Bridge show / confirm / hidden</p>
                     <strong>
                       {
                         diagnostic.matchingEngineV1Foundation
                           .foundationSelectedRecommendations.selectionSummary
-                          .bridgeOrConditionalRecommendationCount
+                          .showableBridgeRecommendationCount
                       }
                       {" / "}
                       {
                         diagnostic.matchingEngineV1Foundation
                           .foundationSelectedRecommendations.selectionSummary
-                          .excludedCandidateCount
+                          .needsConfirmationBridgeRecommendationCount
+                      }
+                      {" / "}
+                      {
+                        diagnostic.matchingEngineV1Foundation
+                          .foundationSelectedRecommendations.selectionSummary
+                          .hiddenBridgeCandidateCount
                       }
                     </strong>
                   </div>
@@ -1834,20 +1840,20 @@ function DirectionV14Debug() {
                 </div>
 
                 <div style={styles.foundationPanelWide}>
-                  <h3 style={styles.smallTitle}>Bridge / conditional lane</h3>
+                  <h3 style={styles.smallTitle}>Showable bridge paths</h3>
                   <div style={styles.directionList}>
                     {diagnostic.matchingEngineV1Foundation
                       .foundationSelectedRecommendations
-                      .bridgeOrConditionalRecommendations.length === 0 ? (
+                      .showableBridgeRecommendations.length === 0 ? (
                       <p style={styles.emptyText}>
-                        No bridge or conditional foundation candidates selected.
+                        No showable bridge candidates selected.
                       </p>
                     ) : (
                       diagnostic.matchingEngineV1Foundation
                         .foundationSelectedRecommendations
-                        .bridgeOrConditionalRecommendations.map((candidate) => (
+                        .showableBridgeRecommendations.map((candidate) => (
                           <div
-                            key={`foundation-conditional-${candidate.legacyDirectionId}`}
+                            key={`foundation-bridge-show-${candidate.legacyDirectionId}`}
                             style={styles.seedItem}
                           >
                             <strong>
@@ -1858,8 +1864,96 @@ function DirectionV14Debug() {
                               {formatText(candidate.familyId)} ·{" "}
                               {formatText(candidate.displaySafeStatus)}
                             </span>
+                            <small>
+                              {candidate.bridgeVisibilityResult.reasons.join(
+                                " | "
+                              )}
+                            </small>
                           </div>
                         ))
+                    )}
+                  </div>
+                </div>
+
+                <div style={styles.foundationPanelWide}>
+                  <h3 style={styles.smallTitle}>Needs confirmation</h3>
+                  <div style={styles.directionList}>
+                    {diagnostic.matchingEngineV1Foundation
+                      .foundationSelectedRecommendations
+                      .needsConfirmationBridgeRecommendations.length === 0 ? (
+                      <p style={styles.emptyText}>
+                        No bridge candidates need confirmation.
+                      </p>
+                    ) : (
+                      diagnostic.matchingEngineV1Foundation
+                        .foundationSelectedRecommendations
+                        .needsConfirmationBridgeRecommendations.map(
+                          (candidate) => (
+                            <div
+                              key={`foundation-bridge-confirm-${candidate.legacyDirectionId}`}
+                              style={styles.gapItem}
+                            >
+                              <strong>
+                                #{candidate.rank} {candidate.displayLabel}
+                              </strong>
+                              <span>
+                                {formatText(candidate.familyId)} ·{" "}
+                                {formatText(
+                                  candidate.bridgeVisibilityResult.status
+                                )}
+                              </span>
+                              <small>
+                                {candidate.bridgeVisibilityResult.reasons.join(
+                                  " | "
+                                )}
+                              </small>
+                              <small>
+                                Missing:{" "}
+                                {candidate.bridgeVisibilityResult.missingInputs.join(
+                                  " | "
+                                )}
+                              </small>
+                            </div>
+                          )
+                        )
+                    )}
+                  </div>
+                </div>
+
+                <div style={styles.foundationPanelWide}>
+                  <h3 style={styles.smallTitle}>Hidden bridge candidates</h3>
+                  <div style={styles.directionList}>
+                    {diagnostic.matchingEngineV1Foundation
+                      .foundationSelectedRecommendations.hiddenBridgeCandidates
+                      .length === 0 ? (
+                      <p style={styles.emptyText}>
+                        No bridge candidates hidden by visibility gate.
+                      </p>
+                    ) : (
+                      diagnostic.matchingEngineV1Foundation
+                        .foundationSelectedRecommendations.hiddenBridgeCandidates.map(
+                          (candidate) => (
+                            <div
+                              key={`foundation-bridge-hidden-${candidate.legacyDirectionId}`}
+                              style={styles.blockedSelectionItem}
+                            >
+                              <strong>
+                                #{candidate.rank} {candidate.displayLabel}
+                              </strong>
+                              <span>
+                                {formatText(candidate.familyId)} ·{" "}
+                                {formatText(
+                                  candidate.bridgeVisibilityResult.status
+                                )}
+                              </span>
+                              <small>
+                                {candidate.bridgeVisibilityResult.reasons.join(
+                                  " | "
+                                )}
+                              </small>
+                            </div>
+                          )
+                        )
                     )}
                   </div>
                 </div>
