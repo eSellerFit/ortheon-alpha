@@ -1499,6 +1499,113 @@ function DirectionV14Debug() {
                   </details>
                 </div>
 
+                <div style={styles.foundationPanelWide}>
+                  <h3 style={styles.smallTitle}>
+                    Role library coverage & foundation readiness
+                  </h3>
+                  <div style={styles.summaryGrid}>
+                    <div>
+                      <p style={styles.mutedLabel}>Needed families</p>
+                      <strong>
+                        {
+                          diagnostic.matchingEngineV1Foundation
+                            .neededCanonicalFamilyCount
+                        }
+                      </strong>
+                    </div>
+                    <div>
+                      <p style={styles.mutedLabel}>Foundation ready</p>
+                      <strong>
+                        {
+                          diagnostic.matchingEngineV1Foundation
+                            .foundationReadyFamilyCount
+                        }
+                      </strong>
+                    </div>
+                    <div>
+                      <p style={styles.mutedLabel}>Generation / display gaps</p>
+                      <strong>
+                        {
+                          diagnostic.matchingEngineV1Foundation
+                            .candidateGenerationGapFamilyCount
+                        }
+                        {" / "}
+                        {
+                          diagnostic.matchingEngineV1Foundation
+                            .displaySafetyGapFamilyCount
+                        }
+                      </strong>
+                    </div>
+                    <div>
+                      <p style={styles.mutedLabel}>Bridge / role gaps</p>
+                      <strong>
+                        {
+                          diagnostic.matchingEngineV1Foundation
+                            .compositeBridgeFamilyCount
+                        }
+                        {" / "}
+                        {
+                          diagnostic.matchingEngineV1Foundation
+                            .roleLibraryGapFamilyCount
+                        }
+                      </strong>
+                    </div>
+                  </div>
+
+                  <div style={styles.readinessList}>
+                    {diagnostic.matchingEngineV1Foundation
+                      .roleLibraryCoverageReadinessReport.familyCoverageRows
+                      .map((family) => (
+                        <div
+                          key={`readiness-${family.familyId}`}
+                          style={
+                            family.foundationReadinessStatus ===
+                            "ready_for_foundation_validation"
+                              ? styles.selectionItem
+                              : family.foundationReadinessStatus ===
+                                  "role_library_gap"
+                                ? styles.blockedSelectionItem
+                                : styles.gapItem
+                          }
+                        >
+                          <strong>
+                            {family.familyId} · {family.familyName}
+                          </strong>
+                          <span>
+                            {formatText(family.foundationReadinessStatus)} ·{" "}
+                            {formatText(family.recommendedNextAction)}
+                          </span>
+                          <small>
+                            Generated: {family.generated ? "yes" : "no"} ·
+                            Display-safe: {family.displaySafe ? "yes" : "no"} ·
+                            Missing: {family.missing ? "yes" : "no"}
+                          </small>
+                          <small>
+                            Legacy bridge:{" "}
+                            {formatText(family.legacyBridgeStatus)} ·{" "}
+                            {family.matchingLegacyDirectionIds.join(", ") ||
+                              "none"}
+                          </small>
+                          {family.reasons.length > 0 && (
+                            <small>{family.reasons.join(" | ")}</small>
+                          )}
+                        </div>
+                      ))}
+                  </div>
+
+                  <details style={styles.details}>
+                    <summary>Coverage report JSON</summary>
+                    <pre style={styles.jsonBox}>
+                      {JSON.stringify(
+                        diagnostic.matchingEngineV1Foundation
+                          .roleLibraryCoverageReadinessReport,
+                        null,
+                        2
+                      )}
+                    </pre>
+                  </details>
+                </div>
+
                 <div style={styles.foundationGrid}>
                   <div style={styles.foundationPanel}>
                     <h3 style={styles.smallTitle}>CandidateProfile</h3>
@@ -1951,6 +2058,11 @@ const styles = {
     display: "grid",
     gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
     gap: 12,
+    marginTop: 14,
+  },
+  readinessList: {
+    display: "grid",
+    gap: 8,
     marginTop: 14,
   },
   selectionItem: {

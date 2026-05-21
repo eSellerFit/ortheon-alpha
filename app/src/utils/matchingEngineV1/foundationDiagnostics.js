@@ -13,6 +13,7 @@ import { buildDisplaySafeCandidateSelection } from "./displaySafeSelector.js";
 import { buildEvidenceSignals } from "./evidenceSignals.js";
 import { evaluateFamilyAlignment } from "./familyAlignment.js";
 import { buildRegistrySeededCandidatePreview } from "./registrySeededCandidatePreview.js";
+import { buildRoleLibraryCoverageReadinessReport } from "./roleLibraryCoverageReadinessReport.js";
 import { buildSeedToLegacyBridgeDiagnostics } from "./seedToLegacyBridgeDiagnostics.js";
 import {
   applyCompositeResolutionToRecommendationCandidate,
@@ -100,6 +101,15 @@ export function buildMatchingEngineFoundationDiagnostics({
     recommendationCandidates,
   });
   const bridgeSummary = seedToLegacyBridgeDiagnostics.bridgeSummary || {};
+  const roleLibraryCoverageReadinessReport =
+    buildRoleLibraryCoverageReadinessReport({
+      displaySafeSelection: displaySafeCandidateSelection,
+      candidateGenerationGapDiagnostics,
+      registrySeededCandidatePreview,
+      seedToLegacyBridgeDiagnostics,
+    });
+  const readinessSummary =
+    roleLibraryCoverageReadinessReport.readinessSummary || {};
   const mappedCandidateCount = recommendationCandidates.filter(
     (candidate) => Boolean(candidate.familyId)
   ).length;
@@ -205,6 +215,18 @@ export function buildMatchingEngineFoundationDiagnostics({
       bridgeSummary.bridgeAvailableNotGeneratedCount ?? 0,
     noLegacyDirectionAvailableCount:
       bridgeSummary.noLegacyDirectionAvailableCount ?? 0,
+    neededCanonicalFamilyCount:
+      readinessSummary.neededCanonicalFamilyCount ?? 0,
+    foundationReadyFamilyCount:
+      readinessSummary.foundationReadyFamilyCount ?? 0,
+    displaySafetyGapFamilyCount:
+      readinessSummary.displaySafetyGapFamilyCount ?? 0,
+    candidateGenerationGapFamilyCount:
+      readinessSummary.candidateGenerationGapFamilyCount ?? 0,
+    compositeBridgeFamilyCount:
+      readinessSummary.compositeBridgeFamilyCount ?? 0,
+    roleLibraryGapFamilyCount:
+      readinessSummary.roleLibraryGapFamilyCount ?? 0,
     candidateProfile,
     evidenceSignals,
     recommendationCandidates,
@@ -213,6 +235,7 @@ export function buildMatchingEngineFoundationDiagnostics({
     candidateGenerationGapDiagnostics,
     registrySeededCandidatePreview,
     seedToLegacyBridgeDiagnostics,
+    roleLibraryCoverageReadinessReport,
     notes: [
       "Foundation diagnostics are internal/debug-only.",
       "Canonical family IDs are not faked from legacy role-library IDs.",
