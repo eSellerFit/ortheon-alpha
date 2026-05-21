@@ -100,6 +100,43 @@ export const CAREER_MAP_METADATA = {
     mapTags: ["information_security", "cyber_risk", "security_governance", "ciso", "grc"],
   },
 
+  "TE-7-E": {
+    mapQuadrant: "corporate_operational",
+    mapCluster: "platform_technology",
+    mapTags: ["cloud", "infrastructure", "devops", "sre", "platform_operations"],
+  },
+
+  "TE-8-E": {
+    mapQuadrant: "corporate_operational",
+    mapCluster: "platform_technology",
+    mapTags: [
+      "enterprise_systems",
+      "erp",
+      "crm",
+      "hris",
+      "business_applications",
+      "saas_administration",
+    ],
+  },
+
+  "TE-9-E": {
+    mapQuadrant: "corporate_operational",
+    mapCluster: "ai_transformation",
+    mapTags: [
+      "process_automation",
+      "workflow_automation",
+      "internal_tools",
+      "low_code",
+      "operations_automation",
+    ],
+  },
+
+  "TE-10-E": {
+    mapQuadrant: "corporate_operational",
+    mapCluster: "ai_transformation",
+    mapTags: ["ai_enablement", "ai_adoption", "genai", "implementation", "operating_model"],
+  },
+
   // ============================================================
   // Existing Management directions
   // ============================================================

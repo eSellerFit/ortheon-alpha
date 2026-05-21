@@ -49,11 +49,15 @@ const mappings = [
   ["CM-8-IF", "composite", null, ["SA-04", "OD-03"], "Operations/supply chain advisory blends transformation advisory and supply chain."],
 
   ["TE-1-E", "composite", null, ["PT-02", "IT-01"], "CTO / VP Engineering blends engineering leadership and enterprise IT leadership."],
-  ["TE-2-E", "exact", "DX-03", [], "AI leadership / transformation maps to Enterprise AI Enablement when deployment evidence exists."],
+  ["TE-2-E", "composite", null, ["DX-03", "PT-02"], "Chief AI Officer / AI transformation leadership blends enterprise AI enablement and senior technical/product leadership; use only with clear executive AI ownership evidence."],
   ["TE-3-E", "exact", "DX-01", [], "Technology strategy / digital transformation maps to Digital Transformation Program Leadership."],
   ["TE-4-IF", "composite", null, ["IP-01", "PT-02", "IT-01"], "Fractional CTO / technical advisory blends advisory practice and technology leadership."],
   ["TE-5-E", "composite", null, ["IT-03", "IT-04", "PT-02"], "Enterprise architecture / platform modernization blends infrastructure, systems, and engineering leadership."],
   ["TE-6-E", "exact", "IT-02", [], "Information Security & Cyber Risk Leadership maps cleanly to Information Security & Risk."],
+  ["TE-7-E", "exact", "IT-03", [], "Cloud / Infrastructure / DevOps Leadership maps cleanly to Cloud, Infrastructure & DevOps."],
+  ["TE-8-E", "exact", "IT-04", [], "Business Systems / Enterprise Applications Leadership maps cleanly to Business Systems & Enterprise Applications."],
+  ["TE-9-E", "exact", "DX-02", [], "Business Process Automation Leadership maps cleanly to Business Process Automation."],
+  ["TE-10-E", "exact", "DX-03", [], "Enterprise AI Enablement / Adoption Leadership maps cleanly to Enterprise AI Enablement."],
 
   ["ED-3-IF", "composite", null, ["PO-05", "IP-01"], "Corporate training & L&D independent blends L&D leadership and advisory practice."],
   ["ED-4-IF", "composite", null, ["PO-05", "IP-01"], "Instructional design / e-learning is closest to L&D plus advisory practice."],

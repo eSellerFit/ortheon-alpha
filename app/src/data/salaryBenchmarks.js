@@ -1167,7 +1167,7 @@ export const salaryBenchmarks = [
   },
 
   // ============================================================
-  // TECHNOLOGY EXECUTIVE — 6 entries
+  // TECHNOLOGY EXECUTIVE — 10 entries
   // ============================================================
 
   {
@@ -1375,6 +1375,150 @@ export const salaryBenchmarks = [
       market: "US_national",
       notes:
         "Security leadership benchmark blends Information Security Analyst and Computer and Information Systems Manager data. CISO / cyber risk leadership varies significantly by company scale and regulatory exposure.",
+    },
+  },
+
+  {
+    directionId: "TE-7-E",
+    version: "v2.2",
+    lastUpdated: "2026-05-21",
+    validUntil: "2027-05-15",
+    dataQuality: "estimated",
+    sources: [
+      {
+        name: "BLS OEWS May 2024",
+        url: "https://www.bls.gov/ooh/management/computer-and-information-systems-managers.htm",
+        occupationCode: "11-3021",
+        occupationTitle: "Computer and Information Systems Managers",
+        medianAnnualWage: 169510,
+        pulledAt: "2026-05-18",
+      },
+      {
+        name: "BLS OEWS May 2024",
+        url: "https://www.bls.gov/news.release/ocwage.t01.htm",
+        occupationCode: "15-1299",
+        occupationTitle: "Computer Occupations, All Other",
+        medianAnnualWage: 118290,
+        pulledAt: "2026-05-18",
+      },
+    ],
+    financialPathway: {
+      months1to3: 125000,
+      months4to6: 150000,
+      months7to12: 180000,
+      avg12month: 155000,
+      currency: "USD",
+      market: "US_national",
+      notes:
+        "Cloud / infrastructure / DevOps leadership benchmark blends technology management and senior systems/platform occupations. Cloud leadership compensation varies by enterprise scale and on-call/reliability scope.",
+    },
+  },
+
+  {
+    directionId: "TE-8-E",
+    version: "v2.2",
+    lastUpdated: "2026-05-21",
+    validUntil: "2027-05-15",
+    dataQuality: "estimated",
+    sources: [
+      {
+        name: "BLS OEWS May 2024",
+        url: "https://www.bls.gov/ooh/management/computer-and-information-systems-managers.htm",
+        occupationCode: "11-3021",
+        occupationTitle: "Computer and Information Systems Managers",
+        medianAnnualWage: 169510,
+        pulledAt: "2026-05-18",
+      },
+      {
+        name: "BLS OEWS May 2024",
+        url: "https://www.bls.gov/ooh/computer-and-information-technology/computer-systems-analysts.htm",
+        occupationCode: "15-1211",
+        occupationTitle: "Computer Systems Analysts",
+        medianAnnualWage: 103800,
+        pulledAt: "2026-05-18",
+      },
+    ],
+    financialPathway: {
+      months1to3: 115000,
+      months4to6: 140000,
+      months7to12: 170000,
+      avg12month: 145000,
+      currency: "USD",
+      market: "US_national",
+      notes:
+        "Business systems / enterprise applications leadership benchmark blends technology management with systems analyst compensation. ERP, CRM, HRIS, and finance systems ownership may command premiums in regulated or large enterprises.",
+    },
+  },
+
+  {
+    directionId: "TE-9-E",
+    version: "v2.2",
+    lastUpdated: "2026-05-21",
+    validUntil: "2027-05-15",
+    dataQuality: "estimated",
+    sources: [
+      {
+        name: "BLS OEWS May 2024",
+        url: "https://www.bls.gov/ooh/business-and-financial/management-analysts.htm",
+        occupationCode: "13-1111",
+        occupationTitle: "Management Analysts",
+        medianAnnualWage: 99410,
+        pulledAt: "2026-05-18",
+      },
+      {
+        name: "BLS OEWS May 2024",
+        url: "https://www.bls.gov/ooh/management/computer-and-information-systems-managers.htm",
+        occupationCode: "11-3021",
+        occupationTitle: "Computer and Information Systems Managers",
+        medianAnnualWage: 169510,
+        pulledAt: "2026-05-18",
+      },
+    ],
+    financialPathway: {
+      months1to3: 115000,
+      months4to6: 140000,
+      months7to12: 170000,
+      avg12month: 142000,
+      currency: "USD",
+      market: "US_national",
+      notes:
+        "Business process automation leadership benchmark blends management analyst and technology management compensation. Enterprise automation program roles vary by platform scope, delivery ownership, and change-management responsibility.",
+    },
+  },
+
+  {
+    directionId: "TE-10-E",
+    version: "v2.2",
+    lastUpdated: "2026-05-21",
+    validUntil: "2027-05-15",
+    dataQuality: "estimated",
+    sources: [
+      {
+        name: "BLS OEWS May 2024",
+        url: "https://www.bls.gov/ooh/management/computer-and-information-systems-managers.htm",
+        occupationCode: "11-3021",
+        occupationTitle: "Computer and Information Systems Managers",
+        medianAnnualWage: 169510,
+        pulledAt: "2026-05-18",
+      },
+      {
+        name: "BLS OEWS May 2024",
+        url: "https://www.bls.gov/ooh/business-and-financial/management-analysts.htm",
+        occupationCode: "13-1111",
+        occupationTitle: "Management Analysts",
+        medianAnnualWage: 99410,
+        pulledAt: "2026-05-18",
+      },
+    ],
+    financialPathway: {
+      months1to3: 130000,
+      months4to6: 155000,
+      months7to12: 190000,
+      avg12month: 165000,
+      currency: "USD",
+      market: "US_national",
+      notes:
+        "Enterprise AI enablement / adoption leadership benchmark blends technology management and transformation advisory compensation. Estimates reflect emerging AI adoption roles rather than AI research or Chief AI Officer pay bands.",
     },
   },
 
