@@ -7,9 +7,13 @@
 // - Do not feed scoring or live report recommendations.
 
 import { buildCandidateProfile } from "./candidateProfileAdapter.js";
+import { resolveCompositeFamilyMapping } from "./compositeFamilyResolver.js";
 import { buildEvidenceSignals } from "./evidenceSignals.js";
 import { evaluateFamilyAlignment } from "./familyAlignment.js";
-import { recommendationCandidateFromV14Diagnostic } from "./recommendationObjects.js";
+import {
+  applyCompositeResolutionToRecommendationCandidate,
+  recommendationCandidateFromV14Diagnostic,
+} from "./recommendationObjects.js";
 import { runReportQa } from "./reportQa.js";
 import {
   directionFamilyRegistryVersion,
@@ -36,9 +40,18 @@ export function buildMatchingEngineFoundationDiagnostics({
   ];
 
   const recommendationCandidates = diagnosticItems.map((item) => {
-    const recommendationCandidate = recommendationCandidateFromV14Diagnostic({
+    const initialRecommendationCandidate = recommendationCandidateFromV14Diagnostic({
       item,
       evidenceSignals,
+    });
+    const compositeResolutionResult = resolveCompositeFamilyMapping({
+      candidateProfile,
+      evidenceSignals,
+      recommendationCandidate: initialRecommendationCandidate,
+    });
+    const recommendationCandidate = applyCompositeResolutionToRecommendationCandidate({
+      recommendationCandidate: initialRecommendationCandidate,
+      compositeResolutionResult,
     });
 
     return {
@@ -66,6 +79,34 @@ export function buildMatchingEngineFoundationDiagnostics({
     (candidate) => candidate.canonicalMappingConfidence === "weak"
   ).length;
   const unmappedCandidateCount = recommendationCandidates.length - mappedCandidateCount;
+  const compositeResolvedCount = recommendationCandidates.filter(
+    (candidate) =>
+      candidate.compositeResolutionResult?.resolved &&
+      candidate.compositeResolutionResult.resolutionStatus !==
+        "exact_mapping_not_needed"
+  ).length;
+  const compositeUnresolvedCount = recommendationCandidates.filter(
+    (candidate) =>
+      candidate.compositeResolutionResult &&
+      candidate.canonicalMappingConfidence === "composite" &&
+      !candidate.compositeResolutionResult.resolved
+  ).length;
+  const highConfidenceCompositeResolvedCount = recommendationCandidates.filter(
+    (candidate) =>
+      candidate.compositeResolutionResult?.resolved &&
+      candidate.compositeResolutionResult.resolutionStatus !==
+        "exact_mapping_not_needed" &&
+      candidate.compositeResolutionResult.resolutionConfidence === "high"
+  ).length;
+  const lowConfidenceCompositeResolvedCount = recommendationCandidates.filter(
+    (candidate) =>
+      candidate.compositeResolutionResult?.resolved &&
+      candidate.compositeResolutionResult.resolutionStatus !==
+        "exact_mapping_not_needed" &&
+      ["medium", "low"].includes(
+        candidate.compositeResolutionResult.resolutionConfidence
+      )
+  ).length;
   const alignedCandidateCount = recommendationCandidates.filter(
     (candidate) => candidate.alignmentResult?.alignmentStatus === "aligned"
   ).length;
@@ -97,6 +138,10 @@ export function buildMatchingEngineFoundationDiagnostics({
     unmappedCandidateCount,
     compositeMappingCount,
     weakMappingCount,
+    compositeResolvedCount,
+    compositeUnresolvedCount,
+    highConfidenceCompositeResolvedCount,
+    lowConfidenceCompositeResolvedCount,
     alignedCandidateCount,
     crossSpineCandidateCount,
     primaryCrossSpineCandidateCount,

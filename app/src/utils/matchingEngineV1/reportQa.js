@@ -9,6 +9,7 @@
 import {
   ALIGNMENT_SEVERITIES,
   ALIGNMENT_STATUSES,
+  CONFIDENCE_LABELS,
   PATH_TYPES,
   SPINE_MATCH_TYPES,
 } from "./constants.js";
@@ -90,6 +91,7 @@ export function runReportQa({
     const isCompositeMapping =
       recommendation.canonicalMappingConfidence === "composite";
     const isWeakMapping = recommendation.canonicalMappingConfidence === "weak";
+    const compositeResolution = recommendation.compositeResolutionResult;
 
     if (hasFamilyId && !familyIdIsKnown) {
       blockingIssues.push(
@@ -142,6 +144,26 @@ export function runReportQa({
           qaNote:
             recommendation.canonicalMappingNotes ||
             "Legacy direction has only weak canonical mapping confidence.",
+        })
+      );
+    }
+
+    if (
+      compositeResolution?.resolved &&
+      [CONFIDENCE_LABELS.MEDIUM, CONFIDENCE_LABELS.LOW].includes(
+        compositeResolution.resolutionConfidence
+      )
+    ) {
+      warnings.push(
+        createIssue({
+          code: "composite_resolution_confidence_review",
+          severity: "warning",
+          recommendation,
+          requiredFix:
+            "Review medium/low confidence composite resolution before display.",
+          qaNote:
+            compositeResolution.reasons?.join(" ") ||
+            "Composite mapping resolved but confidence is not high.",
         })
       );
     }

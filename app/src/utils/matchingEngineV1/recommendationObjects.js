@@ -6,7 +6,11 @@
 // - Use only explicit conservative legacy-to-canonical mappings.
 // - Do not score.
 
-import { CONFIDENCE_LABELS, PATH_TYPES } from "./constants.js";
+import {
+  COMPOSITE_RESOLUTION_STATUSES,
+  CONFIDENCE_LABELS,
+  PATH_TYPES,
+} from "./constants.js";
 import {
   getCanonicalFamilyById,
   getCanonicalFamilyRef,
@@ -99,6 +103,7 @@ export function createRecommendationCandidate({
   legacyDirectionId = null,
   canonicalMappingConfidence = "none",
   canonicalMappingNotes = null,
+  compositeResolutionResult = null,
   pathType = PATH_TYPES.CONDITIONAL,
   evidenceMapping = [],
   levelBandResult = createLevelBandResult(),
@@ -125,6 +130,7 @@ export function createRecommendationCandidate({
     legacyDirectionId,
     canonicalMappingConfidence,
     canonicalMappingNotes,
+    compositeResolutionResult,
     pathType,
     evidenceMapping,
     levelBandResult,
@@ -159,6 +165,56 @@ export function createDisplayRecommendation({
     bridge: candidate.bridge ?? null,
     condition: candidate.condition ?? null,
     confidence: candidate.confidence ?? CONFIDENCE_LABELS.NEEDS_VALIDATION,
+  };
+}
+
+export function applyCompositeResolutionToRecommendationCandidate({
+  recommendationCandidate,
+  compositeResolutionResult,
+} = {}) {
+  const candidate = recommendationCandidate || {};
+
+  if (!compositeResolutionResult?.resolved) {
+    return {
+      ...candidate,
+      compositeResolutionResult: compositeResolutionResult ?? null,
+    };
+  }
+
+  if (
+    compositeResolutionResult.resolutionStatus ===
+    COMPOSITE_RESOLUTION_STATUSES.EXACT_MAPPING_NOT_NEEDED
+  ) {
+    return {
+      ...candidate,
+      compositeResolutionResult,
+    };
+  }
+
+  const familyRef = getCanonicalFamilyRef(
+    compositeResolutionResult.resolvedFamilyId
+  );
+
+  return {
+    ...candidate,
+    familyId: familyRef.familyId,
+    familyName: familyRef.familyName,
+    spine: familyRef.spineName,
+    familyRef,
+    familySpineId: familyRef.spineId,
+    familySpineName: familyRef.spineName,
+    primaryFamilyId: familyRef.familyId,
+    canonicalMappingConfidence:
+      compositeResolutionResult.resolutionConfidence === CONFIDENCE_LABELS.HIGH
+        ? "composite_resolved_high"
+        : "composite_resolved",
+    canonicalMappingNotes: [
+      candidate.canonicalMappingNotes,
+      ...(compositeResolutionResult.reasons || []),
+    ]
+      .filter(Boolean)
+      .join(" "),
+    compositeResolutionResult,
   };
 }
 

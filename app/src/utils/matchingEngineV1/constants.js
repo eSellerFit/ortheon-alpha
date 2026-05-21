@@ -75,6 +75,17 @@ export const SPINE_MATCH_TYPES = {
   COMPOSITE: "composite",
 };
 
+export const COMPOSITE_RESOLUTION_STATUSES = {
+  EXACT_MAPPING_NOT_NEEDED: "exact_mapping_not_needed",
+  RESOLVED_FROM_PRIMARY_SPINE: "resolved_from_primary_spine",
+  RESOLVED_FROM_SECONDARY_SPINE: "resolved_from_secondary_spine",
+  UNRESOLVED_MULTIPLE_PLAUSIBLE: "unresolved_multiple_plausible",
+  UNRESOLVED_NO_SPINE_SUPPORT: "unresolved_no_spine_support",
+  UNRESOLVED_WEAK_SPINE_ONLY: "unresolved_weak_spine_only",
+  UNRESOLVED_MISSING_SUPPORTING_FAMILIES:
+    "unresolved_missing_supporting_families",
+};
+
 export const EVIDENCE_SIGNAL_TYPES = {
   DIRECT_OWNERSHIP: "direct_ownership",
   SUPPORTING: "supporting",

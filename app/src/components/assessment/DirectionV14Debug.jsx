@@ -842,6 +842,44 @@ function DirectionV14Debug() {
 
                 <div style={styles.foundationGrid}>
                   <div style={styles.foundationPanel}>
+                    <h3 style={styles.smallTitle}>Composite resolution</h3>
+                    <p style={styles.debugLine}>
+                      Resolved composites:{" "}
+                      {
+                        diagnostic.matchingEngineV1Foundation
+                          .compositeResolvedCount
+                      }
+                    </p>
+                    <p style={styles.debugLine}>
+                      Unresolved composites:{" "}
+                      {
+                        diagnostic.matchingEngineV1Foundation
+                          .compositeUnresolvedCount
+                      }
+                    </p>
+                  </div>
+
+                  <div style={styles.foundationPanel}>
+                    <h3 style={styles.smallTitle}>Resolution confidence</h3>
+                    <p style={styles.debugLine}>
+                      High-confidence resolved:{" "}
+                      {
+                        diagnostic.matchingEngineV1Foundation
+                          .highConfidenceCompositeResolvedCount
+                      }
+                    </p>
+                    <p style={styles.debugLine}>
+                      Medium/low-confidence resolved:{" "}
+                      {
+                        diagnostic.matchingEngineV1Foundation
+                          .lowConfidenceCompositeResolvedCount
+                      }
+                    </p>
+                  </div>
+                </div>
+
+                <div style={styles.foundationGrid}>
+                  <div style={styles.foundationPanel}>
                     <h3 style={styles.smallTitle}>Family alignment</h3>
                     <p style={styles.debugLine}>
                       Aligned candidates:{" "}
@@ -1026,6 +1064,8 @@ function DirectionV14Debug() {
                   item.directionId
                 );
                 const alignment = foundationCandidate?.alignmentResult;
+                const compositeResolution =
+                  foundationCandidate?.compositeResolutionResult;
 
                 return (
                   <article key={item.directionId} style={styles.directionCard}>
@@ -1077,6 +1117,27 @@ function DirectionV14Debug() {
                         {alignment?.reasons?.length > 0 && (
                           <ul style={styles.reasonList}>
                             {alignment.reasons.map((reason) => (
+                              <li key={reason}>{reason}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    )}
+
+                    {compositeResolution && (
+                      <div style={styles.resolutionBox}>
+                        <strong>Composite resolution:</strong>{" "}
+                        {formatText(compositeResolution.resolutionStatus)} ·{" "}
+                        {formatText(compositeResolution.resolutionConfidence)}
+                        <div style={styles.debugLine}>
+                          Resolved family:{" "}
+                          {compositeResolution.resolved
+                            ? `${compositeResolution.resolvedFamilyId} · ${compositeResolution.resolvedFamilyName}`
+                            : "unresolved"}
+                        </div>
+                        {compositeResolution.reasons?.length > 0 && (
+                          <ul style={styles.reasonList}>
+                            {compositeResolution.reasons.map((reason) => (
                               <li key={reason}>{reason}</li>
                             ))}
                           </ul>
@@ -1384,6 +1445,15 @@ const styles = {
     color: "#18416c",
     fontSize: 13,
     border: "1px solid #c7ddf4",
+  },
+  resolutionBox: {
+    marginTop: 12,
+    padding: 10,
+    borderRadius: 12,
+    background: "#f6f4ff",
+    color: "#3e2f73",
+    fontSize: 13,
+    border: "1px solid #d8d0ff",
   },
   details: {
     marginTop: 12,
