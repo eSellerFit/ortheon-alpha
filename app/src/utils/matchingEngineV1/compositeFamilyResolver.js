@@ -65,7 +65,6 @@ const FAMILY_EVIDENCE_TERMS = {
     "client acquisition",
     "advisory services",
     "consulting practice",
-    "pipeline",
     "runway",
   ],
   "IP-03": [
@@ -253,11 +252,9 @@ function buildCandidateFamilyOptions({
             [
               "independent consultant",
               "solo advisory",
-              "fractional",
               "client acquisition",
               "advisory services",
               "consulting practice",
-              "pipeline",
               "runway",
               "creator practice",
               "coaching practice",

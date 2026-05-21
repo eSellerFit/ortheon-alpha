@@ -923,6 +923,147 @@ function DirectionV14Debug() {
                   </div>
                 </div>
 
+                <div style={styles.foundationPanelWide}>
+                  <h3 style={styles.smallTitle}>
+                    Display-safe candidate selection
+                  </h3>
+                  <div style={styles.summaryGrid}>
+                    <div>
+                      <p style={styles.mutedLabel}>Display-safe</p>
+                      <strong>
+                        {
+                          diagnostic.matchingEngineV1Foundation
+                            .displaySafeCandidateCount
+                        }
+                      </strong>
+                    </div>
+                    <div>
+                      <p style={styles.mutedLabel}>Conditional / bridge</p>
+                      <strong>
+                        {
+                          diagnostic.matchingEngineV1Foundation
+                            .conditionalCandidateCount
+                        }
+                      </strong>
+                    </div>
+                    <div>
+                      <p style={styles.mutedLabel}>Blocked</p>
+                      <strong>
+                        {
+                          diagnostic.matchingEngineV1Foundation
+                            .blockedCandidateCount
+                        }
+                      </strong>
+                    </div>
+                    <div>
+                      <p style={styles.mutedLabel}>Primary / Adjacent / Bridge</p>
+                      <strong>
+                        {
+                          diagnostic.matchingEngineV1Foundation
+                            .displaySafePrimaryCount
+                        }
+                        {" / "}
+                        {
+                          diagnostic.matchingEngineV1Foundation
+                            .displaySafeAdjacentCount
+                        }
+                        {" / "}
+                        {
+                          diagnostic.matchingEngineV1Foundation
+                            .displaySafeBridgeCount
+                        }
+                      </strong>
+                    </div>
+                  </div>
+
+                  <div style={styles.selectionGrid}>
+                    <div>
+                      <h4 style={styles.tinyTitle}>Display-safe</h4>
+                      {diagnostic.matchingEngineV1Foundation
+                        .displaySafeCandidateSelection.displaySafeCandidates
+                        .length === 0 ? (
+                        <p style={styles.emptyText}>
+                          No display-safe candidates.
+                        </p>
+                      ) : (
+                        diagnostic.matchingEngineV1Foundation
+                          .displaySafeCandidateSelection.displaySafeCandidates
+                          .map((candidate) => (
+                            <div
+                              key={`safe-${candidate.legacyDirectionId}`}
+                              style={styles.selectionItem}
+                            >
+                              <strong>{candidate.displayLabel}</strong>
+                              <span>
+                                {candidate.recommendedDisplayClassification} ·{" "}
+                                {candidate.familyId} ·{" "}
+                                {candidate.displaySafeStatus}
+                              </span>
+                              {candidate.warnings.length > 0 && (
+                                <small>
+                                  Warnings: {candidate.warnings.join(" | ")}
+                                </small>
+                              )}
+                            </div>
+                          ))
+                      )}
+                    </div>
+
+                    <div>
+                      <h4 style={styles.tinyTitle}>Conditional / bridge</h4>
+                      {diagnostic.matchingEngineV1Foundation
+                        .displaySafeCandidateSelection.conditionalCandidates
+                        .length === 0 ? (
+                        <p style={styles.emptyText}>
+                          No conditional candidates.
+                        </p>
+                      ) : (
+                        diagnostic.matchingEngineV1Foundation
+                          .displaySafeCandidateSelection.conditionalCandidates
+                          .map((candidate) => (
+                            <div
+                              key={`conditional-${candidate.legacyDirectionId}`}
+                              style={styles.selectionItem}
+                            >
+                              <strong>{candidate.displayLabel}</strong>
+                              <span>
+                                {candidate.recommendedDisplayClassification} ·{" "}
+                                {candidate.familyId} ·{" "}
+                                {candidate.displaySafeStatus}
+                              </span>
+                            </div>
+                          ))
+                      )}
+                    </div>
+                  </div>
+
+                  <details style={styles.details}>
+                    <summary>Blocked display candidates</summary>
+                    <div style={styles.directionList}>
+                      {diagnostic.matchingEngineV1Foundation
+                        .displaySafeCandidateSelection.blockedCandidates.map(
+                          (candidate) => (
+                            <div
+                              key={`blocked-${candidate.legacyDirectionId}`}
+                              style={styles.blockedSelectionItem}
+                            >
+                              <strong>{candidate.displayLabel}</strong>
+                              <span>
+                                {candidate.familyId || "unmapped"} ·{" "}
+                                {candidate.recommendedDisplayClassification}
+                              </span>
+                              {candidate.blockingReasons.length > 0 && (
+                                <small>
+                                  {candidate.blockingReasons.join(" | ")}
+                                </small>
+                              )}
+                            </div>
+                          )
+                        )}
+                    </div>
+                  </details>
+                </div>
+
                 <div style={styles.foundationGrid}>
                   <div style={styles.foundationPanel}>
                     <h3 style={styles.smallTitle}>CandidateProfile</h3>
@@ -1338,6 +1479,13 @@ const styles = {
     padding: 12,
     background: "#f8fafc",
   },
+  foundationPanelWide: {
+    border: "1px solid #e5eaf1",
+    borderRadius: 14,
+    padding: 12,
+    background: "#f8fafc",
+    marginTop: 14,
+  },
   debugLine: {
     margin: "6px 0",
     color: "#344054",
@@ -1358,6 +1506,38 @@ const styles = {
     margin: "0 0 10px",
     color: "#344054",
     fontSize: 14,
+  },
+  tinyTitle: {
+    margin: "0 0 8px",
+    color: "#475467",
+    fontSize: 13,
+  },
+  selectionGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    gap: 12,
+    marginTop: 14,
+  },
+  selectionItem: {
+    display: "grid",
+    gap: 4,
+    padding: 10,
+    border: "1px solid #d5eadc",
+    borderRadius: 12,
+    background: "#f6fffa",
+    color: "#174a2d",
+    fontSize: 13,
+    marginBottom: 8,
+  },
+  blockedSelectionItem: {
+    display: "grid",
+    gap: 4,
+    padding: 10,
+    border: "1px solid #f0c4c4",
+    borderRadius: 12,
+    background: "#fffafa",
+    color: "#7f1d1d",
+    fontSize: 13,
   },
   spineItem: {
     display: "grid",

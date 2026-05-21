@@ -8,6 +8,7 @@
 
 import { buildCandidateProfile } from "./candidateProfileAdapter.js";
 import { resolveCompositeFamilyMapping } from "./compositeFamilyResolver.js";
+import { buildDisplaySafeCandidateSelection } from "./displaySafeSelector.js";
 import { buildEvidenceSignals } from "./evidenceSignals.js";
 import { evaluateFamilyAlignment } from "./familyAlignment.js";
 import {
@@ -69,6 +70,14 @@ export function buildMatchingEngineFoundationDiagnostics({
     evidenceSignals,
     recommendationCandidates,
   });
+  const displaySafeCandidateSelection = buildDisplaySafeCandidateSelection({
+    candidateProfile,
+    evidenceSignals,
+    recommendationCandidates,
+    reportQaResult,
+  });
+  const selectionSummary =
+    displaySafeCandidateSelection.selectionSummary || {};
   const mappedCandidateCount = recommendationCandidates.filter(
     (candidate) => Boolean(candidate.familyId)
   ).length;
@@ -147,10 +156,19 @@ export function buildMatchingEngineFoundationDiagnostics({
     primaryCrossSpineCandidateCount,
     familyAlignmentBlockingCount,
     familyAlignmentWarningCount,
+    displaySafeCandidateCount:
+      selectionSummary.displaySafeCandidateCount ?? 0,
+    blockedCandidateCount: selectionSummary.blockedCandidateCount ?? 0,
+    conditionalCandidateCount:
+      selectionSummary.conditionalCandidateCount ?? 0,
+    displaySafePrimaryCount: selectionSummary.displaySafePrimaryCount ?? 0,
+    displaySafeAdjacentCount: selectionSummary.displaySafeAdjacentCount ?? 0,
+    displaySafeBridgeCount: selectionSummary.displaySafeBridgeCount ?? 0,
     candidateProfile,
     evidenceSignals,
     recommendationCandidates,
     reportQaResult,
+    displaySafeCandidateSelection,
     notes: [
       "Foundation diagnostics are internal/debug-only.",
       "Canonical family IDs are not faked from legacy role-library IDs.",
