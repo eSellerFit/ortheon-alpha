@@ -1199,6 +1199,149 @@ function DirectionV14Debug() {
                   </details>
                 </div>
 
+                <div style={styles.foundationPanelWide}>
+                  <h3 style={styles.smallTitle}>
+                    Registry-seeded candidate preview
+                  </h3>
+                  <div style={styles.summaryGrid}>
+                    <div>
+                      <p style={styles.mutedLabel}>Primary seeds</p>
+                      <strong>
+                        {
+                          diagnostic.matchingEngineV1Foundation
+                            .primarySeedFamilyCount
+                        }
+                      </strong>
+                    </div>
+                    <div>
+                      <p style={styles.mutedLabel}>Secondary seeds</p>
+                      <strong>
+                        {
+                          diagnostic.matchingEngineV1Foundation
+                            .secondarySeedFamilyCount
+                        }
+                      </strong>
+                    </div>
+                    <div>
+                      <p style={styles.mutedLabel}>Already covered</p>
+                      <strong>
+                        {
+                          diagnostic.matchingEngineV1Foundation
+                            .alreadyCoveredSeedFamilyCount
+                        }
+                      </strong>
+                    </div>
+                    <div>
+                      <p style={styles.mutedLabel}>Excluded</p>
+                      <strong>
+                        {
+                          diagnostic.matchingEngineV1Foundation
+                            .excludedSeedFamilyCount
+                        }
+                      </strong>
+                    </div>
+                  </div>
+
+                  <div style={styles.selectionGrid}>
+                    <div>
+                      <h4 style={styles.tinyTitle}>Primary seed families</h4>
+                      {diagnostic.matchingEngineV1Foundation
+                        .registrySeededCandidatePreview.primarySpineSeedFamilies
+                        .length === 0 ? (
+                        <p style={styles.emptyText}>No primary seed families.</p>
+                      ) : (
+                        diagnostic.matchingEngineV1Foundation
+                          .registrySeededCandidatePreview.primarySpineSeedFamilies
+                          .map((family) => (
+                            <div
+                              key={`primary-seed-${family.familyId}`}
+                              style={styles.seedItem}
+                            >
+                              <strong>
+                                {family.familyId} · {family.familyName}
+                              </strong>
+                              <span>
+                                {family.seedPriority} · {family.seedStatus}
+                              </span>
+                              <small>{family.reasons.join(" | ")}</small>
+                            </div>
+                          ))
+                      )}
+                    </div>
+
+                    <div>
+                      <h4 style={styles.tinyTitle}>Secondary seed families</h4>
+                      {diagnostic.matchingEngineV1Foundation
+                        .registrySeededCandidatePreview
+                        .secondarySpineSeedFamilies.length === 0 ? (
+                        <p style={styles.emptyText}>
+                          No secondary seed families.
+                        </p>
+                      ) : (
+                        diagnostic.matchingEngineV1Foundation
+                          .registrySeededCandidatePreview
+                          .secondarySpineSeedFamilies.map((family) => (
+                            <div
+                              key={`secondary-seed-${family.familyId}`}
+                              style={styles.seedItem}
+                            >
+                              <strong>
+                                {family.familyId} · {family.familyName}
+                              </strong>
+                              <span>
+                                {family.seedPriority} · {family.seedStatus}
+                              </span>
+                              <small>{family.reasons.join(" | ")}</small>
+                            </div>
+                          ))
+                      )}
+                    </div>
+                  </div>
+
+                  <details style={styles.details}>
+                    <summary>Already covered families</summary>
+                    <div style={styles.directionList}>
+                      {diagnostic.matchingEngineV1Foundation
+                        .registrySeededCandidatePreview.alreadyCoveredFamilies
+                        .map((family) => (
+                          <div
+                            key={`covered-seed-${family.familyId}`}
+                            style={styles.selectionItem}
+                          >
+                            <strong>
+                              {family.familyId} · {family.familyName}
+                            </strong>
+                            <span>{family.seedStatus}</span>
+                            <small>{family.reasons.join(" | ")}</small>
+                          </div>
+                        ))}
+                    </div>
+                  </details>
+
+                  <details style={styles.details}>
+                    <summary>Excluded seed families</summary>
+                    <div style={styles.directionList}>
+                      {diagnostic.matchingEngineV1Foundation
+                        .registrySeededCandidatePreview.excludedFamilies.map(
+                          (family) => (
+                            <div
+                              key={`excluded-seed-${family.familyId}`}
+                              style={styles.blockedSelectionItem}
+                            >
+                              <strong>
+                                {family.familyId} · {family.familyName}
+                              </strong>
+                              <span>
+                                {family.seedPriority} · {family.seedStatus}
+                              </span>
+                              <small>{family.reasons.join(" | ")}</small>
+                            </div>
+                          )
+                        )}
+                    </div>
+                  </details>
+                </div>
+
                 <div style={styles.foundationGrid}>
                   <div style={styles.foundationPanel}>
                     <h3 style={styles.smallTitle}>CandidateProfile</h3>
@@ -1682,6 +1825,17 @@ const styles = {
     borderRadius: 12,
     background: "#ffffff",
     color: "#344054",
+    fontSize: 13,
+    marginBottom: 8,
+  },
+  seedItem: {
+    display: "grid",
+    gap: 4,
+    padding: 10,
+    border: "1px solid #d6e4ff",
+    borderRadius: 12,
+    background: "#f8fbff",
+    color: "#1d3b6f",
     fontSize: 13,
     marginBottom: 8,
   },

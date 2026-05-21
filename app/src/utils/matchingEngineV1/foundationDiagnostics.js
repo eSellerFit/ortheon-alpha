@@ -12,6 +12,7 @@ import { resolveCompositeFamilyMapping } from "./compositeFamilyResolver.js";
 import { buildDisplaySafeCandidateSelection } from "./displaySafeSelector.js";
 import { buildEvidenceSignals } from "./evidenceSignals.js";
 import { evaluateFamilyAlignment } from "./familyAlignment.js";
+import { buildRegistrySeededCandidatePreview } from "./registrySeededCandidatePreview.js";
 import {
   applyCompositeResolutionToRecommendationCandidate,
   recommendationCandidateFromV14Diagnostic,
@@ -86,6 +87,13 @@ export function buildMatchingEngineFoundationDiagnostics({
       displaySafeSelection: displaySafeCandidateSelection,
     });
   const gapSummary = candidateGenerationGapDiagnostics.gapSummary || {};
+  const registrySeededCandidatePreview = buildRegistrySeededCandidatePreview({
+    candidateProfile,
+    candidateGenerationGapDiagnostics,
+    displaySafeSelection: displaySafeCandidateSelection,
+    recommendationCandidates,
+  });
+  const previewSummary = registrySeededCandidatePreview.previewSummary || {};
   const mappedCandidateCount = recommendationCandidates.filter(
     (candidate) => Boolean(candidate.familyId)
   ).length;
@@ -179,12 +187,18 @@ export function buildMatchingEngineFoundationDiagnostics({
     missingPrimaryFamilyCount: gapSummary.missingPrimaryFamilyCount ?? 0,
     generatedUnsafeCandidateCount:
       gapSummary.generatedUnsafeCandidateCount ?? 0,
+    primarySeedFamilyCount: previewSummary.primarySeedFamilyCount ?? 0,
+    secondarySeedFamilyCount: previewSummary.secondarySeedFamilyCount ?? 0,
+    alreadyCoveredSeedFamilyCount:
+      previewSummary.alreadyCoveredSeedFamilyCount ?? 0,
+    excludedSeedFamilyCount: previewSummary.excludedSeedFamilyCount ?? 0,
     candidateProfile,
     evidenceSignals,
     recommendationCandidates,
     reportQaResult,
     displaySafeCandidateSelection,
     candidateGenerationGapDiagnostics,
+    registrySeededCandidatePreview,
     notes: [
       "Foundation diagnostics are internal/debug-only.",
       "Canonical family IDs are not faked from legacy role-library IDs.",
