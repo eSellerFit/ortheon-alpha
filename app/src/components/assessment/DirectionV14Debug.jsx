@@ -1342,6 +1342,163 @@ function DirectionV14Debug() {
                   </details>
                 </div>
 
+                <div style={styles.foundationPanelWide}>
+                  <h3 style={styles.smallTitle}>
+                    Seed-to-legacy bridge diagnostics
+                  </h3>
+                  <div style={styles.summaryGrid}>
+                    <div>
+                      <p style={styles.mutedLabel}>Bridged seeds</p>
+                      <strong>
+                        {
+                          diagnostic.matchingEngineV1Foundation
+                            .bridgedSeedCount
+                        }
+                      </strong>
+                    </div>
+                    <div>
+                      <p style={styles.mutedLabel}>Unbridged seeds</p>
+                      <strong>
+                        {
+                          diagnostic.matchingEngineV1Foundation
+                            .unbridgedSeedCount
+                        }
+                      </strong>
+                    </div>
+                    <div>
+                      <p style={styles.mutedLabel}>Already generated</p>
+                      <strong>
+                        {
+                          diagnostic.matchingEngineV1Foundation
+                            .alreadyGeneratedSeedCount
+                        }
+                      </strong>
+                    </div>
+                    <div>
+                      <p style={styles.mutedLabel}>Bridge / No legacy</p>
+                      <strong>
+                        {
+                          diagnostic.matchingEngineV1Foundation
+                            .bridgeAvailableNotGeneratedCount
+                        }
+                        {" / "}
+                        {
+                          diagnostic.matchingEngineV1Foundation
+                            .noLegacyDirectionAvailableCount
+                        }
+                      </strong>
+                    </div>
+                  </div>
+
+                  <div style={styles.selectionGrid}>
+                    <div>
+                      <h4 style={styles.tinyTitle}>
+                        Already generated seed families
+                      </h4>
+                      {diagnostic.matchingEngineV1Foundation
+                        .seedToLegacyBridgeDiagnostics.alreadyGeneratedSeeds
+                        .length === 0 ? (
+                        <p style={styles.emptyText}>
+                          No already generated seed families.
+                        </p>
+                      ) : (
+                        diagnostic.matchingEngineV1Foundation
+                          .seedToLegacyBridgeDiagnostics.alreadyGeneratedSeeds
+                          .map((family) => (
+                            <div
+                              key={`bridge-generated-${family.familyId}`}
+                              style={styles.selectionItem}
+                            >
+                              <strong>
+                                {family.familyId} · {family.familyName}
+                              </strong>
+                              <span>
+                                {formatText(family.bridgeStatus)} ·{" "}
+                                {formatText(family.recommendedNextStep)}
+                              </span>
+                              <small>
+                                Legacy:{" "}
+                                {family.matchingLegacyDirectionIds.join(", ") ||
+                                  "none"}
+                              </small>
+                              <small>{family.reasons.join(" | ")}</small>
+                            </div>
+                          ))
+                      )}
+                    </div>
+
+                    <div>
+                      <h4 style={styles.tinyTitle}>
+                        Bridged but not generated
+                      </h4>
+                      {diagnostic.matchingEngineV1Foundation
+                        .seedToLegacyBridgeDiagnostics.bridgedSeeds.length ===
+                      0 ? (
+                        <p style={styles.emptyText}>
+                          No bridged seed families pending generation.
+                        </p>
+                      ) : (
+                        diagnostic.matchingEngineV1Foundation
+                          .seedToLegacyBridgeDiagnostics.bridgedSeeds.map(
+                            (family) => (
+                              <div
+                                key={`bridge-available-${family.familyId}`}
+                                style={styles.seedItem}
+                              >
+                                <strong>
+                                  {family.familyId} · {family.familyName}
+                                </strong>
+                                <span>
+                                  {formatText(family.bridgeStatus)} ·{" "}
+                                  {formatText(family.recommendedNextStep)}
+                                </span>
+                                <small>
+                                  Legacy:{" "}
+                                  {family.matchingLegacyDirectionIds.join(
+                                    ", "
+                                  ) || "none"}
+                                </small>
+                                <small>{family.reasons.join(" | ")}</small>
+                              </div>
+                            )
+                          )
+                      )}
+                    </div>
+                  </div>
+
+                  <details style={styles.details}>
+                    <summary>Unbridged seed families</summary>
+                    <div style={styles.directionList}>
+                      {diagnostic.matchingEngineV1Foundation
+                        .seedToLegacyBridgeDiagnostics.unbridgedSeeds.length ===
+                      0 ? (
+                        <p style={styles.emptyText}>
+                          No unbridged seed families.
+                        </p>
+                      ) : (
+                        diagnostic.matchingEngineV1Foundation
+                          .seedToLegacyBridgeDiagnostics.unbridgedSeeds.map(
+                            (family) => (
+                              <div
+                                key={`bridge-missing-${family.familyId}`}
+                                style={styles.blockedSelectionItem}
+                              >
+                                <strong>
+                                  {family.familyId} · {family.familyName}
+                                </strong>
+                                <span>
+                                  {formatText(family.bridgeStatus)} ·{" "}
+                                  {formatText(family.recommendedNextStep)}
+                                </span>
+                                <small>{family.reasons.join(" | ")}</small>
+                              </div>
+                            )
+                          )
+                      )}
+                    </div>
+                  </details>
+                </div>
+
                 <div style={styles.foundationGrid}>
                   <div style={styles.foundationPanel}>
                     <h3 style={styles.smallTitle}>CandidateProfile</h3>

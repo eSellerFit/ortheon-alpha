@@ -13,6 +13,7 @@ import { buildDisplaySafeCandidateSelection } from "./displaySafeSelector.js";
 import { buildEvidenceSignals } from "./evidenceSignals.js";
 import { evaluateFamilyAlignment } from "./familyAlignment.js";
 import { buildRegistrySeededCandidatePreview } from "./registrySeededCandidatePreview.js";
+import { buildSeedToLegacyBridgeDiagnostics } from "./seedToLegacyBridgeDiagnostics.js";
 import {
   applyCompositeResolutionToRecommendationCandidate,
   recommendationCandidateFromV14Diagnostic,
@@ -94,6 +95,11 @@ export function buildMatchingEngineFoundationDiagnostics({
     recommendationCandidates,
   });
   const previewSummary = registrySeededCandidatePreview.previewSummary || {};
+  const seedToLegacyBridgeDiagnostics = buildSeedToLegacyBridgeDiagnostics({
+    registrySeededCandidatePreview,
+    recommendationCandidates,
+  });
+  const bridgeSummary = seedToLegacyBridgeDiagnostics.bridgeSummary || {};
   const mappedCandidateCount = recommendationCandidates.filter(
     (candidate) => Boolean(candidate.familyId)
   ).length;
@@ -192,6 +198,13 @@ export function buildMatchingEngineFoundationDiagnostics({
     alreadyCoveredSeedFamilyCount:
       previewSummary.alreadyCoveredSeedFamilyCount ?? 0,
     excludedSeedFamilyCount: previewSummary.excludedSeedFamilyCount ?? 0,
+    bridgedSeedCount: bridgeSummary.bridgedSeedCount ?? 0,
+    unbridgedSeedCount: bridgeSummary.unbridgedSeedCount ?? 0,
+    alreadyGeneratedSeedCount: bridgeSummary.alreadyGeneratedSeedCount ?? 0,
+    bridgeAvailableNotGeneratedCount:
+      bridgeSummary.bridgeAvailableNotGeneratedCount ?? 0,
+    noLegacyDirectionAvailableCount:
+      bridgeSummary.noLegacyDirectionAvailableCount ?? 0,
     candidateProfile,
     evidenceSignals,
     recommendationCandidates,
@@ -199,6 +212,7 @@ export function buildMatchingEngineFoundationDiagnostics({
     displaySafeCandidateSelection,
     candidateGenerationGapDiagnostics,
     registrySeededCandidatePreview,
+    seedToLegacyBridgeDiagnostics,
     notes: [
       "Foundation diagnostics are internal/debug-only.",
       "Canonical family IDs are not faked from legacy role-library IDs.",
