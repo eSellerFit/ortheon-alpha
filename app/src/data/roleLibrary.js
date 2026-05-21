@@ -1,6 +1,6 @@
 // src/data/roleLibrary.js
 // Ortheon Role Library v2.2 — Domain-Gated Master
-// 49 directions across 11 direction families
+// 52 directions across 11 direction families
 // financialPathway is NOT here — see salaryBenchmarks.js
 // Last validated: May 18, 2026
 
@@ -375,6 +375,138 @@ export const roleLibrary = [
     transitionPathway: "bridge",
     d4EvolutionPath:
       "AI-augmented communications strategist using AI for content production and monitoring while focusing on narrative strategy and stakeholder relationships",
+  },
+
+  // Marketing Pack 1 enterprise directions are kept near the existing
+  // communications/marketing bridge so v1.4's same-score candidate slice
+  // evaluates them before less-specific cross-spine directions.
+  {
+    directionId: "AD-8-E",
+    version: "v2.2",
+    onetCodes: ["11-2021.00", "13-1161.00"],
+    onetTitles: ["Marketing Managers", "Market Research Analysts and Marketing Specialists"],
+    category: "Arts, Design & Media",
+    metaDirection: "Marketing, PR & Brand",
+    context: "Enterprise",
+    contextCode: "E",
+    directionLabel: "Marketing / Growth Leadership — Enterprise",
+    aiDurabilityRating: "D3",
+    aiExposureSource: "Anthropic Economic Index 2026",
+    requiredCompetencies: [3, 4, 14, 10],
+    preferredCompetencies: [15, 8, 20, 5],
+    dominantAnchors: [
+      { anchorId: "management", idealMin: 6, idealMax: 10 },
+      { anchorId: "impact", idealMin: 6, idealMax: 10 },
+    ],
+    significantAnchors: [
+      { anchorId: "challenge", idealMin: 5, idealMax: 10 },
+      { anchorId: "security", idealMin: 4, idealMax: 9 },
+    ],
+    transitionCategory: "domain_heavy",
+    domainSpecificityRequired: "high",
+    relevantDomains: [
+      "marketing",
+      "growth marketing",
+      "brand strategy",
+      "demand generation",
+      "digital marketing",
+      "go-to-market",
+      "revenue marketing",
+      "customer segmentation",
+    ],
+    financialRiskLevel: "low",
+    bridgeDirections: ["AD-5-IF", "BF-10-IF"],
+    longerPathOptions: ["AD-9-E", "AD-10-E"],
+    stretchabilityRequired: "medium",
+    transitionPathway: "direct",
+    d4EvolutionPath:
+      "AI-augmented marketing leader using AI for campaign intelligence, audience research, and content workflows while focusing on strategy, brand judgment, and revenue alignment",
+  },
+
+  {
+    directionId: "AD-9-E",
+    version: "v2.2",
+    onetCodes: ["13-1161.00", "11-2021.00"],
+    onetTitles: ["Market Research Analysts and Marketing Specialists", "Marketing Managers"],
+    category: "Arts, Design & Media",
+    metaDirection: "Marketing, PR & Brand",
+    context: "Enterprise",
+    contextCode: "E",
+    directionLabel: "Performance / Growth Marketing — Enterprise",
+    aiDurabilityRating: "D3",
+    aiExposureSource: "Anthropic Economic Index 2026",
+    requiredCompetencies: [9, 3, 4, 8],
+    preferredCompetencies: [14, 20, 15, 5],
+    dominantAnchors: [
+      { anchorId: "technical", idealMin: 6, idealMax: 10 },
+      { anchorId: "challenge", idealMin: 5, idealMax: 10 },
+    ],
+    significantAnchors: [
+      { anchorId: "impact", idealMin: 5, idealMax: 10 },
+      { anchorId: "security", idealMin: 4, idealMax: 9 },
+    ],
+    transitionCategory: "domain_heavy",
+    domainSpecificityRequired: "high",
+    relevantDomains: [
+      "performance marketing",
+      "growth marketing",
+      "demand generation",
+      "paid acquisition",
+      "campaign management",
+      "digital marketing",
+      "conversion optimization",
+      "revenue pipeline",
+    ],
+    financialRiskLevel: "low",
+    bridgeDirections: ["AD-8-E", "BF-10-IF"],
+    longerPathOptions: ["AD-10-E"],
+    stretchabilityRequired: "medium",
+    transitionPathway: "direct",
+    d4EvolutionPath:
+      "AI-augmented growth marketer using AI for experimentation, audience analysis, and campaign optimization while focusing on performance judgment and revenue outcomes",
+  },
+
+  {
+    directionId: "AD-10-E",
+    version: "v2.2",
+    onetCodes: ["11-2021.00", "13-1161.00"],
+    onetTitles: ["Marketing Managers", "Market Research Analysts and Marketing Specialists"],
+    category: "Arts, Design & Media",
+    metaDirection: "Marketing, PR & Brand",
+    context: "Enterprise",
+    contextCode: "E",
+    directionLabel: "Product Marketing / GTM Strategy — Enterprise",
+    aiDurabilityRating: "D3",
+    aiExposureSource: "Anthropic Economic Index 2026",
+    requiredCompetencies: [3, 4, 14, 1],
+    preferredCompetencies: [8, 15, 20, 5],
+    dominantAnchors: [
+      { anchorId: "impact", idealMin: 6, idealMax: 10 },
+      { anchorId: "challenge", idealMin: 5, idealMax: 10 },
+    ],
+    significantAnchors: [
+      { anchorId: "management", idealMin: 4, idealMax: 9 },
+      { anchorId: "security", idealMin: 4, idealMax: 9 },
+    ],
+    transitionCategory: "domain_heavy",
+    domainSpecificityRequired: "high",
+    relevantDomains: [
+      "product marketing",
+      "go-to-market",
+      "gtm",
+      "positioning",
+      "messaging",
+      "launch strategy",
+      "sales enablement",
+      "customer segmentation",
+    ],
+    financialRiskLevel: "low",
+    bridgeDirections: ["AD-8-E", "AD-9-E", "CM-6-E"],
+    longerPathOptions: [],
+    stretchabilityRequired: "medium",
+    transitionPathway: "direct",
+    d4EvolutionPath:
+      "AI-augmented product marketer using AI for market research, launch planning, and sales enablement assets while focusing on positioning, narrative, and customer insight",
   },
 
   {
@@ -1797,7 +1929,7 @@ export const roleLibrary = [
   },
 
   // ============================================================
-  // ARTS, DESIGN & MEDIA (AD) — 3 directions
+  // ARTS, DESIGN & MEDIA (AD) — 6 directions
   // ============================================================
 
   {

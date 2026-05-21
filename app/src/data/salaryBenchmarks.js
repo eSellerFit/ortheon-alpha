@@ -1,6 +1,6 @@
 // src/data/salaryBenchmarks.js
 // Ortheon Salary Benchmarks v2.2 — Domain-Gated Master
-// 49 entries matching roleLibrary.js v2.2
+// 52 entries matching roleLibrary.js v2.2
 // Primary source: BLS OEWS May 2024 where available.
 // All figures USD annual. BLS covers employed workers only.
 // Fractional/Own Venture = estimated 12-month average including ramp-up.
@@ -1300,7 +1300,7 @@ export const salaryBenchmarks = [
   },
 
   // ============================================================
-  // ARTS, DESIGN & MEDIA — 3 entries
+  // ARTS, DESIGN & MEDIA — 6 entries
   // ============================================================
 
   {
@@ -1384,6 +1384,98 @@ export const salaryBenchmarks = [
       market: "US_national",
       notes:
         "BLS web/digital interface designers median $92,750. Independent UX/product design consultants with strong portfolio may earn more.",
+    },
+  },
+
+  {
+    directionId: "AD-8-E",
+    version: "v2.2",
+    lastUpdated: "2026-05-18",
+    validUntil: "2027-05-15",
+    dataQuality: "bls_validated",
+    sources: [
+      {
+        name: "BLS OEWS May 2024",
+        url: "https://www.bls.gov/ooh/management/advertising-promotions-and-marketing-managers.htm",
+        occupationCode: "11-2021",
+        occupationTitle: "Marketing Managers",
+        medianAnnualWage: 161030,
+        pulledAt: "2026-05-11",
+      },
+    ],
+    financialPathway: {
+      months1to3: 125000,
+      months4to6: 145000,
+      months7to12: 165000,
+      avg12month: 150000,
+      currency: "USD",
+      market: "US_national",
+      notes:
+        "BLS median $161,030 for marketing managers. Enterprise marketing/growth leadership compensation varies by company stage and scope.",
+    },
+  },
+
+  {
+    directionId: "AD-9-E",
+    version: "v2.2",
+    lastUpdated: "2026-05-18",
+    validUntil: "2027-05-15",
+    dataQuality: "bls_validated",
+    sources: [
+      {
+        name: "BLS OEWS May 2024",
+        url: "https://www.bls.gov/ooh/business-and-financial/market-research-analysts.htm",
+        occupationCode: "13-1161",
+        occupationTitle: "Market Research Analysts and Marketing Specialists",
+        medianAnnualWage: 76350,
+        pulledAt: "2026-05-11",
+      },
+      {
+        name: "BLS OEWS May 2024",
+        url: "https://www.bls.gov/ooh/management/advertising-promotions-and-marketing-managers.htm",
+        occupationCode: "11-2021",
+        occupationTitle: "Marketing Managers",
+        medianAnnualWage: 161030,
+        pulledAt: "2026-05-11",
+      },
+    ],
+    financialPathway: {
+      months1to3: 90000,
+      months4to6: 115000,
+      months7to12: 145000,
+      avg12month: 118000,
+      currency: "USD",
+      market: "US_national",
+      notes:
+        "BLS marketing specialists median $76,350 and marketing managers median $161,030. Performance/growth marketing roles span specialist through leadership levels.",
+    },
+  },
+
+  {
+    directionId: "AD-10-E",
+    version: "v2.2",
+    lastUpdated: "2026-05-18",
+    validUntil: "2027-05-15",
+    dataQuality: "bls_validated",
+    sources: [
+      {
+        name: "BLS OEWS May 2024",
+        url: "https://www.bls.gov/ooh/management/advertising-promotions-and-marketing-managers.htm",
+        occupationCode: "11-2021",
+        occupationTitle: "Marketing Managers",
+        medianAnnualWage: 161030,
+        pulledAt: "2026-05-11",
+      },
+    ],
+    financialPathway: {
+      months1to3: 105000,
+      months4to6: 130000,
+      months7to12: 155000,
+      avg12month: 135000,
+      currency: "USD",
+      market: "US_national",
+      notes:
+        "BLS does not isolate product marketing / GTM strategy. Marketing managers median $161,030 is used as the closest enterprise benchmark.",
     },
   },
 

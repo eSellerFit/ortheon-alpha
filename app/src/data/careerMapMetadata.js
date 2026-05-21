@@ -231,6 +231,33 @@ export const CAREER_MAP_METADATA = {
   },
 
   // ============================================================
+  // Marketing / growth directions
+  // ============================================================
+
+  "AD-8-E": {
+    mapQuadrant: "corporate_human",
+    mapCluster: "creative_content",
+    mapTags: ["marketing", "growth", "marketing_leadership", "enterprise"],
+  },
+
+  "AD-9-E": {
+    mapQuadrant: "corporate_operational",
+    mapCluster: "creative_content",
+    mapTags: [
+      "performance_marketing",
+      "growth_marketing",
+      "demand_generation",
+      "analytics",
+    ],
+  },
+
+  "AD-10-E": {
+    mapQuadrant: "corporate_human",
+    mapCluster: "creative_content",
+    mapTags: ["product_marketing", "gtm", "positioning", "launch_strategy"],
+  },
+
+  // ============================================================
   // Engineering / technical directions
   // ============================================================
 

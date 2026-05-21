@@ -60,6 +60,9 @@ const mappings = [
   ["AD-5-IF", "composite", null, ["MG-01", "MG-02", "IP-01"], "Fractional CMO / brand strategy blends marketing leadership, brand, and advisory practice."],
   ["AD-6-IF", "exact", "MG-04", [], "Knowledge management / content strategy maps to Content, SEO & Editorial Strategy."],
   ["AD-7-IF", "exact", "PT-04", [], "UX / product design consulting maps to Design & User Experience."],
+  ["AD-8-E", "exact", "MG-01", [], "Marketing / Growth Leadership maps cleanly to Marketing / Growth Leadership."],
+  ["AD-9-E", "exact", "MG-03", [], "Performance / Growth Marketing maps cleanly to Performance & Growth Marketing."],
+  ["AD-10-E", "exact", "MG-06", [], "Product Marketing / GTM Strategy maps cleanly to Product Marketing / GTM Strategy."],
 
   ["AE-4-IF", "composite", null, ["PT-03", "IP-01"], "Engineering consulting blends technical craft and solo advisory practice."],
   ["AE-5-E", "composite", null, ["OD-02", "PT-03"], "Technical program management / systems engineering blends program leadership and technical craft."],
