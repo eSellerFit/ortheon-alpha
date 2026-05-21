@@ -1,6 +1,6 @@
 // src/data/roleLibrary.js
 // Ortheon Role Library v2.2 — Domain-Gated Master
-// 52 directions across 11 direction families
+// 57 directions across 11 direction families
 // financialPathway is NOT here — see salaryBenchmarks.js
 // Last validated: May 18, 2026
 
@@ -17,7 +17,7 @@
 
 export const roleLibrary = [
   // ============================================================
-  // BUSINESS & FINANCE (BF) — 10 directions
+  // BUSINESS & FINANCE (BF) — 15 directions
   // ============================================================
 
   {
@@ -214,6 +214,221 @@ export const roleLibrary = [
     transitionPathway: "bridge",
     d4EvolutionPath:
       "AI-native people analyst using predictive attrition, performance modeling, and workforce analytics while focusing on strategic interpretation",
+  },
+
+  {
+    directionId: "BF-12-E",
+    version: "v2.2",
+    onetCodes: ["13-1071.00", "11-3121.00"],
+    onetTitles: ["Human Resources Specialists", "Human Resources Managers"],
+    category: "Business & Finance",
+    metaDirection: "People, HR & Organization",
+    context: "Enterprise",
+    contextCode: "E",
+    directionLabel: "Strategic HR Business Partner / People Partner — Enterprise",
+    aiDurabilityRating: "D2",
+    aiExposureSource: "Anthropic Economic Index 2026",
+    requiredCompetencies: [1, 10, 14, 4],
+    preferredCompetencies: [11, 12, 6, 8],
+    dominantAnchors: [
+      { anchorId: "management", idealMin: 6, idealMax: 10 },
+      { anchorId: "impact", idealMin: 6, idealMax: 10 },
+    ],
+    significantAnchors: [
+      { anchorId: "security", idealMin: 5, idealMax: 10 },
+      { anchorId: "challenge", idealMin: 4, idealMax: 9 },
+    ],
+    transitionCategory: "domain_heavy",
+    domainSpecificityRequired: "high",
+    relevantDomains: [
+      "hr business partner",
+      "human resources business partner",
+      "people partner",
+      "employee relations",
+      "manager advisory",
+      "stakeholder advisory",
+      "hr advisory",
+      "organizational effectiveness",
+    ],
+    financialRiskLevel: "low",
+    bridgeDirections: ["BF-4-E"],
+    longerPathOptions: ["BF-14-E", "BF-16-E"],
+    stretchabilityRequired: "medium",
+    transitionPathway: "direct",
+    d4EvolutionPath:
+      "AI-augmented HR business partner using AI for employee insight and policy analysis while focusing on advisory judgment, trust, and leader partnership",
+  },
+
+  {
+    directionId: "BF-13-E",
+    version: "v2.2",
+    onetCodes: ["13-1071.00", "11-3121.00"],
+    onetTitles: ["Human Resources Specialists", "Human Resources Managers"],
+    category: "Business & Finance",
+    metaDirection: "People, HR & Organization",
+    context: "Enterprise",
+    contextCode: "E",
+    directionLabel: "Talent Acquisition Leadership / Recruiting Strategy — Enterprise",
+    aiDurabilityRating: "D3",
+    aiExposureSource: "Anthropic Economic Index 2026",
+    requiredCompetencies: [10, 1, 14, 4],
+    preferredCompetencies: [8, 12, 15, 5],
+    dominantAnchors: [
+      { anchorId: "management", idealMin: 6, idealMax: 10 },
+      { anchorId: "impact", idealMin: 5, idealMax: 10 },
+    ],
+    significantAnchors: [
+      { anchorId: "challenge", idealMin: 5, idealMax: 10 },
+      { anchorId: "security", idealMin: 4, idealMax: 9 },
+    ],
+    transitionCategory: "domain_heavy",
+    domainSpecificityRequired: "high",
+    relevantDomains: [
+      "talent acquisition",
+      "recruiting",
+      "recruitment",
+      "sourcing",
+      "hiring strategy",
+      "candidate experience",
+      "employer brand",
+      "recruiting operations",
+    ],
+    financialRiskLevel: "low",
+    bridgeDirections: ["BF-4-E", "BF-5-E"],
+    longerPathOptions: ["BF-12-E"],
+    stretchabilityRequired: "medium",
+    transitionPathway: "direct",
+    d4EvolutionPath:
+      "AI-augmented talent acquisition leader using AI for sourcing intelligence and funnel analytics while focusing on hiring strategy, candidate judgment, and stakeholder trust",
+  },
+
+  {
+    directionId: "BF-14-E",
+    version: "v2.2",
+    onetCodes: ["11-3121.00", "13-1111.00"],
+    onetTitles: ["Human Resources Managers", "Management Analysts"],
+    category: "Business & Finance",
+    metaDirection: "People, HR & Organization",
+    context: "Enterprise",
+    contextCode: "E",
+    directionLabel: "Organizational Development / Change & HR Transformation — Enterprise",
+    aiDurabilityRating: "D2",
+    aiExposureSource: "Anthropic Economic Index 2026",
+    requiredCompetencies: [4, 10, 6, 1],
+    preferredCompetencies: [11, 5, 14, 12],
+    dominantAnchors: [
+      { anchorId: "impact", idealMin: 6, idealMax: 10 },
+      { anchorId: "challenge", idealMin: 5, idealMax: 10 },
+    ],
+    significantAnchors: [
+      { anchorId: "management", idealMin: 5, idealMax: 10 },
+      { anchorId: "security", idealMin: 4, idealMax: 9 },
+    ],
+    transitionCategory: "domain_heavy",
+    domainSpecificityRequired: "high",
+    relevantDomains: [
+      "organizational development",
+      "organization development",
+      "org design",
+      "organizational design",
+      "change management",
+      "hr transformation",
+      "culture transformation",
+      "operating model",
+    ],
+    financialRiskLevel: "low",
+    bridgeDirections: ["BF-4-E", "BF-12-E"],
+    longerPathOptions: ["TE-3-E"],
+    stretchabilityRequired: "medium",
+    transitionPathway: "direct",
+    d4EvolutionPath:
+      "AI-augmented organizational development leader using AI for diagnostics and change sensing while focusing on organizational judgment, adoption, and leadership alignment",
+  },
+
+  {
+    directionId: "BF-15-E",
+    version: "v2.2",
+    onetCodes: ["13-1151.00", "11-3131.00"],
+    onetTitles: ["Training and Development Specialists", "Training and Development Managers"],
+    category: "Business & Finance",
+    metaDirection: "People, HR & Organization",
+    context: "Enterprise",
+    contextCode: "E",
+    directionLabel: "Learning & Development / Leadership Development — Enterprise",
+    aiDurabilityRating: "D3",
+    aiExposureSource: "Anthropic Economic Index 2026",
+    requiredCompetencies: [11, 10, 1, 4],
+    preferredCompetencies: [3, 5, 6, 13],
+    dominantAnchors: [
+      { anchorId: "impact", idealMin: 7, idealMax: 10 },
+      { anchorId: "management", idealMin: 5, idealMax: 10 },
+    ],
+    significantAnchors: [
+      { anchorId: "challenge", idealMin: 4, idealMax: 9 },
+      { anchorId: "security", idealMin: 4, idealMax: 9 },
+    ],
+    transitionCategory: "domain_heavy",
+    domainSpecificityRequired: "high",
+    relevantDomains: [
+      "learning and development",
+      "l&d",
+      "leadership development",
+      "training",
+      "capability building",
+      "talent development",
+      "employee development",
+      "learning programs",
+    ],
+    financialRiskLevel: "low",
+    bridgeDirections: ["BF-4-E", "ED-3-IF", "ED-5-IF"],
+    longerPathOptions: ["ED-4-IF"],
+    stretchabilityRequired: "medium",
+    transitionPathway: "direct",
+    d4EvolutionPath:
+      "AI-augmented L&D leader using AI for learning content and skills diagnostics while focusing on leadership development, behavior change, and capability strategy",
+  },
+
+  {
+    directionId: "BF-16-E",
+    version: "v2.2",
+    onetCodes: ["13-1141.00", "11-3111.00"],
+    onetTitles: ["Compensation, Benefits, and Job Analysis Specialists", "Compensation and Benefits Managers"],
+    category: "Business & Finance",
+    metaDirection: "People, HR & Organization",
+    context: "Enterprise",
+    contextCode: "E",
+    directionLabel: "Total Rewards / Compensation & Benefits — Enterprise",
+    aiDurabilityRating: "D3",
+    aiExposureSource: "Anthropic Economic Index 2026",
+    requiredCompetencies: [8, 9, 7, 1],
+    preferredCompetencies: [4, 10, 12, 20],
+    dominantAnchors: [
+      { anchorId: "technical", idealMin: 6, idealMax: 10 },
+      { anchorId: "security", idealMin: 5, idealMax: 10 },
+    ],
+    significantAnchors: [
+      { anchorId: "impact", idealMin: 5, idealMax: 10 },
+      { anchorId: "management", idealMin: 4, idealMax: 9 },
+    ],
+    transitionCategory: "domain_heavy",
+    domainSpecificityRequired: "high",
+    relevantDomains: [
+      "compensation",
+      "benefits",
+      "total rewards",
+      "pay equity",
+      "salary benchmarking",
+      "job architecture",
+      "incentive design",
+      "rewards strategy",
+    ],
+    financialRiskLevel: "low",
+    bridgeDirections: ["BF-4-E", "BF-5-E", "BF-6-E"],
+    longerPathOptions: [],
+    stretchabilityRequired: "medium",
+    transitionPathway: "direct",
+    d4EvolutionPath:
+      "AI-augmented total rewards leader using AI for benchmarking and pay analytics while focusing on rewards strategy, equity judgment, and governance",
   },
 
   {

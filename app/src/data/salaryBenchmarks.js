@@ -1,6 +1,6 @@
 // src/data/salaryBenchmarks.js
 // Ortheon Salary Benchmarks v2.2 — Domain-Gated Master
-// 52 entries matching roleLibrary.js v2.2
+// 57 entries matching roleLibrary.js v2.2
 // Primary source: BLS OEWS May 2024 where available.
 // All figures USD annual. BLS covers employed workers only.
 // Fractional/Own Venture = estimated 12-month average including ramp-up.
@@ -8,7 +8,7 @@
 
 export const salaryBenchmarks = [
   // ============================================================
-  // BUSINESS & FINANCE — 10 entries
+  // BUSINESS & FINANCE — 15 entries
   // ============================================================
 
   {
@@ -156,6 +156,186 @@ export const salaryBenchmarks = [
       market: "US_national",
       notes:
         "BLS data scientist median $112,590. People analytics blends data science and HR manager ranges. Senior people analytics leaders at large enterprises typically $120k-$160k.",
+    },
+  },
+
+  {
+    directionId: "BF-12-E",
+    version: "v2.2",
+    lastUpdated: "2026-05-18",
+    validUntil: "2027-05-15",
+    dataQuality: "bls_validated",
+    sources: [
+      {
+        name: "BLS OEWS May 2024",
+        url: "https://www.bls.gov/ooh/business-and-financial/human-resources-specialists.htm",
+        occupationCode: "13-1071",
+        occupationTitle: "Human Resources Specialists",
+        medianAnnualWage: 72910,
+        pulledAt: "2026-05-11",
+      },
+      {
+        name: "BLS OEWS May 2024",
+        url: "https://www.bls.gov/ooh/management/human-resources-managers.htm",
+        occupationCode: "11-3121",
+        occupationTitle: "Human Resources Managers",
+        medianAnnualWage: 140030,
+        pulledAt: "2026-05-11",
+      },
+    ],
+    financialPathway: {
+      months1to3: 90000,
+      months4to6: 105000,
+      months7to12: 125000,
+      avg12month: 110000,
+      currency: "USD",
+      market: "US_national",
+      notes:
+        "BLS range: HR Specialist $72,910 to HR Manager $140,030. Enterprise HRBP / People Partner roles typically sit between senior specialist and HR director levels.",
+    },
+  },
+
+  {
+    directionId: "BF-13-E",
+    version: "v2.2",
+    lastUpdated: "2026-05-18",
+    validUntil: "2027-05-15",
+    dataQuality: "bls_validated",
+    sources: [
+      {
+        name: "BLS OEWS May 2024",
+        url: "https://www.bls.gov/ooh/business-and-financial/human-resources-specialists.htm",
+        occupationCode: "13-1071",
+        occupationTitle: "Human Resources Specialists",
+        medianAnnualWage: 72910,
+        pulledAt: "2026-05-11",
+      },
+      {
+        name: "BLS OEWS May 2024",
+        url: "https://www.bls.gov/ooh/management/human-resources-managers.htm",
+        occupationCode: "11-3121",
+        occupationTitle: "Human Resources Managers",
+        medianAnnualWage: 140030,
+        pulledAt: "2026-05-11",
+      },
+    ],
+    financialPathway: {
+      months1to3: 85000,
+      months4to6: 100000,
+      months7to12: 120000,
+      avg12month: 105000,
+      currency: "USD",
+      market: "US_national",
+      notes:
+        "BLS range: HR Specialist $72,910 to HR Manager $140,030. Talent acquisition leadership benchmark reflects recruiting manager/director roles in larger employers.",
+    },
+  },
+
+  {
+    directionId: "BF-14-E",
+    version: "v2.2",
+    lastUpdated: "2026-05-18",
+    validUntil: "2027-05-15",
+    dataQuality: "bls_validated",
+    sources: [
+      {
+        name: "BLS OEWS May 2024",
+        url: "https://www.bls.gov/ooh/management/human-resources-managers.htm",
+        occupationCode: "11-3121",
+        occupationTitle: "Human Resources Managers",
+        medianAnnualWage: 140030,
+        pulledAt: "2026-05-11",
+      },
+      {
+        name: "BLS OEWS May 2024",
+        url: "https://www.bls.gov/ooh/business-and-financial/management-analysts.htm",
+        occupationCode: "13-1111",
+        occupationTitle: "Management Analysts",
+        medianAnnualWage: 99410,
+        pulledAt: "2026-05-11",
+      },
+    ],
+    financialPathway: {
+      months1to3: 95000,
+      months4to6: 115000,
+      months7to12: 135000,
+      avg12month: 120000,
+      currency: "USD",
+      market: "US_national",
+      notes:
+        "Benchmark blends HR Manager $140,030 and Management Analyst $99,410. OD/change and HR transformation roles vary by scope and enterprise transformation ownership.",
+    },
+  },
+
+  {
+    directionId: "BF-15-E",
+    version: "v2.2",
+    lastUpdated: "2026-05-18",
+    validUntil: "2027-05-15",
+    dataQuality: "estimated",
+    sources: [
+      {
+        name: "BLS OEWS May 2024",
+        url: "https://www.bls.gov/ooh/business-and-financial/training-and-development-specialists.htm",
+        occupationCode: "13-1151",
+        occupationTitle: "Training and Development Specialists",
+        medianAnnualWage: 65850,
+        pulledAt: "2026-05-11",
+      },
+      {
+        name: "BLS OEWS May 2024",
+        url: "https://www.bls.gov/ooh/management/training-and-development-managers.htm",
+        occupationCode: "11-3131",
+        occupationTitle: "Training and Development Managers",
+        medianAnnualWage: 125040,
+        pulledAt: "2026-05-11",
+      },
+    ],
+    financialPathway: {
+      months1to3: 80000,
+      months4to6: 95000,
+      months7to12: 115000,
+      avg12month: 100000,
+      currency: "USD",
+      market: "US_national",
+      notes:
+        "BLS range: Training and Development Specialist $65,850 to manager-level L&D benchmark. Enterprise leadership development roles are typically senior specialist through director level.",
+    },
+  },
+
+  {
+    directionId: "BF-16-E",
+    version: "v2.2",
+    lastUpdated: "2026-05-18",
+    validUntil: "2027-05-15",
+    dataQuality: "estimated",
+    sources: [
+      {
+        name: "BLS OEWS May 2024",
+        url: "https://www.bls.gov/ooh/business-and-financial/compensation-benefits-and-job-analysis-specialists.htm",
+        occupationCode: "13-1141",
+        occupationTitle: "Compensation, Benefits, and Job Analysis Specialists",
+        medianAnnualWage: 77650,
+        pulledAt: "2026-05-11",
+      },
+      {
+        name: "BLS OEWS May 2024",
+        url: "https://www.bls.gov/ooh/management/compensation-and-benefits-managers.htm",
+        occupationCode: "11-3111",
+        occupationTitle: "Compensation and Benefits Managers",
+        medianAnnualWage: 140360,
+        pulledAt: "2026-05-11",
+      },
+    ],
+    financialPathway: {
+      months1to3: 90000,
+      months4to6: 110000,
+      months7to12: 135000,
+      avg12month: 118000,
+      currency: "USD",
+      market: "US_national",
+      notes:
+        "Benchmark blends compensation/benefits specialist and manager roles. Total rewards leadership typically commands a premium when scope includes pay equity, job architecture, and incentive design.",
     },
   },
 

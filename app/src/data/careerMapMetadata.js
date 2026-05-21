@@ -156,6 +156,36 @@ export const CAREER_MAP_METADATA = {
     mapTags: ["people_analytics", "hr_tech", "workforce", "analytics"],
   },
 
+  "BF-12-E": {
+    mapQuadrant: "corporate_human",
+    mapCluster: "people_operations",
+    mapTags: ["hrbp", "people_partner", "employee_relations", "stakeholder_advisory"],
+  },
+
+  "BF-13-E": {
+    mapQuadrant: "corporate_human",
+    mapCluster: "people_operations",
+    mapTags: ["talent_acquisition", "recruiting", "sourcing", "employer_brand"],
+  },
+
+  "BF-14-E": {
+    mapQuadrant: "corporate_human",
+    mapCluster: "people_operations",
+    mapTags: ["organizational_development", "change_management", "hr_transformation", "org_design"],
+  },
+
+  "BF-15-E": {
+    mapQuadrant: "corporate_human",
+    mapCluster: "learning_workforce_development",
+    mapTags: ["learning_development", "leadership_development", "training", "capability_building"],
+  },
+
+  "BF-16-E": {
+    mapQuadrant: "corporate_operational",
+    mapCluster: "people_operations",
+    mapTags: ["total_rewards", "compensation", "benefits", "pay_equity"],
+  },
+
   "BF-7-IF": {
     mapQuadrant: "autonomous_human",
     mapCluster: "independent_advisory",
