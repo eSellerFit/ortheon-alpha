@@ -3,9 +3,9 @@ import { createPortal } from "react-dom";
 import CareerDirectionMap from "./CareerDirectionMap";
 import PdfReport from "./PdfReport";
 import {
-  generateCareerMap,
-  generateRecommendations,
-} from "../../utils/scoring";
+  generateLiveCareerMap,
+  generateLiveRecommendations,
+} from "../../utils/foundationAdapter/liveRecommendationAdapter";
 import {
   getAssessment,
   saveAssessmentResults,
@@ -467,8 +467,8 @@ function ResultsStep({ assessmentId }) {
         setErrorMessage("");
 
         const assessment = await getAssessment(assessmentId);
-        const generatedRecommendations = generateRecommendations(assessment);
-        const generatedCareerMap = generateCareerMap(
+        const generatedRecommendations = await generateLiveRecommendations(assessment);
+        const generatedCareerMap = generateLiveCareerMap(
           assessment,
           generatedRecommendations
         );
