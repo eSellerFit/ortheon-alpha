@@ -12,6 +12,7 @@ import { resolveCompositeFamilyMapping } from "./compositeFamilyResolver.js";
 import { buildDisplaySafeCandidateSelection } from "./displaySafeSelector.js";
 import { buildEvidenceSignals } from "./evidenceSignals.js";
 import { evaluateFamilyAlignment } from "./familyAlignment.js";
+import { buildFoundationSelectedRecommendations } from "./foundationRecommendationSelector.js";
 import { buildRegistrySeededCandidatePreview } from "./registrySeededCandidatePreview.js";
 import { buildRoleLibraryCoverageReadinessReport } from "./roleLibraryCoverageReadinessReport.js";
 import { buildSeedToLegacyBridgeDiagnostics } from "./seedToLegacyBridgeDiagnostics.js";
@@ -25,26 +26,12 @@ import {
 } from "../../data/directionFamilyRegistryV1.js";
 import { getCanonicalFamilyCount } from "./familyRegistry.js";
 
-export function buildMatchingEngineFoundationDiagnostics({
-  assessment = {},
-  directionDiagnostics = {},
+function buildRecommendationCandidates({
+  diagnosticItems = [],
+  candidateProfile = {},
+  evidenceSignals = [],
 } = {}) {
-  const candidateProfile = buildCandidateProfile({
-    assessment,
-    evidenceModel: directionDiagnostics.evidenceModel || {},
-    directionDiagnostics,
-  });
-
-  const evidenceSignals = buildEvidenceSignals({
-    candidateProfile,
-  });
-
-  const diagnosticItems = [
-    ...(directionDiagnostics.recommendations || []),
-    ...(directionDiagnostics.suppressedDirections || []),
-  ];
-
-  const recommendationCandidates = diagnosticItems.map((item) => {
+  return diagnosticItems.map((item) => {
     const initialRecommendationCandidate = recommendationCandidateFromV14Diagnostic({
       item,
       evidenceSignals,
@@ -68,6 +55,40 @@ export function buildMatchingEngineFoundationDiagnostics({
       }),
     };
   });
+}
+
+export function buildMatchingEngineFoundationDiagnostics({
+  assessment = {},
+  directionDiagnostics = {},
+} = {}) {
+  const candidateProfile = buildCandidateProfile({
+    assessment,
+    evidenceModel: directionDiagnostics.evidenceModel || {},
+    directionDiagnostics,
+  });
+
+  const evidenceSignals = buildEvidenceSignals({
+    candidateProfile,
+  });
+
+  const diagnosticItems = [
+    ...(directionDiagnostics.recommendations || []),
+    ...(directionDiagnostics.suppressedDirections || []),
+  ];
+  const recommendationCandidates = buildRecommendationCandidates({
+    diagnosticItems,
+    candidateProfile,
+    evidenceSignals,
+  });
+  const foundationSelectionDiagnosticItems =
+    directionDiagnostics.lensDiagnostics?.length > 0
+      ? directionDiagnostics.lensDiagnostics
+      : diagnosticItems;
+  const foundationSelectionCandidates = buildRecommendationCandidates({
+    diagnosticItems: foundationSelectionDiagnosticItems,
+    candidateProfile,
+    evidenceSignals,
+  });
 
   const reportQaResult = runReportQa({
     candidateProfile,
@@ -80,6 +101,23 @@ export function buildMatchingEngineFoundationDiagnostics({
     recommendationCandidates,
     reportQaResult,
   });
+  const foundationSelectionReportQaResult = runReportQa({
+    candidateProfile,
+    evidenceSignals,
+    recommendationCandidates: foundationSelectionCandidates,
+  });
+  const foundationSelectionDisplaySafeCandidateSelection =
+    buildDisplaySafeCandidateSelection({
+      candidateProfile,
+      evidenceSignals,
+      recommendationCandidates: foundationSelectionCandidates,
+      reportQaResult: foundationSelectionReportQaResult,
+    });
+  const foundationSelectedRecommendations =
+    buildFoundationSelectedRecommendations({
+      displaySafeSelection: foundationSelectionDisplaySafeCandidateSelection,
+      recommendationCandidates: foundationSelectionCandidates,
+    });
   const selectionSummary =
     displaySafeCandidateSelection.selectionSummary || {};
   const candidateGenerationGapDiagnostics =
@@ -232,6 +270,10 @@ export function buildMatchingEngineFoundationDiagnostics({
     recommendationCandidates,
     reportQaResult,
     displaySafeCandidateSelection,
+    foundationSelectionCandidates,
+    foundationSelectionReportQaResult,
+    foundationSelectionDisplaySafeCandidateSelection,
+    foundationSelectedRecommendations,
     candidateGenerationGapDiagnostics,
     registrySeededCandidatePreview,
     seedToLegacyBridgeDiagnostics,

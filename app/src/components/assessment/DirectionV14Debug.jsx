@@ -1739,6 +1739,176 @@ function DirectionV14Debug() {
             )}
           </SectionCard>
 
+          <SectionCard title="Foundation-selected recommendations">
+            {diagnostic.matchingEngineV1Foundation
+              ?.foundationSelectedRecommendations ? (
+              <>
+                <div style={styles.summaryGrid}>
+                  <div>
+                    <p style={styles.mutedLabel}>Selected</p>
+                    <strong>
+                      {
+                        diagnostic.matchingEngineV1Foundation
+                          .foundationSelectedRecommendations.selectionSummary
+                          .selectedRecommendationCount
+                      }
+                    </strong>
+                  </div>
+                  <div>
+                    <p style={styles.mutedLabel}>Primary</p>
+                    <strong>
+                      {
+                        diagnostic.matchingEngineV1Foundation
+                          .foundationSelectedRecommendations.selectionSummary
+                          .primaryRecommendationCount
+                      }
+                    </strong>
+                  </div>
+                  <div>
+                    <p style={styles.mutedLabel}>Adjacent</p>
+                    <strong>
+                      {
+                        diagnostic.matchingEngineV1Foundation
+                          .foundationSelectedRecommendations.selectionSummary
+                          .adjacentRecommendationCount
+                      }
+                    </strong>
+                  </div>
+                  <div>
+                    <p style={styles.mutedLabel}>Bridge / excluded</p>
+                    <strong>
+                      {
+                        diagnostic.matchingEngineV1Foundation
+                          .foundationSelectedRecommendations.selectionSummary
+                          .bridgeOrConditionalRecommendationCount
+                      }
+                      {" / "}
+                      {
+                        diagnostic.matchingEngineV1Foundation
+                          .foundationSelectedRecommendations.selectionSummary
+                          .excludedCandidateCount
+                      }
+                    </strong>
+                  </div>
+                </div>
+
+                <div style={styles.foundationPanelWide}>
+                  <h3 style={styles.smallTitle}>Clean display-safe lane</h3>
+                  <div style={styles.directionList}>
+                    {diagnostic.matchingEngineV1Foundation
+                      .foundationSelectedRecommendations
+                      .selectedRecommendations.length === 0 ? (
+                      <p style={styles.emptyText}>
+                        No display-safe foundation recommendations selected.
+                      </p>
+                    ) : (
+                      diagnostic.matchingEngineV1Foundation
+                        .foundationSelectedRecommendations
+                        .selectedRecommendations.map((candidate) => (
+                          <div
+                            key={`foundation-selected-${candidate.legacyDirectionId}`}
+                            style={styles.selectionItem}
+                          >
+                            <strong>
+                              #{candidate.rank} {candidate.displayLabel}
+                            </strong>
+                            <span>
+                              {candidate.recommendedDisplayClassification} ·{" "}
+                              {formatText(candidate.familyId)} ·{" "}
+                              {formatText(candidate.displaySafeStatus)}
+                            </span>
+                            <small>
+                              Mapping:{" "}
+                              {formatText(candidate.canonicalMappingConfidence)}
+                              {" · "}
+                              Alignment: {formatText(candidate.alignmentStatus)}
+                              {" · "}
+                              Lens / candidate:{" "}
+                              {formatText(candidate.overallLensScore)} /{" "}
+                              {formatText(candidate.candidateScore)}
+                            </small>
+                          </div>
+                        ))
+                    )}
+                  </div>
+                </div>
+
+                <div style={styles.foundationPanelWide}>
+                  <h3 style={styles.smallTitle}>Bridge / conditional lane</h3>
+                  <div style={styles.directionList}>
+                    {diagnostic.matchingEngineV1Foundation
+                      .foundationSelectedRecommendations
+                      .bridgeOrConditionalRecommendations.length === 0 ? (
+                      <p style={styles.emptyText}>
+                        No bridge or conditional foundation candidates selected.
+                      </p>
+                    ) : (
+                      diagnostic.matchingEngineV1Foundation
+                        .foundationSelectedRecommendations
+                        .bridgeOrConditionalRecommendations.map((candidate) => (
+                          <div
+                            key={`foundation-conditional-${candidate.legacyDirectionId}`}
+                            style={styles.seedItem}
+                          >
+                            <strong>
+                              #{candidate.rank} {candidate.displayLabel}
+                            </strong>
+                            <span>
+                              {candidate.recommendedDisplayClassification} ·{" "}
+                              {formatText(candidate.familyId)} ·{" "}
+                              {formatText(candidate.displaySafeStatus)}
+                            </span>
+                          </div>
+                        ))
+                    )}
+                  </div>
+                </div>
+
+                <details style={styles.details}>
+                  <summary>Foundation selection exclusions</summary>
+                  <div style={styles.directionList}>
+                    {diagnostic.matchingEngineV1Foundation
+                      .foundationSelectedRecommendations.excludedCandidates
+                      .length === 0 ? (
+                      <p style={styles.emptyText}>
+                        No candidates excluded from the foundation selection.
+                      </p>
+                    ) : (
+                      diagnostic.matchingEngineV1Foundation
+                        .foundationSelectedRecommendations.excludedCandidates.map(
+                          (candidate, index) => (
+                            <div
+                              key={`foundation-excluded-${candidate.legacyDirectionId || index}`}
+                              style={styles.blockedSelectionItem}
+                            >
+                              <strong>
+                                {candidate.displayLabel ||
+                                  candidate.legacyDirectionId ||
+                                  "Unknown candidate"}
+                              </strong>
+                              <span>
+                                {formatText(candidate.familyId)} ·{" "}
+                                {formatText(candidate.displaySafeStatus)}
+                              </span>
+                              <small>
+                                {candidate.exclusionReason ||
+                                  candidate.blockingReasons?.join(" | ") ||
+                                  "Excluded by foundation selection."}
+                              </small>
+                            </div>
+                          )
+                        )
+                    )}
+                  </div>
+                </details>
+              </>
+            ) : (
+              <p style={styles.emptyText}>
+                Foundation-selected recommendations are not available.
+              </p>
+            )}
+          </SectionCard>
+
           <SectionCard title="Final calibrated recommendations">
             <div style={styles.directionList}>
               {diagnostic.recommendations.map((item) => {
