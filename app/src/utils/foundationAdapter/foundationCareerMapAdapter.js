@@ -92,6 +92,11 @@ const TECH_HEAVY_SUMMARY_TERMS = [
   "engineering leadership",
   "ai transformation",
   "enterprise execution",
+  "platform-scale execution",
+  "digital transformation",
+  "platform modernization",
+  "technology strategy",
+  "technology executive",
 ];
 
 function isTechHeavySummary(mainPattern) {

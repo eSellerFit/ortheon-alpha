@@ -280,6 +280,12 @@ function adaptCandidateToLiveShape(candidate, assessment, liveProfile) {
       canonicalMappingConfidence:
         candidate.canonicalMappingConfidence || null,
       widenedFromBridge: candidate._widenedFromBridge || false,
+      workforceScoreCalibrated: candidate._workforceScoreCalibrated || false,
+      originalScore: candidate._originalScoreBeforeCalibration ?? null,
+      calibratedScore: candidate._workforceScoreCalibrated
+        ? (Number(candidate.overallLensScore) || null)
+        : null,
+      calibrationReason: candidate._calibrationReason || null,
     },
   };
 }
@@ -314,30 +320,40 @@ async function runFoundationPath(assessment) {
     return null;
   }
 
-  const { passed, rejected, profile } = applyLiveQualityGate(
+  const { passed, rejected, profile, debugMeta } = applyLiveQualityGate(
     selectedRecommendations,
     showableBridges,
     assessment,
     FOUNDATION_MIN_LIVE_COUNT
   );
 
-  console.log(
-    "[liveAdapter] Quality gate result:",
-    {
-      passed: passed.length,
-      rejected: rejected.length,
-      workforceProfile: profile.workforce.isWorkforce,
-      workforceStrength: profile.workforce.strength,
-      techExec: profile.techExec.isTechExec,
-    }
-  );
+  console.log("[liveAdapter] Quality gate result:", {
+    passed: passed.length,
+    rejected: rejected.length,
+    workforcePeopleProfile: profile.workforcePeopleProfile,
+    workforceStrength: profile.workforce.strength,
+    techExec: profile.techExec.isTechExec,
+    fallbackType: debugMeta?.fallbackType,
+    blockedTe: debugMeta?.blockedTeCandidates?.length,
+  });
 
   if (passed.length < FOUNDATION_MIN_LIVE_COUNT) {
-    console.warn(
-      "[liveAdapter] Quality gate returned too few candidates — falling back to scoring.js.",
-      { passedCount: passed.length, rejectedCount: rejected.length }
-    );
-    return null;
+    // For confirmed workforce-primary profiles, do NOT fall back to scoring.js —
+    // it uses "technology" domain signal to produce TE-* results.
+    // Accept whatever workforce candidates the gate produced.
+    if (profile.workforcePeopleProfile && passed.length > 0) {
+      console.warn(
+        "[liveAdapter] Workforce profile: using available gate-passed candidates instead of scoring.js fallback.",
+        debugMeta
+      );
+      // continue with what we have
+    } else {
+      console.warn(
+        "[liveAdapter] Quality gate returned too few candidates — falling back to scoring.js.",
+        { passedCount: passed.length, rejectedCount: rejected.length }
+      );
+      return null;
+    }
   }
 
   const adapted = passed
@@ -347,11 +363,27 @@ async function runFoundationPath(assessment) {
     .filter(Boolean);
 
   if (adapted.length < FOUNDATION_MIN_LIVE_COUNT) {
-    console.warn(
-      "[liveAdapter] Adaptation produced too few results — falling back to scoring.js.",
-      { adaptedCount: adapted.length }
-    );
-    return null;
+    if (profile.workforcePeopleProfile && adapted.length > 0) {
+      console.warn(
+        "[liveAdapter] Workforce profile: adaptation produced few results but not falling back.",
+        { adaptedCount: adapted.length }
+      );
+      // continue — don't fall back to scoring.js
+    } else {
+      console.warn(
+        "[liveAdapter] Adaptation produced too few results — falling back to scoring.js.",
+        { adaptedCount: adapted.length }
+      );
+      return null;
+    }
+  }
+
+  // Attach gate debug metadata to the first result for observability
+  if (adapted.length > 0 && debugMeta) {
+    adapted[0] = {
+      ...adapted[0],
+      _liveGateDebug: debugMeta,
+    };
   }
 
   return adapted;
@@ -379,13 +411,16 @@ export async function generateLiveRecommendations(assessment) {
 
 export function generateLiveCareerMap(assessment, recommendations) {
   const baseMap = generateCareerMap(assessment, recommendations);
+  const liveProfile = buildLiveProfile(assessment);
 
-  if (
+  const hasFoundationSource =
     Array.isArray(recommendations) &&
     recommendations.length > 0 &&
-    recommendations[0]?._foundationSource
-  ) {
-    const liveProfile = buildLiveProfile(assessment);
+    recommendations[0]?._foundationSource;
+
+  // Always sanitize for confirmed workforce-primary profiles regardless of
+  // whether recommendations came from the foundation path or scoring.js fallback.
+  if (hasFoundationSource || liveProfile.workforcePeopleProfile) {
     return sanitizeFoundationCareerMap(baseMap, liveProfile);
   }
 

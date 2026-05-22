@@ -83,8 +83,10 @@ const WORKFORCE_STRONG_KEYWORDS = [
   "capacity planning",
   "staffing model",
   "headcount model",
+  "headcount modeling",
   "headcount planning",
   "labor supply planning",
+  "labor supply",
   "workforce intelligence",
   "talent intelligence",
   "people analytics",
@@ -99,6 +101,12 @@ const WORKFORCE_STRONG_KEYWORDS = [
   "gig workforce",
   "frontline workforce",
   "workforce forecasting",
+  "ta hub",
+  "ta hubs",
+  "hr operations",
+  "people technology",
+  "workforce systems",
+  "talent operations",
 ];
 
 const HR_PEOPLE_KEYWORDS = [
@@ -161,6 +169,43 @@ const HR_TITLE_PHRASES = [
   "director of people",
   "director of hr",
 ];
+
+// Foundation family IDs that are safe/appropriate for workforce profiles
+export const WORKFORCE_SAFE_FAMILY_IDS = new Set([
+  "WI-01", "WI-02", "WI-03", "WI-04",
+  "PO-01", "PO-02", "PO-03", "PO-04", "PO-05", "PO-06",
+  "OD-01", "OD-02",
+  "MP-05",
+]);
+
+// Role library direction IDs for workforce roles (for emergency injection)
+const WORKFORCE_SAFE_LEGACY_IDS = [
+  "BF-5-E",  // Workforce Planning / Talent Intelligence (WI-01 + WI-04)
+  "BF-13-E", // Talent Acquisition Leadership / Recruiting Strategy (PO-03)
+  "BF-4-E",  // HR & People Operations (PO-01)
+  "BF-12-E", // Strategic HR Business Partner (PO-02)
+  "BF-14-E", // Organizational Development / HR Transformation (PO-04)
+  "BF-6-E",  // People Analytics / HR Tech (WI-02 + WI-03)
+  "BF-15-E", // Learning & Development (PO-05)
+  "BF-16-E", // Total Rewards (PO-06)
+];
+
+// Family ID → spine mapping for injected workforce candidates
+const WORKFORCE_FAMILY_SPINE = {
+  "WI-01": "workforce_intelligence",
+  "WI-02": "workforce_intelligence",
+  "WI-03": "workforce_intelligence",
+  "WI-04": "workforce_intelligence",
+  "PO-01": "people_operations",
+  "PO-02": "people_operations",
+  "PO-03": "people_operations",
+  "PO-04": "people_operations",
+  "PO-05": "people_operations",
+  "PO-06": "people_operations",
+  "OD-01": "organizational_development",
+  "OD-02": "organizational_development",
+  "MP-05": "mission_social",
+};
 
 export function detectWorkforceProfile(assessment) {
   const text = buildSearchText(assessment);
@@ -319,12 +364,21 @@ export function detectMarketingProfile(assessment) {
 // ── Composite profile ──────────────────────────────────────────────────────────
 
 export function buildLiveProfile(assessment) {
-  return {
-    workforce: detectWorkforceProfile(assessment),
-    techExec: detectTechExecutiveProfile(assessment),
-    sales: detectSalesProfile(assessment),
-    marketing: detectMarketingProfile(assessment),
-  };
+  const workforce = detectWorkforceProfile(assessment);
+  const techExec = detectTechExecutiveProfile(assessment);
+  const sales = detectSalesProfile(assessment);
+  const marketing = detectMarketingProfile(assessment);
+
+  // workforcePeopleProfile: true when workforce is clearly primary and technology
+  // context is not strong enough to override it. "technology" domain signal alone
+  // (without multiple tech-executive role keywords) is treated as a modifier,
+  // not as evidence of a technology executive profile.
+  const workforcePeopleProfile =
+    workforce.isWorkforce &&
+    workforce.strength !== "weak" &&
+    (workforce.strength === "strong" || techExec.matchCount < 3);
+
+  return { workforce, techExec, sales, marketing, workforcePeopleProfile };
 }
 
 // ── Strict display-safe gate ───────────────────────────────────────────────────
@@ -379,7 +433,24 @@ function passesStrictDisplaySafeGate(candidate) {
 function evaluateFalsePositiveBlocks(candidate, profile) {
   const { familyId, familySpineId, legacyDirectionId } = candidate;
 
-  if (
+  if (profile.workforcePeopleProfile) {
+    // Hard-block all tech-spine families for confirmed workforce-primary profiles.
+    // "technology" domain signal alone does not constitute technology executive
+    // evidence — AI tools, workforce systems, and automation are modifiers.
+    if (TECH_SPINES.has(familySpineId)) {
+      return {
+        blocked: true,
+        reason: `Hard-blocked for workforcePeopleProfile: ${familyId} (spine: ${familySpineId}). Technology-domain signal alone does not override strong workforce evidence.`,
+      };
+    }
+    // Also block by legacy direction ID prefix (TE-* roles)
+    if (legacyDirectionId && /^TE-/.test(legacyDirectionId)) {
+      return {
+        blocked: true,
+        reason: `Hard-blocked TE-* direction ${legacyDirectionId} for workforcePeopleProfile.`,
+      };
+    }
+  } else if (
     TECH_SPINES.has(familySpineId) &&
     profile.workforce.isWorkforce &&
     !profile.techExec.isTechExec
@@ -506,6 +577,154 @@ function rankForWorkforceProfile(a, b) {
   return numberOrZero(b.overallLensScore) - numberOrZero(a.overallLensScore);
 }
 
+// ── Workforce score calibration ───────────────────────────────────────────────
+//
+// When a workforce-primary profile's candidates arrive via workforce_safe_widening
+// or workforce_injected (with conservative default scores), lift overallLensScore
+// to a domain-appropriate floor so fitBand and UI labels reflect real fit.
+//
+// Only fires when:
+// - workforcePeopleProfile === true
+// - the candidate's familyId is in the calibration table
+// - at least 2 specific evidence keywords are confirmed in the assessment text
+
+const WORKFORCE_MIN_CALIBRATED_SCORES = {
+  "WI-01": 84,
+  "WI-04": 80,
+  "WI-02": 78,
+  "WI-03": 78,
+  "PO-03": 82,
+  "PO-01": 78,
+  "PO-02": 78,
+  "PO-04": 76,
+  "PO-05": 76,
+  "PO-06": 76,
+  "OD-01": 76,
+  "OD-02": 76,
+  "MP-05": 74,
+};
+
+const WORKFORCE_CALIBRATION_EVIDENCE_KEYWORDS = [
+  "workforce planning",
+  "labor forecasting",
+  "capacity planning",
+  "staffing model",
+  "headcount modeling",
+  "talent acquisition",
+  "recruiting operations",
+  "frontline workforce",
+  "contractor workforce",
+  "gig workforce",
+  "labor supply planning",
+  "rfl",
+  "reach frequency length",
+  "ta hub",
+  "ta hubs",
+  "hr operations",
+  "people operations",
+];
+
+export function getWorkforceCalibrationEvidenceCount(assessment) {
+  const text = buildSearchText(assessment);
+  return WORKFORCE_CALIBRATION_EVIDENCE_KEYWORDS.filter((kw) =>
+    text.includes(kw)
+  ).length;
+}
+
+function calibrateWorkforceCandidateScore(candidate, profile, evidenceCount) {
+  if (!profile.workforcePeopleProfile) return candidate;
+
+  const minScore = WORKFORCE_MIN_CALIBRATED_SCORES[candidate.familyId];
+  if (!minScore) return candidate; // family not in calibration table
+
+  // Require at least 2 domain-specific evidence keywords to calibrate.
+  // Prevents inflation for profiles that are only weakly workforce-oriented.
+  if (evidenceCount < 2) return candidate;
+
+  const currentScore = Number(candidate.overallLensScore) || 0;
+  if (currentScore >= minScore) return candidate; // already at or above floor
+
+  return {
+    ...candidate,
+    overallLensScore: minScore,
+    _originalScoreBeforeCalibration: currentScore,
+    _workforceScoreCalibrated: true,
+    _calibrationReason: `Workforce score floor applied: familyId=${candidate.familyId}, evidenceCount=${evidenceCount}, original=${currentScore}, floor=${minScore}.`,
+  };
+}
+
+// ── Workforce-safe widening ────────────────────────────────────────────────────
+
+// For workforcePeopleProfile, accept rejected WI/PO/OD candidates with relaxed
+// mapping-confidence requirements. Only requires displaySafeStatus = "display_safe".
+function tryWorkforceSafeWidening(passed, rejected, profile, minCount) {
+  if (!profile.workforcePeopleProfile) return passed;
+  if (passed.length >= minCount) return passed;
+
+  const existingIds = new Set(
+    passed.map((c) => c.legacyDirectionId).filter(Boolean)
+  );
+  const widened = [...passed];
+
+  const workforceRejected = rejected
+    .filter(
+      (c) =>
+        (WORKFORCE_SAFE_FAMILY_IDS.has(c.familyId) ||
+          (c.legacyDirectionId &&
+            WORKFORCE_SAFE_LEGACY_IDS.includes(c.legacyDirectionId))) &&
+        !existingIds.has(c.legacyDirectionId) &&
+        c.legacyDirectionId &&
+        c.displaySafeStatus === "display_safe"
+    )
+    .sort(rankForWorkforceProfile);
+
+  for (const candidate of workforceRejected) {
+    widened.push({
+      ...candidate,
+      _widenedFromWorkforceSafe: true,
+      _gateStatus: "workforce_safe_widening",
+      _gateReasons: [
+        `Workforce-safe widening: ${candidate.familyId || candidate.legacyDirectionId} accepted for workforcePeopleProfile. Original rejection: ${(candidate._gateReasons || []).join("; ")}`,
+      ],
+    });
+    existingIds.add(candidate.legacyDirectionId);
+    if (widened.length >= minCount) break;
+  }
+
+  return widened;
+}
+
+// Emergency injection: when the foundation engine produced no WI/PO candidates
+// at all, create minimal synthetic candidates from known role library IDs so
+// we never fall back to scoring.js for workforce profiles.
+function buildWorkforceInjectedCandidates() {
+  const defs = [
+    { legacyDirectionId: "BF-5-E",  familyId: "WI-01", score: 68 },
+    { legacyDirectionId: "BF-13-E", familyId: "PO-03", score: 65 },
+    { legacyDirectionId: "BF-4-E",  familyId: "PO-01", score: 62 },
+    { legacyDirectionId: "BF-12-E", familyId: "PO-02", score: 60 },
+    { legacyDirectionId: "BF-14-E", familyId: "PO-04", score: 58 },
+  ];
+
+  return defs.map((def) => ({
+    legacyDirectionId: def.legacyDirectionId,
+    familyId: def.familyId,
+    familySpineId: WORKFORCE_FAMILY_SPINE[def.familyId] || "people_operations",
+    displaySafeStatus: "display_safe",
+    canonicalMappingConfidence: "exact",
+    alignmentMatchType: "primary_spine",
+    overallLensScore: def.score,
+    recommendedDisplayClassification: "Primary",
+    sourceDiagnostic: {},
+    compositeResolutionStatus: null,
+    _workforceInjected: true,
+    _gateStatus: "workforce_injected",
+    _gateReasons: [
+      "Emergency workforce injection: no foundation WI/PO candidates available for workforcePeopleProfile.",
+    ],
+  }));
+}
+
 // ── Conservative fallback widening ────────────────────────────────────────────
 
 function tryWidenWithBridges(passed, showableBridges, profile, minCount) {
@@ -548,6 +767,7 @@ export function applyLiveQualityGate(
 
   const passed = [];
   const rejected = [];
+  const blockedTeCandidates = [];
 
   for (const candidate of selectedRecommendations) {
     const result = evaluateCandidateLiveGate(candidate, profile);
@@ -558,20 +778,72 @@ export function applyLiveQualityGate(
         _gateReasons: result.reasons,
       });
     } else {
-      rejected.push({
+      const tagged = {
         ...candidate,
         _gateStatus: result.gateStatus,
         _gateReasons: result.reasons,
-      });
+      };
+      rejected.push(tagged);
+
+      if (
+        result.gateStatus === "rejected_false_positive" &&
+        profile.workforcePeopleProfile &&
+        (TECH_SPINES.has(candidate.familySpineId) ||
+          /^TE-/.test(candidate.legacyDirectionId || ""))
+      ) {
+        blockedTeCandidates.push({
+          legacyDirectionId: candidate.legacyDirectionId,
+          familyId: candidate.familyId,
+          reason: result.reasons[0],
+        });
+      }
     }
   }
 
-  const widened = tryWidenWithBridges(
-    passed,
-    showableBridges || [],
-    profile,
-    minCount
-  );
+  let fallbackType = "foundation_strict";
+  let widened = [...passed];
+
+  // For workforce-primary profiles: widen from rejected WI/PO/OD candidates
+  // before trying bridge widening, to avoid pulling in tech directions.
+  if (profile.workforcePeopleProfile && widened.length < minCount) {
+    widened = tryWorkforceSafeWidening(passed, rejected, profile, minCount);
+    if (widened.length > passed.length) {
+      fallbackType = "workforce_safe_widening";
+    }
+  }
+
+  // Emergency injection when foundation produced no usable WI/PO candidates.
+  if (profile.workforcePeopleProfile && widened.length < minCount) {
+    const preInjectionLength = widened.length;
+    const existingIds = new Set(
+      widened.map((c) => c.legacyDirectionId).filter(Boolean)
+    );
+    for (const inj of buildWorkforceInjectedCandidates()) {
+      if (!existingIds.has(inj.legacyDirectionId) && widened.length < minCount) {
+        widened.push(inj);
+        existingIds.add(inj.legacyDirectionId);
+      }
+    }
+    if (widened.length > preInjectionLength) {
+      fallbackType = "workforce_injected";
+    }
+  }
+
+  // Bridge widening only for non-workforce profiles (or workforce that still needs more)
+  widened = tryWidenWithBridges(widened, showableBridges || [], profile, minCount);
+
+  // Calibrate scores for workforce-primary profiles before the final sort.
+  // This lifts conservative default scores from workforce_injected / workforce_safe_widening
+  // candidates to domain-appropriate floors so fitBand reflects real fit.
+  const workforceEvidenceCount = profile.workforcePeopleProfile
+    ? getWorkforceCalibrationEvidenceCount(assessment)
+    : 0;
+
+  if (profile.workforcePeopleProfile && workforceEvidenceCount >= 2) {
+    widened = widened.map((c) =>
+      calibrateWorkforceCandidateScore(c, profile, workforceEvidenceCount)
+    );
+  }
 
   if (profile.workforce.isWorkforce && profile.workforce.strength !== "weak") {
     widened.sort(rankForWorkforceProfile);
@@ -579,5 +851,18 @@ export function applyLiveQualityGate(
 
   const rankedPassed = widened.map((c, idx) => ({ ...c, rank: idx + 1 }));
 
-  return { passed: rankedPassed, rejected, profile };
+  const debugMeta = {
+    workforcePeopleProfile: profile.workforcePeopleProfile,
+    fallbackType,
+    blockedTeCandidates,
+    workforceStrength: profile.workforce.strength,
+    workforceTotalMatches: profile.workforce.totalMatches,
+    techExecMatchCount: profile.techExec.matchCount,
+    techExecIsTechExec: profile.techExec.isTechExec,
+    workforceEvidenceCount,
+    passedCount: rankedPassed.length,
+    rejectedCount: rejected.length,
+  };
+
+  return { passed: rankedPassed, rejected, profile, debugMeta };
 }
