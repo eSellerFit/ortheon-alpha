@@ -5,7 +5,7 @@
 // To enable: set FOUNDATION_LIVE_SELECTION_ENABLED = true.
 // Fallback to scoring.js is automatic on failure or too-few results.
 
-export const FOUNDATION_LIVE_SELECTION_ENABLED = false;
+export const FOUNDATION_LIVE_SELECTION_ENABLED = true;
 
 // Minimum number of foundation-selected recommendations required before
 // the adapter will use the foundation path. Falls back to scoring.js if fewer.
