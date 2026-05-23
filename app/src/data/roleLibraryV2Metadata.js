@@ -29,6 +29,7 @@ const ROLE_LIBRARY_V2_METADATA = {
       "hr leadership",
       "people operations",
       "talent management",
+      "employee relations",
     ],
     negativeEvidence: [
       "workforce planning",
@@ -180,7 +181,7 @@ const ROLE_LIBRARY_V2_METADATA = {
     negativeEvidence: [
       "talent acquisition",
       "people analytics",
-      "general hr admin",
+      "employee relations",
     ],
     falsePositiveRisks: [
       "PO-01 — OD requires methodology evidence, not just having managed change projects",

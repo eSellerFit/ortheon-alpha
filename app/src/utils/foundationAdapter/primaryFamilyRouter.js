@@ -151,18 +151,21 @@ export function routePrimaryFamily(assessment) {
     );
   }
 
-  // 2. Aggregate scores by subfamily.
-  //    Primary sort key: maxScore (best single direction in the subfamily).
-  //    Using max instead of sum prevents inflating subfamilies that happen to
-  //    have more directions in the library.
-  const subfamilyAgg = new Map(); // subfamilyId → SubfamilyAgg
+  // 2. Aggregate scores by (familyId × subfamilyId).
+  //    Key is compound because multiple families can share the same subfamilyId
+  //    label (e.g. DX-01, DX-02, DX-03 all use DIGITAL_TRANSFORMATION_AUTOMATION).
+  //    Using a compound key keeps each family's score isolated so that
+  //    high-scoring directions in one family cannot inflate a different family's rank.
+  //    Primary sort key: maxScore (best single direction in the bucket).
+  //    Using max instead of sum prevents inflating buckets with more directions.
+  const subfamilyAgg = new Map(); // "familyId:subfamilyId" → SubfamilyAgg
   for (const record of Object.values(ROLE_LIBRARY_V2_METADATA)) {
     const result = directionScores.get(record.directionId);
-    const key = record.primarySubfamilyId;
+    const key = `${record.familyId}:${record.primarySubfamilyId}`;
 
     if (!subfamilyAgg.has(key)) {
       subfamilyAgg.set(key, {
-        subfamilyId: key,
+        subfamilyId: record.primarySubfamilyId,
         familyId:    record.familyId,
         functionId:  record.functionId,
         maxScore:    0,
@@ -213,9 +216,12 @@ export function routePrimaryFamily(assessment) {
     }
   }
 
-  // 5. Primary direction IDs = directions in the winning subfamily,
+  // 5. Primary direction IDs = directions in the winning family+subfamily,
   //    ordered by their individual direction score descending.
+  //    Filter by familyId so cross-family directions that share the same
+  //    subfamilyId label are excluded.
   const primaryDirectionIds = (BY_SUBFAMILY.get(primary.subfamilyId) || [])
+    .filter((record) => record.familyId === primary.familyId)
     .map((record) => ({
       directionId: record.directionId,
       score: directionScores.get(record.directionId)?.score ?? 0,
