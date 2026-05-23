@@ -2,43 +2,11 @@
 // Phase 2G: Foundation-aware career map sanitization.
 //
 // Takes a base career map from scoring.js generateCareerMap and:
-// - Filters adjacent / longer-path nodes that fail the live profile check.
+// - Removes non-primary map nodes for the MVP report surface.
 // - Fixes currentProfileNode cluster/label when the profile is workforce-primary.
 // - Replaces a tech-heavy mainPattern with a workforce-aligned one.
 //
 // Does not modify CareerDirectionMap.jsx or scoring.js.
-
-// ── Adjacent node filters ──────────────────────────────────────────────────────
-
-const TECH_EXEC_ADJACENT_CLUSTERS = new Set([
-  "technology_executive",
-  "engineering_leadership",
-  "platform_technology",
-  "ai_transformation",
-]);
-
-function isLegacyTechExecDirection(directionId) {
-  return typeof directionId === "string" && directionId.startsWith("TE-");
-}
-
-function isLegacySellerDirection(directionId) {
-  return typeof directionId === "string" && directionId.startsWith("SR-");
-}
-
-function shouldIncludeAdjacentNode(node, liveProfile) {
-  const { workforce, techExec, sales } = liveProfile;
-
-  if (workforce.isWorkforce && !techExec.isTechExec) {
-    if (TECH_EXEC_ADJACENT_CLUSTERS.has(node.mapCluster)) return false;
-    if (isLegacyTechExecDirection(node.directionId)) return false;
-  }
-
-  if (!sales.hasSales && isLegacySellerDirection(node.directionId)) {
-    return false;
-  }
-
-  return true;
-}
 
 // ── Current profile node fix ───────────────────────────────────────────────────
 
@@ -128,11 +96,17 @@ function buildWorkforceMainPattern(primaryNodes) {
 
 function sanitizeSummary(summary, liveProfile, primaryNodes) {
   if (!summary) return summary;
-  if (!liveProfile.workforce.isWorkforce) return summary;
-  if (!isTechHeavySummary(summary.mainPattern)) return summary;
+  const baseSummary = {
+    ...summary,
+    bridgeGoal: null,
+    mainCaution: null,
+  };
+
+  if (!liveProfile.workforce.isWorkforce) return baseSummary;
+  if (!isTechHeavySummary(summary.mainPattern)) return baseSummary;
 
   return {
-    ...summary,
+    ...baseSummary,
     mainPattern: buildWorkforceMainPattern(primaryNodes),
   };
 }
@@ -141,14 +115,6 @@ function sanitizeSummary(summary, liveProfile, primaryNodes) {
 
 export function sanitizeFoundationCareerMap(baseMap, liveProfile) {
   if (!baseMap || !liveProfile) return baseMap;
-
-  const adjacentNodes = (baseMap.adjacentNodes || []).filter((node) =>
-    shouldIncludeAdjacentNode(node, liveProfile)
-  );
-
-  const longerPathNodes = (baseMap.longerPathNodes || []).filter((node) =>
-    shouldIncludeAdjacentNode(node, liveProfile)
-  );
 
   const currentProfileNode = sanitizeCurrentProfileNode(
     baseMap.currentProfileNode,
@@ -164,9 +130,13 @@ export function sanitizeFoundationCareerMap(baseMap, liveProfile) {
   return {
     ...baseMap,
     currentProfileNode,
-    adjacentNodes,
-    longerPathNodes,
+    adjacentNodes: [],
+    longerPathNodes: [],
+    nearbyTrajectories: [],
+    nearbyDirections: [],
+    nearby: [],
     summary,
     _foundationSanitized: true,
+    _mvpPrimaryOnly: true,
   };
 }

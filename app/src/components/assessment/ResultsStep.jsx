@@ -24,12 +24,6 @@ const durabilityLabels = {
   D4: "Future-resilient / AI-native path",
 };
 
-const transitionLabels = {
-  direct: "Direct path",
-  bridge: "Bridge path",
-  stretch: "Stretch path",
-};
-
 function getOrdinal(rank) {
   if (rank === 1) return "1st";
   if (rank === 2) return "2nd";
@@ -141,69 +135,6 @@ function ScoreBreakdown({ breakdown }) {
   );
 }
 
-function TransitionBadge({ transitionLabel }) {
-  if (!transitionLabel) {
-    return null;
-  }
-
-  const classMap = {
-    main: "transition-badge-main",
-    secondary: "transition-badge-secondary",
-    flagged: "transition-badge-flagged",
-  };
-
-  const className = classMap[transitionLabel.treatment] || classMap.main;
-
-  return (
-    <div className={`transition-badge ${className}`}>
-      <span>{transitionLabel.label}</span>
-
-      {transitionLabel.sublabel && <small>{transitionLabel.sublabel}</small>}
-    </div>
-  );
-}
-
-function BridgePathSuggestions({ bridgeDirections, longerPathOptions }) {
-  const hasBridges = bridgeDirections?.length > 0;
-  const hasLonger = longerPathOptions?.length > 0;
-
-  if (!hasBridges && !hasLonger) {
-    return null;
-  }
-
-  return (
-    <div className="bridge-suggestions">
-      {hasBridges && (
-        <div>
-          <span className="bridge-label">Consider first</span>
-
-          <div className="bridge-chip-row">
-            {bridgeDirections.map((bridge) => (
-              <span key={bridge.directionId} className="bridge-chip">
-                {bridge.directionLabel}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {hasLonger && (
-        <div>
-          <span className="bridge-label">Longer path option</span>
-
-          <div className="bridge-chip-row">
-            {longerPathOptions.map((option) => (
-              <span key={option.directionId} className="bridge-chip">
-                {option.directionLabel}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 function ResultCard({ recommendation }) {
   return (
     <section className="result-card">
@@ -219,15 +150,6 @@ function ResultCard({ recommendation }) {
         </div>
       </div>
 
-      <TransitionBadge transitionLabel={recommendation.transitionLabel} />
-
-      {recommendation.transitionLabel?.showBridges && (
-        <BridgePathSuggestions
-          bridgeDirections={recommendation.bridgeDirections}
-          longerPathOptions={recommendation.longerPathOptions}
-        />
-      )}
-
       <div className="result-facts-grid">
         <div>
           <span>Fit band</span>
@@ -240,14 +162,6 @@ function ResultCard({ recommendation }) {
             {recommendation.aiDurabilityRating} —{" "}
             {durabilityLabels[recommendation.aiDurabilityRating] ||
               "Not classified"}
-          </strong>
-        </div>
-
-        <div>
-          <span>Transition pathway</span>
-          <strong>
-            {transitionLabels[recommendation.transitionPathway] ||
-              recommendation.transitionPathway}
           </strong>
         </div>
 
@@ -509,15 +423,9 @@ function ResultsStep({ assessmentId, forceRegenerate = false, disableResultSave 
 
     hasTrackedResultsViewRef.current = true;
 
-    const nearbyCount =
-      careerMap?.nearbyTrajectories?.length ||
-      careerMap?.nearbyDirections?.length ||
-      careerMap?.nearby?.length ||
-      0;
-
     trackEvent(ANALYTICS_EVENTS.RESULTS_VIEWED, {
       direction_count: recommendations.length,
-      has_nearby_trajectories: nearbyCount > 0,
+      has_nearby_trajectories: false,
       source_section: "results_page",
     });
   }, [status, recommendations.length, careerMap]);

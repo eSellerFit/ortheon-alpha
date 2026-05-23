@@ -10,12 +10,10 @@
 //   applyLiveQualityGate(selectedRecommendations, showableBridges, assessment, minCount)
 
 import {
-  buildRoutingEvidenceText,
   routePrimaryFamily,
   getDirectionsByFamily,
-  scoreDirectionMetadata,
 } from "./primaryFamilyRouter.js";
-import { ROLE_LIBRARY_V2_METADATA } from "../../data/roleLibraryV2Metadata.js";
+import { applyDirectionValidityGateToCandidates } from "./directionValidityGate.js";
 
 // ── Spine constants ────────────────────────────────────────────────────────────
 
@@ -570,8 +568,6 @@ const PRIMARY_SCORE_FLOOR = 84;
 const SCORE_FLOOR_STEP    = 4;
 const MIN_SCORE_FLOOR     = 70;
 const DEFAULT_INJECTION_SCORE = 65;
-const NEAR_PERFECT_SCORE = 95;
-const UNSUPPORTED_NEAR_PERFECT_CAP = 88;
 
 const ROUTER_PRIORITY_FUNCTION_IDS = new Set([
   "TECHNOLOGY",
@@ -639,8 +635,12 @@ const WORKFORCE_CALIBRATION_EVIDENCE_KEYWORDS = [
   "people operations",
   // Broad HR leadership signals — ensure calibration fires for senior HR advisory profiles
   // (CHRO/VP HR) who may not use workforce-operations vocabulary.
+  "human resources",
+  "hr programs",
   "employee relations",
   "hr advisory",
+  "stakeholder advisory",
+  "people processes",
   "people strategy",
   "talent management",
 ];
@@ -671,47 +671,6 @@ function calibrateWorkforceCandidateScore(candidate, profile, evidenceCount, sub
     _originalScoreBeforeCalibration: currentScore,
     _workforceScoreCalibrated: true,
     _calibrationReason: `Workforce score floor applied: familyId=${candidate.familyId}, evidenceCount=${evidenceCount}, original=${currentScore}, floor=${minScore}.`,
-  };
-}
-
-function getCandidateMetadataScore(candidate, assessment) {
-  const record = ROLE_LIBRARY_V2_METADATA[candidate.legacyDirectionId];
-  if (!record) return null;
-
-  return scoreDirectionMetadata(
-    record,
-    buildRoutingEvidenceText(assessment),
-    (assessment?.currentRole || "").toLowerCase()
-  );
-}
-
-function capUnsupportedNearPerfectCandidate(candidate, assessment, profile) {
-  const currentScore = Number(candidate.overallLensScore) || 0;
-  if (currentScore < NEAR_PERFECT_SCORE) return candidate;
-
-  const metadataScore = getCandidateMetadataScore(candidate, assessment);
-  if (!metadataScore) return candidate;
-
-  const primaryDirectionIds = new Set(profile.routerResult?.primaryDirectionIds || []);
-  const hasStrongMetadataEvidence =
-    metadataScore.evidenceHits.length >= 2 &&
-    !["none", "title_only", "low"].includes(metadataScore.confidence);
-
-  if (
-    primaryDirectionIds.has(candidate.legacyDirectionId) ||
-    hasStrongMetadataEvidence
-  ) {
-    return candidate;
-  }
-
-  return {
-    ...candidate,
-    overallLensScore: Math.min(currentScore, UNSUPPORTED_NEAR_PERFECT_CAP),
-    _originalScoreBeforeNearPerfectCap: currentScore,
-    _nearPerfectScoreCapped: true,
-    _nearPerfectCapReason:
-      `Near-perfect score capped: ${candidate.legacyDirectionId} lacks strong metadata evidence ` +
-      `(evidenceHits=${metadataScore.evidenceHits.length}, confidence=${metadataScore.confidence}).`,
   };
 }
 
@@ -933,8 +892,10 @@ export function applyLiveQualityGate(
     );
   }
 
-  widened = widened.map((c) =>
-    capUnsupportedNearPerfectCandidate(c, assessment, profile)
+  widened = applyDirectionValidityGateToCandidates(
+    widened,
+    assessment,
+    routerResult
   );
 
   // Sort workforce profiles by metadata-derived family priority.
@@ -974,7 +935,9 @@ export function applyLiveQualityGate(
     workforceEvidenceCount,
     calibrationApplied:       profile.workforcePeopleProfile && workforceEvidenceCount >= 2,
     calibrationEvidenceCount: workforceEvidenceCount,
-    nearPerfectScoreCapCount: widened.filter((c) => c._nearPerfectScoreCapped).length,
+    validityGateCapCount: widened.filter(
+      (c) => c._directionValidityGate?.capApplied
+    ).length,
     passedCount:   rankedPassed.length,
     rejectedCount: rejected.length,
   };

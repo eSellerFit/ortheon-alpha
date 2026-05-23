@@ -5,7 +5,8 @@
 // modifying roleLibrary.js. This is the authoritative source for:
 //   functionId, familyId, primarySubfamilyId, complexityBands,
 //   primaryEvidenceDomain, evidenceRequired, negativeEvidence,
-//   falsePositiveRisks, titleAliases
+//   falsePositiveRisks, titleAliases, claimLevel, evidenceStrictness,
+//   mustHaveEvidence
 //
 // complexityBands: 1=Practitioner/Specialist, 2=Program Owner/Senior Practitioner,
 //                  3=Function Leader/Strategic Advisor
@@ -32,7 +33,6 @@ const ROLE_LIBRARY_V2_METADATA = {
       "employee relations",
     ],
     negativeEvidence: [
-      "workforce planning",
       "headcount modeling",
       "labor forecasting",
     ],
@@ -400,6 +400,14 @@ const ROLE_LIBRARY_V2_METADATA = {
       "vp of engineering",
       "head of engineering",
     ],
+    claimLevel: "executive",
+    evidenceStrictness: "strict",
+    mustHaveEvidence: [
+      "engineering leadership",
+      "software engineering",
+      "platform ownership",
+      "technical leadership",
+    ],
   },
 
   "TE-2-E": {
@@ -429,6 +437,19 @@ const ROLE_LIBRARY_V2_METADATA = {
       "head of ai",
       "ai transformation executive",
     ],
+    claimLevel: "emerging_executive",
+    evidenceStrictness: "very_strict",
+    mustHaveEvidence: [
+      "ai strategy",
+      "ai transformation",
+      "enterprise ai adoption",
+      "ai adoption roadmap",
+      "ai operating model",
+      "ai governance",
+      "ai product",
+      "ai platform",
+      "generative ai deployment",
+    ],
   },
 
   "TE-4-IF": {
@@ -456,6 +477,14 @@ const ROLE_LIBRARY_V2_METADATA = {
       "technical advisor",
       "cto in residence",
       "technical co-founder",
+    ],
+    claimLevel: "executive",
+    evidenceStrictness: "strict",
+    mustHaveEvidence: [
+      "fractional cto",
+      "technical advisory",
+      "software engineering",
+      "architecture",
     ],
   },
 
@@ -516,6 +545,14 @@ const ROLE_LIBRARY_V2_METADATA = {
       "data scientist startup",
       "ai/ml specialist",
     ],
+    claimLevel: "specialist",
+    evidenceStrictness: "strict",
+    mustHaveEvidence: [
+      "machine learning",
+      "ai",
+      "llm",
+      "artificial intelligence",
+    ],
   },
 
   "CM-5-IF": {
@@ -543,6 +580,14 @@ const ROLE_LIBRARY_V2_METADATA = {
       "transformation consultant",
       "digital transformation advisor",
       "automation consultant",
+    ],
+    claimLevel: "specialist",
+    evidenceStrictness: "strict",
+    mustHaveEvidence: [
+      "ai transformation",
+      "ai adoption",
+      "automation",
+      "digital transformation",
     ],
   },
 
@@ -599,6 +644,14 @@ const ROLE_LIBRARY_V2_METADATA = {
       "ai product manager",
       "head of ai product",
       "llm product lead",
+    ],
+    claimLevel: "specialist",
+    evidenceStrictness: "very_strict",
+    mustHaveEvidence: [
+      "ai product",
+      "llm",
+      "generative ai",
+      "startup",
     ],
   },
 
@@ -660,6 +713,14 @@ const ROLE_LIBRARY_V2_METADATA = {
       "digital transformation director",
       "technology strategy director",
     ],
+    claimLevel: "executive",
+    evidenceStrictness: "strict",
+    mustHaveEvidence: [
+      "digital transformation",
+      "technology strategy",
+      "enterprise transformation",
+      "transformation program",
+    ],
   },
 
   "TE-5-E": {
@@ -688,6 +749,14 @@ const ROLE_LIBRARY_V2_METADATA = {
       "chief architect",
       "head of enterprise architecture",
       "platform modernization director",
+    ],
+    claimLevel: "specialist",
+    evidenceStrictness: "strict",
+    mustHaveEvidence: [
+      "enterprise architecture",
+      "systems design",
+      "platform modernization",
+      "architecture",
     ],
   },
 
@@ -806,6 +875,14 @@ const ROLE_LIBRARY_V2_METADATA = {
       "enterprise ai program director",
       "genai enablement manager",
     ],
+    claimLevel: "specialist",
+    evidenceStrictness: "strict",
+    mustHaveEvidence: [
+      "ai adoption",
+      "ai enablement",
+      "genai",
+      "ai implementation",
+    ],
   },
 
   // ── RISK_SECURITY ─────────────────────────────────────────────────────────────
@@ -837,6 +914,14 @@ const ROLE_LIBRARY_V2_METADATA = {
       "vp cybersecurity",
       "vp information security",
       "director of security",
+    ],
+    claimLevel: "executive",
+    evidenceStrictness: "strict",
+    mustHaveEvidence: [
+      "cybersecurity",
+      "information security",
+      "security governance",
+      "ciso",
     ],
   },
 
@@ -1569,6 +1654,14 @@ const ROLE_LIBRARY_V2_METADATA = {
       "director of programs",
       "nonprofit director",
     ],
+    claimLevel: "specialist",
+    evidenceStrictness: "strict",
+    mustHaveEvidence: [
+      "nonprofit",
+      "community",
+      "social impact",
+      "mission organization",
+    ],
   },
 
   "MG-10-NP": {
@@ -1625,6 +1718,14 @@ const ROLE_LIBRARY_V2_METADATA = {
       "social enterprise founder",
       "impact entrepreneur",
       "impact venture founder",
+    ],
+    claimLevel: "specialist",
+    evidenceStrictness: "strict",
+    mustHaveEvidence: [
+      "social enterprise",
+      "impact venture",
+      "mission organization",
+      "social impact",
     ],
   },
 
@@ -1687,6 +1788,15 @@ const ROLE_LIBRARY_V2_METADATA = {
       "ceo at startup",
       "early operator",
     ],
+    claimLevel: "executive",
+    evidenceStrictness: "strict",
+    mustHaveEvidence: [
+      "startup",
+      "founder",
+      "co-founder",
+      "early stage",
+      "entrepreneurship",
+    ],
   },
 
   "MG-11-OV": {
@@ -1743,6 +1853,14 @@ const ROLE_LIBRARY_V2_METADATA = {
       "small business consultant",
       "sme advisor",
       "entrepreneur advisor",
+    ],
+    claimLevel: "specialist",
+    evidenceStrictness: "strict",
+    mustHaveEvidence: [
+      "small business advisory",
+      "consulting",
+      "business advisor",
+      "sme advisory",
     ],
   },
 

@@ -4,8 +4,6 @@
 const SUMMARY_ICONS = {
   "Main pattern": "◈",
   "Transition style": "▶",
-  "Bridge goal": "◎",
-  "Main caution": "△",
 };
 
 const durabilityLabels = {
@@ -17,18 +15,18 @@ const durabilityLabels = {
 };
 
 const pathLabels = {
-  direct: "Credible now",
-  bridge: "Bridge path",
-  stretch: "Stretch",
-  longer_path: "Longer path",
-  credentialed: "Credentialed",
-  credibility_gap: "Credibility gap",
+  direct: "Primary direction",
+  bridge: "Primary direction",
+  stretch: "Primary direction",
+  longer_path: "Primary direction",
+  credentialed: "Primary direction",
+  credibility_gap: "Primary direction",
 };
 
 const transitionPathwayLabels = {
-  direct: "Direct path",
-  bridge: "Bridge path",
-  stretch: "Stretch path",
+  direct: "Primary direction",
+  bridge: "Primary direction",
+  stretch: "Primary direction",
 };
 
 function getOrdinal(rank) {
@@ -91,8 +89,6 @@ function getWhyItFits(node) {
 }
 
 function getCredibilityAction(node) {
-  if (node.pathType === "bridge")
-    return "Build clearer proof points, case examples, and positioning before treating this as fully direct.";
   if (node.pathType === "stretch")
     return "Validate carefully with real market feedback before making it the main move.";
   if (node.mapCluster === "marketplace_platforms")
@@ -122,8 +118,6 @@ function PdfPage1({ careerMap, recommendations }) {
   const summaryItems = [
     ["Main pattern", summary.mainPattern],
     ["Transition style", summary.transitionStyle],
-    ["Bridge goal", summary.bridgeGoal],
-    ["Main caution", summary.mainCaution],
   ];
 
   return (
@@ -134,8 +128,7 @@ function PdfPage1({ careerMap, recommendations }) {
         <h1 className="pdf-p1-title">Career Direction Report</h1>
         <p className="pdf-p1-sub">
           These are career directions, not fixed job titles. The map shows where
-          your profile sits today, which primary trajectories are most realistic,
-          and which nearby paths may be worth validating.
+          your profile sits today and which primary directions are most realistic.
         </p>
       </div>
 
@@ -194,15 +187,13 @@ function PdfPage1({ careerMap, recommendations }) {
 
 // ── Pages 2–3: Direction Cards ─────────────────────────────────────────────
 
-function PdfDirectionCard({ node, isAdjacent }) {
+function PdfDirectionCard({ node }) {
   return (
-    <div className={`pdf-dcard ${isAdjacent ? "pdf-dcard-adj" : ""}`}>
+    <div className="pdf-dcard">
       <div className="pdf-dcard-top">
         <strong className="pdf-dcard-title">{node.directionLabel}</strong>
-        <span
-          className={`pdf-dcard-badge ${isAdjacent ? "pdf-dcard-badge-adj" : ""}`}
-        >
-          {isAdjacent ? "Nearby" : pathLabels[node.pathType] || "Path"}
+        <span className="pdf-dcard-badge">
+          {pathLabels[node.pathType] || "Primary direction"}
         </span>
       </div>
 
@@ -217,41 +208,25 @@ function PdfDirectionCard({ node, isAdjacent }) {
 
       <div className="pdf-dcard-rows">
         <div className="pdf-dcard-row">
-          <strong>
-            {isAdjacent ? "Why it is nearby" : "What this direction means"}
-          </strong>
-          <p>
-            {isAdjacent
-              ? node.reason || getWhyItFits(node)
-              : getPrimaryMeaning(node)}
-          </p>
+          <strong>What this direction means</strong>
+          <p>{getPrimaryMeaning(node)}</p>
         </div>
 
-        {!isAdjacent && (
-          <div className="pdf-dcard-row">
-            <strong>Why it fits</strong>
-            <p>{getWhyItFits(node)}</p>
-          </div>
-        )}
+        <div className="pdf-dcard-row">
+          <strong>Why it fits</strong>
+          <p>{getWhyItFits(node)}</p>
+        </div>
 
         <div className="pdf-dcard-row">
-          <strong>
-            {isAdjacent
-              ? "What would make it stronger"
-              : "Credibility action"}
-          </strong>
-          <p>
-            {isAdjacent
-              ? "More evidence, stronger positioning, or a bridge project would make this path more credible."
-              : getCredibilityAction(node)}
-          </p>
+          <strong>Credibility action</strong>
+          <p>{getCredibilityAction(node)}</p>
         </div>
       </div>
     </div>
   );
 }
 
-function PdfPageDirections({ title, subtitle, section, nodes, isAdjacent }) {
+function PdfPageDirections({ title, subtitle, section, nodes }) {
   return (
     <>
       <PdfBrand section={section} />
@@ -264,7 +239,6 @@ function PdfPageDirections({ title, subtitle, section, nodes, isAdjacent }) {
           <PdfDirectionCard
             key={node.directionId || node.directionLabel}
             node={node}
-            isAdjacent={isAdjacent}
           />
         ))}
       </div>
@@ -341,10 +315,6 @@ function PdfPageSignals({ careerMap }) {
             <PdfSigItem
               label="Income drop"
               value={formatValue(financial.incomeDropTolerance)}
-            />
-            <PdfSigItem
-              label="Bridge role"
-              value={formatValue(financial.bridgeRoleWillingness)}
             />
           </div>
         </div>
@@ -559,8 +529,6 @@ function PdfReport({ careerMap, recommendations, containerRef }) {
   }
 
   const primaryNodes = careerMap.primaryNodes || [];
-  const adjacentNodes = (careerMap.adjacentNodes || []).slice(0, 3);
-
   return (
     <div
       ref={containerRef}
@@ -578,19 +546,6 @@ function PdfReport({ careerMap, recommendations, containerRef }) {
             section="Recommended Directions"
             subtitle="The strongest primary trajectories from the current assessment."
             nodes={primaryNodes}
-            isAdjacent={false}
-          />
-        </div>
-      )}
-
-      {adjacentNodes.length > 0 && (
-        <div className="pdf-page">
-          <PdfPageDirections
-            title="Nearby Trajectories"
-            section="Nearby Trajectories"
-            subtitle="Adjacent paths that may become stronger with more evidence, bridge work, or clearer positioning."
-            nodes={adjacentNodes}
-            isAdjacent={true}
           />
         </div>
       )}

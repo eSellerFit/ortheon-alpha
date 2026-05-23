@@ -8,15 +8,15 @@ function getDurabilityClass(tone) {
 
 function getPathLabel(pathType) {
   const labels = {
-    direct: "Credible now",
-    bridge: "Bridge path",
-    stretch: "Stretch",
-    longer_path: "Longer path",
-    credentialed: "Credentialed",
-    credibility_gap: "Credibility gap",
+    direct: "Primary direction",
+    bridge: "Primary direction",
+    stretch: "Primary direction",
+    longer_path: "Primary direction",
+    credentialed: "Primary direction",
+    credibility_gap: "Primary direction",
   };
 
-  return labels[pathType] || "Nearby path";
+  return labels[pathType] || "Primary direction";
 }
 
 const MAP_SHORT_LABELS = {
@@ -180,14 +180,6 @@ function normalizePrimaryNodes(primaryNodes = []) {
   });
 }
 
-function normalizeAdjacentNodes(adjacentNodes = []) {
-  return adjacentNodes.slice(0, 3).map((node, index) => ({
-    ...node,
-    nodeType: "adjacent",
-    id: `adjacent-${node.directionId || index}`,
-  }));
-}
-
 function buildCurrentNode(careerMap) {
   const current = careerMap.currentProfileNode;
 
@@ -213,9 +205,8 @@ function buildMapNodes(careerMap) {
 }
 
 function getLineClass(node) {
-  if (node.pathType === "direct") return "direct";
   if (node.pathType === "longer_path") return "longer";
-  return "bridge";
+  return "direct";
 }
 
 function MapNode({ node }) {
@@ -371,14 +362,8 @@ function HubMap({ careerMap }) {
               x2={node.x}
               y2={node.y}
               stroke={node.pathType === "direct" ? "#374151" : "#3a7d8c"}
-              strokeWidth={node.pathType === "direct" ? 0.4 : 0.5}
-              strokeDasharray={
-                getLineClass(node) === "bridge"
-                  ? "2 2"
-                  : getLineClass(node) === "longer"
-                    ? "1 2"
-                    : "0"
-              }
+              strokeWidth={0.4}
+              strokeDasharray="0"
               opacity="0.6"
             />
           ))}
@@ -417,29 +402,7 @@ function MapLegend() {
             display: "inline-block",
           }}
         />
-        Credible now
-      </div>
-
-      <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-        <span
-          style={{
-            width: 26,
-            borderTop: "1.5px dashed #3a7d8c",
-            display: "inline-block",
-          }}
-        />
-        Bridge path
-      </div>
-
-      <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-        <span
-          style={{
-            width: 26,
-            borderTop: "1.5px dotted #6b7280",
-            display: "inline-block",
-          }}
-        />
-        Longer path
+        Primary direction
       </div>
 
       <div style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
@@ -466,16 +429,12 @@ function MapLegend() {
 const SUMMARY_CARD_ICONS = {
   "Main pattern": "◈",
   "Transition style": "▶",
-  "Bridge goal": "◎",
-  "Main caution": "△",
 };
 
 function SummaryGrid({ summary }) {
   const items = [
     ["Main pattern", summary.mainPattern],
     ["Transition style", summary.transitionStyle],
-    ["Bridge goal", summary.bridgeGoal],
-    ["Main caution", summary.mainCaution],
   ];
 
   return (
@@ -590,10 +549,6 @@ function getWhyItFits(node) {
 }
 
 function getCredibilityAction(node) {
-  if (node.pathType === "bridge") {
-    return "Build clearer proof points, case examples, and positioning before treating this as fully direct.";
-  }
-
   if (node.pathType === "stretch") {
     return "Validate carefully with real market feedback before making it the main move.";
   }
@@ -625,18 +580,16 @@ function getCredibilityAction(node) {
   return "Prepare evidence that makes this direction believable to a hiring manager, client, or partner.";
 }
 
-function DirectionCard({ node, variant = "primary" }) {
-  const isAdjacent = variant === "adjacent";
-
+function DirectionCard({ node }) {
   return (
     <article
       className="pdf-avoid-break"
       style={{
-        padding: isAdjacent ? 14 : 20,
+        padding: 20,
         border: "1px solid #dbd8d0",
-        borderRadius: isAdjacent ? 13 : 16,
-        background: isAdjacent ? "#fafaf8" : "#ffffff",
-        boxShadow: isAdjacent ? "none" : "0 1px 4px rgba(17, 24, 39, 0.04)",
+        borderRadius: 16,
+        background: "#ffffff",
+        boxShadow: "0 1px 4px rgba(17, 24, 39, 0.04)",
       }}
     >
       <div
@@ -645,20 +598,20 @@ function DirectionCard({ node, variant = "primary" }) {
           justifyContent: "space-between",
           gap: 10,
           alignItems: "flex-start",
-          marginBottom: isAdjacent ? 10 : 14,
+          marginBottom: 14,
         }}
       >
         <div
           style={{
-            width: isAdjacent ? 26 : 32,
-            height: isAdjacent ? 26 : 32,
+            width: 32,
+            height: 32,
             borderRadius: 999,
             display: "grid",
             placeItems: "center",
-            background: isAdjacent ? "#6b7280" : "#245f73",
+            background: "#245f73",
             color: "#ffffff",
             fontWeight: 700,
-            fontSize: isAdjacent ? 12 : 15,
+            fontSize: 15,
             flexShrink: 0,
           }}
         >
@@ -667,103 +620,97 @@ function DirectionCard({ node, variant = "primary" }) {
 
         <span
           style={{
-            padding: isAdjacent ? "4px 8px" : "6px 10px",
+            padding: "6px 10px",
             borderRadius: 999,
-            background: isAdjacent ? "#eeece8" : "#e7f1f3",
-            color: isAdjacent ? "#6b7280" : "#245f73",
+            background: "#e7f1f3",
+            color: "#245f73",
             fontWeight: 600,
             fontSize: 11,
           }}
         >
-          {isAdjacent ? "Nearby" : getPathLabel(node.pathType)}
+          {getPathLabel(node.pathType)}
         </span>
       </div>
 
       <h4
         style={{
-          margin: isAdjacent ? "0 0 8px" : "0 0 12px",
-          fontSize: isAdjacent ? 15 : 17,
+          margin: "0 0 12px",
+          fontSize: 17,
           lineHeight: 1.3,
           color: "#111827",
-          fontWeight: isAdjacent ? 600 : 700,
+          fontWeight: 700,
         }}
       >
         {node.directionLabel}
       </h4>
 
-      <div style={{ display: "grid", gap: isAdjacent ? 8 : 12 }}>
+      <div style={{ display: "grid", gap: 12 }}>
         <div>
           <strong
             style={{
               display: "block",
               marginBottom: 3,
-              fontSize: isAdjacent ? 12 : 13,
+              fontSize: 13,
               color: "#374151",
             }}
           >
-            {isAdjacent ? "Why it is nearby" : "What this direction means"}
+            What this direction means
           </strong>
           <p
             style={{
               margin: 0,
               color: "#6b7280",
               lineHeight: 1.5,
-              fontSize: isAdjacent ? 13 : 14,
+              fontSize: 14,
             }}
           >
-            {isAdjacent
-              ? node.reason || getWhyItFits(node)
-              : getPrimaryMeaning(node)}
+            {getPrimaryMeaning(node)}
           </p>
         </div>
 
-        {!isAdjacent && (
-          <div>
-            <strong
-              style={{
-                display: "block",
-                marginBottom: 3,
-                fontSize: 13,
-                color: "#374151",
-              }}
-            >
-              Why it fits
-            </strong>
-            <p
-              style={{
-                margin: 0,
-                color: "#6b7280",
-                lineHeight: 1.5,
-                fontSize: 14,
-              }}
-            >
-              {getWhyItFits(node)}
-            </p>
-          </div>
-        )}
-
         <div>
           <strong
             style={{
               display: "block",
               marginBottom: 3,
-              fontSize: isAdjacent ? 12 : 13,
+              fontSize: 13,
               color: "#374151",
             }}
           >
-            {isAdjacent ? "What would make it stronger" : "Credibility action"}
+            Why it fits
           </strong>
           <p
             style={{
               margin: 0,
               color: "#6b7280",
               lineHeight: 1.5,
-              fontSize: isAdjacent ? 13 : 14,
+              fontSize: 14,
             }}
           >
-            {isAdjacent
-              ? "More evidence, stronger positioning, or a bridge project would make this path more credible."
-              : getCredibilityAction(node)}
+            {getWhyItFits(node)}
+          </p>
+        </div>
+
+        <div>
+          <strong
+            style={{
+              display: "block",
+              marginBottom: 3,
+              fontSize: 13,
+              color: "#374151",
+            }}
+          >
+            Credibility action
+          </strong>
+          <p
+            style={{
+              margin: 0,
+              color: "#6b7280",
+              lineHeight: 1.5,
+              fontSize: 14,
+            }}
+          >
+            {getCredibilityAction(node)}
           </p>
         </div>
       </div>
@@ -771,21 +718,19 @@ function DirectionCard({ node, variant = "primary" }) {
   );
 }
 
-function DirectionCards({ title, subtitle, nodes, variant }) {
+function DirectionCards({ title, subtitle, nodes }) {
   if (!nodes || nodes.length === 0) return null;
-
-  const isPrimary = variant === "primary";
 
   return (
     <div
       style={{ marginTop: 32 }}
-      className={isPrimary ? "pdf-recommended-section" : "pdf-nearby-section"}
+      className="pdf-recommended-section"
     >
       <div style={{ marginBottom: 16 }}>
         <h4
           style={{
             margin: "0 0 6px",
-            fontSize: isPrimary ? 20 : 17,
+            fontSize: 20,
             color: "#111827",
           }}
         >
@@ -802,17 +747,14 @@ function DirectionCards({ title, subtitle, nodes, variant }) {
         className="pdf-direction-grid"
         style={{
           display: "grid",
-          gridTemplateColumns: isPrimary
-            ? "repeat(auto-fill, minmax(300px, 1fr))"
-            : "repeat(auto-fill, minmax(260px, 1fr))",
-          gap: isPrimary ? 16 : 12,
+          gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+          gap: 16,
         }}
       >
         {nodes.map((node) => (
           <DirectionCard
-            key={`${variant}-${node.directionId}`}
+            key={`primary-${node.directionId}`}
             node={node}
-            variant={variant}
           />
         ))}
       </div>
@@ -934,10 +876,6 @@ function AssessmentSignals({ careerMap }) {
             <SignalItem
               label="Income drop"
               value={formatValue(financial.incomeDropTolerance)}
-            />
-            <SignalItem
-              label="Bridge role"
-              value={formatValue(financial.bridgeRoleWillingness)}
             />
           </div>
         </article>
@@ -1079,7 +1017,6 @@ function CareerDirectionMap({ careerMap }) {
 
   const summary = careerMap.summary || {};
   const primaryNodes = careerMap.primaryNodes || [];
-  const adjacentNodes = normalizeAdjacentNodes(careerMap.adjacentNodes || []);
 
   return (
     <section className="career-map-section">
@@ -1089,8 +1026,8 @@ function CareerDirectionMap({ careerMap }) {
           <h3>Your Career Direction Map</h3>
           <p className="career-map-intro">
             These are career directions, not fixed job titles. The map shows
-            where your profile sits today, which primary trajectories are most
-            realistic, and which nearby paths may be worth validating.
+            where your profile sits today and which primary directions are most
+            realistic.
           </p>
         </div>
 
@@ -1107,14 +1044,6 @@ function CareerDirectionMap({ careerMap }) {
         title="Recommended directions"
         subtitle="The strongest primary trajectories from the current assessment."
         nodes={primaryNodes}
-        variant="primary"
-      />
-
-      <DirectionCards
-        title="Nearby trajectories"
-        subtitle="Adjacent paths that may become stronger with more evidence, bridge work, or clearer positioning."
-        nodes={adjacentNodes}
-        variant="adjacent"
       />
 
       <AssessmentSignals careerMap={careerMap} />
