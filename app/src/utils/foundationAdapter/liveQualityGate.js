@@ -9,6 +9,11 @@
 //   buildLiveProfile(assessment) → profile object used by gate and map adapter
 //   applyLiveQualityGate(selectedRecommendations, showableBridges, assessment, minCount)
 
+import {
+  routePrimaryFamily,
+  getDirectionsByFamily,
+} from "./primaryFamilyRouter.js";
+
 // ── Spine constants ────────────────────────────────────────────────────────────
 
 const TECH_SPINES = new Set([
@@ -378,7 +383,9 @@ export function buildLiveProfile(assessment) {
     workforce.strength !== "weak" &&
     (workforce.strength === "strong" || techExec.matchCount < 3);
 
-  return { workforce, techExec, sales, marketing, workforcePeopleProfile };
+  const routerResult = routePrimaryFamily(assessment);
+
+  return { workforce, techExec, sales, marketing, workforcePeopleProfile, routerResult };
 }
 
 // ── Strict display-safe gate ───────────────────────────────────────────────────
@@ -549,32 +556,43 @@ function evaluateBridgeCandidateLiveGate(candidate, profile) {
   };
 }
 
-// ── Workforce priority ranking ─────────────────────────────────────────────────
+// ── Ranking and calibration derived from router result ────────────────────────
+//
+// Family priority order comes entirely from routerResult.rankedFamilies.
+// Score floors use a simple formula: primary family gets PRIMARY_SCORE_FLOOR,
+// each subsequent rank steps down by SCORE_FLOOR_STEP, min MIN_SCORE_FLOOR.
+// No per-family values are hardcoded.
 
-const WORKFORCE_FAMILY_PRIORITY = {
-  "WI-01": 0,
-  "WI-04": 1,
-  "WI-02": 2,
-  "WI-03": 3,
-  "PO-03": 4,
-  "PO-01": 5,
-  "PO-02": 6,
-  "PO-04": 7,
-  "PO-05": 8,
-  "PO-06": 9,
-  "MP-05": 10,
-  "OD-01": 20,
-};
+const PRIMARY_SCORE_FLOOR = 84;
+const SCORE_FLOOR_STEP    = 4;
+const MIN_SCORE_FLOOR     = 70;
+const DEFAULT_INJECTION_SCORE = 65;
 
 function numberOrZero(v) {
   return Number.isFinite(Number(v)) ? Number(v) : 0;
 }
 
-function rankForWorkforceProfile(a, b) {
-  const aPriority = WORKFORCE_FAMILY_PRIORITY[a.familyId] ?? 12;
-  const bPriority = WORKFORCE_FAMILY_PRIORITY[b.familyId] ?? 12;
-  if (aPriority !== bPriority) return aPriority - bPriority;
-  return numberOrZero(b.overallLensScore) - numberOrZero(a.overallLensScore);
+// Returns a sort comparator that ranks candidates by their family's position
+// in routerResult.rankedFamilies, breaking ties with overallLensScore.
+function buildRankFnFromRouter(routerResult) {
+  const familyRankMap = new Map(
+    (routerResult?.rankedFamilies || []).map(({ familyId }, idx) => [familyId, idx])
+  );
+  return function rankCandidate(a, b) {
+    const aPriority = familyRankMap.has(a.familyId) ? familyRankMap.get(a.familyId) : 99;
+    const bPriority = familyRankMap.has(b.familyId) ? familyRankMap.get(b.familyId) : 99;
+    if (aPriority !== bPriority) return aPriority - bPriority;
+    return numberOrZero(b.overallLensScore) - numberOrZero(a.overallLensScore);
+  };
+}
+
+// Returns score floors keyed by familyId, derived from ranked position.
+function buildCalibratedScoresFromRouter(routerResult) {
+  const scores = {};
+  (routerResult?.rankedFamilies || []).forEach(({ familyId }, idx) => {
+    scores[familyId] = Math.max(MIN_SCORE_FLOOR, PRIMARY_SCORE_FLOOR - idx * SCORE_FLOOR_STEP);
+  });
+  return scores;
 }
 
 // ── Workforce score calibration ───────────────────────────────────────────────
@@ -583,26 +601,12 @@ function rankForWorkforceProfile(a, b) {
 // or workforce_injected (with conservative default scores), lift overallLensScore
 // to a domain-appropriate floor so fitBand and UI labels reflect real fit.
 //
+// Score floors come from buildCalibratedScoresFromRouter() — derived from the
+// router's rankedFamilies, not from any hardcoded per-family table.
 // Only fires when:
 // - workforcePeopleProfile === true
 // - the candidate's familyId is in the calibration table
 // - at least 2 specific evidence keywords are confirmed in the assessment text
-
-const WORKFORCE_MIN_CALIBRATED_SCORES = {
-  "WI-01": 84,
-  "WI-04": 80,
-  "WI-02": 78,
-  "WI-03": 78,
-  "PO-03": 82,
-  "PO-01": 78,
-  "PO-02": 78,
-  "PO-04": 76,
-  "PO-05": 76,
-  "PO-06": 76,
-  "OD-01": 76,
-  "OD-02": 76,
-  "MP-05": 74,
-};
 
 const WORKFORCE_CALIBRATION_EVIDENCE_KEYWORDS = [
   "workforce planning",
@@ -631,10 +635,10 @@ export function getWorkforceCalibrationEvidenceCount(assessment) {
   ).length;
 }
 
-function calibrateWorkforceCandidateScore(candidate, profile, evidenceCount) {
+function calibrateWorkforceCandidateScore(candidate, profile, evidenceCount, subfamilyScores) {
   if (!profile.workforcePeopleProfile) return candidate;
 
-  const minScore = WORKFORCE_MIN_CALIBRATED_SCORES[candidate.familyId];
+  const minScore = subfamilyScores[candidate.familyId];
   if (!minScore) return candidate; // family not in calibration table
 
   // Require at least 2 domain-specific evidence keywords to calibrate.
@@ -657,7 +661,7 @@ function calibrateWorkforceCandidateScore(candidate, profile, evidenceCount) {
 
 // For workforcePeopleProfile, accept rejected WI/PO/OD candidates with relaxed
 // mapping-confidence requirements. Only requires displaySafeStatus = "display_safe".
-function tryWorkforceSafeWidening(passed, rejected, profile, minCount) {
+function tryWorkforceSafeWidening(passed, rejected, profile, minCount, rankFn) {
   if (!profile.workforcePeopleProfile) return passed;
   if (passed.length >= minCount) return passed;
 
@@ -676,7 +680,7 @@ function tryWorkforceSafeWidening(passed, rejected, profile, minCount) {
         c.legacyDirectionId &&
         c.displaySafeStatus === "display_safe"
     )
-    .sort(rankForWorkforceProfile);
+    .sort(rankFn);
 
   for (const candidate of workforceRejected) {
     widened.push({
@@ -695,25 +699,44 @@ function tryWorkforceSafeWidening(passed, rejected, profile, minCount) {
 }
 
 // Emergency injection: when the foundation engine produced no WI/PO candidates
-// at all, create minimal synthetic candidates from known role library IDs so
+// at all, create minimal synthetic candidates from role library metadata so
 // we never fall back to scoring.js for workforce profiles.
-function buildWorkforceInjectedCandidates() {
-  const defs = [
-    { legacyDirectionId: "BF-5-E",  familyId: "WI-01", score: 68 },
-    { legacyDirectionId: "BF-13-E", familyId: "PO-03", score: 65 },
-    { legacyDirectionId: "BF-4-E",  familyId: "PO-01", score: 62 },
-    { legacyDirectionId: "BF-12-E", familyId: "PO-02", score: 60 },
-    { legacyDirectionId: "BF-14-E", familyId: "PO-04", score: 58 },
-  ];
+//
+// Candidate order is fully derived from routerResult.rankedFamilies:
+// walk ranked families in order, collect PEOPLE-function directions from each
+// workforce-safe family. No direction IDs are hardcoded.
+function buildWorkforceInjectedCandidates(routerResult) {
+  const MAX_INJECTED = 5;
+  const PEOPLE_FUNCTION = "PEOPLE";
 
-  return defs.map((def) => ({
+  const candidates = [];
+  const seen = new Set();
+
+  for (const { familyId } of routerResult?.rankedFamilies || []) {
+    if (!WORKFORCE_SAFE_FAMILY_IDS.has(familyId)) continue;
+
+    for (const { directionId, functionId } of getDirectionsByFamily(familyId)) {
+      // Only inject PEOPLE-function directions to avoid accidentally injecting
+      // marketplace-operations or programme-management directions (OD-01, OD-02).
+      if (functionId !== PEOPLE_FUNCTION) continue;
+      if (seen.has(directionId)) continue;
+
+      seen.add(directionId);
+      candidates.push({ legacyDirectionId: directionId, familyId });
+
+      if (candidates.length >= MAX_INJECTED) break;
+    }
+    if (candidates.length >= MAX_INJECTED) break;
+  }
+
+  return candidates.map((def) => ({
     legacyDirectionId: def.legacyDirectionId,
     familyId: def.familyId,
     familySpineId: WORKFORCE_FAMILY_SPINE[def.familyId] || "people_operations",
     displaySafeStatus: "display_safe",
     canonicalMappingConfidence: "exact",
     alignmentMatchType: "primary_spine",
-    overallLensScore: def.score,
+    overallLensScore: DEFAULT_INJECTION_SCORE,
     recommendedDisplayClassification: "Primary",
     sourceDiagnostic: {},
     compositeResolutionStatus: null,
@@ -800,13 +823,21 @@ export function applyLiveQualityGate(
     }
   }
 
+  const { routerResult } = profile;
+
+  // Build rank comparator and score floors from router result.
+  // Falls back gracefully: if confidence is "none" the maps are empty and
+  // all candidates default to priority 99 (foundation engine order preserved).
+  const rankFn = buildRankFnFromRouter(routerResult);
+  const subfamilyScores = buildCalibratedScoresFromRouter(routerResult);
+
   let fallbackType = "foundation_strict";
   let widened = [...passed];
 
   // For workforce-primary profiles: widen from rejected WI/PO/OD candidates
   // before trying bridge widening, to avoid pulling in tech directions.
   if (profile.workforcePeopleProfile && widened.length < minCount) {
-    widened = tryWorkforceSafeWidening(passed, rejected, profile, minCount);
+    widened = tryWorkforceSafeWidening(passed, rejected, profile, minCount, rankFn);
     if (widened.length > passed.length) {
       fallbackType = "workforce_safe_widening";
     }
@@ -818,7 +849,7 @@ export function applyLiveQualityGate(
     const existingIds = new Set(
       widened.map((c) => c.legacyDirectionId).filter(Boolean)
     );
-    for (const inj of buildWorkforceInjectedCandidates()) {
+    for (const inj of buildWorkforceInjectedCandidates(routerResult)) {
       if (!existingIds.has(inj.legacyDirectionId) && widened.length < minCount) {
         widened.push(inj);
         existingIds.add(inj.legacyDirectionId);
@@ -833,34 +864,49 @@ export function applyLiveQualityGate(
   widened = tryWidenWithBridges(widened, showableBridges || [], profile, minCount);
 
   // Calibrate scores for workforce-primary profiles before the final sort.
-  // This lifts conservative default scores from workforce_injected / workforce_safe_widening
-  // candidates to domain-appropriate floors so fitBand reflects real fit.
+  // Floors are formula-derived from ranked position — no hardcoded per-family values.
   const workforceEvidenceCount = profile.workforcePeopleProfile
     ? getWorkforceCalibrationEvidenceCount(assessment)
     : 0;
 
   if (profile.workforcePeopleProfile && workforceEvidenceCount >= 2) {
     widened = widened.map((c) =>
-      calibrateWorkforceCandidateScore(c, profile, workforceEvidenceCount)
+      calibrateWorkforceCandidateScore(c, profile, workforceEvidenceCount, subfamilyScores)
     );
   }
 
+  // Sort workforce profiles by metadata-derived family priority.
   if (profile.workforce.isWorkforce && profile.workforce.strength !== "weak") {
-    widened.sort(rankForWorkforceProfile);
+    widened.sort(rankFn);
+  }
+
+  // Sort technology profiles by metadata-derived family priority when not
+  // workforce-primary (workforce blocking already handles those).
+  if (profile.techExec.isTechExec && !profile.workforcePeopleProfile) {
+    widened.sort(rankFn);
   }
 
   const rankedPassed = widened.map((c, idx) => ({ ...c, rank: idx + 1 }));
 
   const debugMeta = {
-    workforcePeopleProfile: profile.workforcePeopleProfile,
+    workforcePeopleProfile:   profile.workforcePeopleProfile,
+    primaryFamilyId:          routerResult.primaryFamilyId,
+    primarySubfamilyId:       routerResult.primarySubfamilyId,
+    primaryFunctionId:        routerResult.primaryFunctionId,
+    routerConfidence:         routerResult.routerConfidence,
+    rankedFamilies:           routerResult.rankedFamilies,
+    evidenceHits:             routerResult.evidenceHits,
+    negativeEvidenceHits:     routerResult.negativeEvidenceHits,
+    titleAliasHits:           routerResult.titleAliasHits,
+    usedMetadataDrivenRouter: routerResult.usedMetadataDrivenRouter,
     fallbackType,
     blockedTeCandidates,
-    workforceStrength: profile.workforce.strength,
+    workforceStrength:    profile.workforce.strength,
     workforceTotalMatches: profile.workforce.totalMatches,
-    techExecMatchCount: profile.techExec.matchCount,
-    techExecIsTechExec: profile.techExec.isTechExec,
+    techExecMatchCount:   profile.techExec.matchCount,
+    techExecIsTechExec:   profile.techExec.isTechExec,
     workforceEvidenceCount,
-    passedCount: rankedPassed.length,
+    passedCount:   rankedPassed.length,
     rejectedCount: rejected.length,
   };
 
