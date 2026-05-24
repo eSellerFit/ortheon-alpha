@@ -9,3 +9,4 @@
 
 export * from "./assessmentSnapshotAdapterV31.js";
 export * from "./profileSynthesizerInputAdapterV31.js";
+export * from "./transferabilityMapperInputAdapterV31.js";
