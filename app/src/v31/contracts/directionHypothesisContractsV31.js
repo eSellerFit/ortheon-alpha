@@ -66,6 +66,7 @@
  * @property {string} seniorityComplexityLevel
  * @property {string} workModel
  * @property {string} routeType
+ * @property {string[]} sourceTransferableAssets Asset names from TransferabilityMapV31.transferableAssets[].assetName that ground this hypothesis.
  * @property {string} directionStatement
  * @property {string[]} whyThisCouldWork
  * @property {string} requiredBridge
@@ -104,6 +105,7 @@ export const DIRECTION_HYPOTHESIS_V31_EMPTY = Object.freeze({
   seniorityComplexityLevel: "",
   workModel: "",
   routeType: "",
+  sourceTransferableAssets: [],
   directionStatement: "",
   whyThisCouldWork: [],
   requiredBridge: "",

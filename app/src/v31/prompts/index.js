@@ -9,3 +9,4 @@
 
 export * from "./profileSynthesizerPromptSpecV31.js";
 export * from "./transferabilityMapperPromptSpecV31.js";
+export * from "./directionHypothesisGeneratorPromptSpecV31.js";
