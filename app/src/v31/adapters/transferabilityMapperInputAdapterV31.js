@@ -69,6 +69,12 @@ export function buildTransferabilityMapperInputV31(
     );
   }
 
+  if (synthesizedProfile.assessmentId !== assessmentSnapshot.assessmentId) {
+    throw new Error(
+      "buildTransferabilityMapperInputV31 expected synthesizedProfile.assessmentId to match assessmentSnapshot.assessmentId."
+    );
+  }
+
   return {
     stage: "transferability_mapper_v31",
     instructionsVersion: TRANSFERABILITY_MAPPER_PROMPT_SPEC_V31.id,
