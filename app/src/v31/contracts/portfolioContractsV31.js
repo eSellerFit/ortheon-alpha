@@ -1,0 +1,135 @@
+/**
+ * Ortheon MVP Cut v3.1 — Portfolio Critic / Composer Contracts
+ *
+ * The Portfolio Critic / Composer is AI Call 4.
+ *
+ * Purpose:
+ * Review direction hypotheses and compose the final direction portfolio.
+ *
+ * Important:
+ * The final portfolio is not a ranked list of job titles.
+ * It is a small, high-quality set of career direction recommendations.
+ *
+ * Bundle 1 rule:
+ * - Contract only.
+ * - No prompt implementation.
+ * - No API calls.
+ * - No production imports.
+ */
+
+/**
+ * @typedef {import("./profileSynthesizerContractsV31.js").SynthesizedProfileV31} SynthesizedProfileV31
+ * @typedef {import("./transferabilityContractsV31.js").TransferabilityMapV31} TransferabilityMapV31
+ * @typedef {import("./directionHypothesisContractsV31.js").DirectionHypothesisV31} DirectionHypothesisV31
+ * @typedef {import("./guardrailContractsV31.js").FinancialModelV31} FinancialModelV31
+ * @typedef {import("./guardrailContractsV31.js").HardConstraintResultV31} HardConstraintResultV31
+ */
+
+/**
+ * @typedef {Object} PortfolioCriticInputV31
+ * @property {"portfolio_critic_composer_v31"} stage
+ * @property {string} instructionsVersion
+ * @property {SynthesizedProfileV31} synthesizedProfile
+ * @property {TransferabilityMapV31} transferabilityMap
+ * @property {DirectionHypothesisV31[]} directionHypotheses
+ * @property {FinancialModelV31|null} financialModel
+ * @property {HardConstraintResultV31|null} hardConstraints
+ */
+
+/**
+ * @typedef {Object} PortfolioSummaryV31
+ * @property {string} overallInterpretation
+ * @property {string} mainTension
+ * @property {string} recommendedStrategy
+ * @property {string[]} portfolioLogic
+ */
+
+/**
+ * @typedef {Object} FinalPortfolioDirectionV31
+ * @property {string} directionId
+ * @property {number} rank
+ * @property {string} directionArena
+ * @property {string} seniorityComplexityLevel
+ * @property {string} workModel
+ * @property {string} routeType
+ * @property {string} label
+ * @property {"primary"|"secondary"|"bridge"|"exploratory"|"not_recommended"} recommendationType
+ * @property {"high"|"medium"|"low"|"insufficient_data"} confidence
+ * @property {string[]} whyItFits
+ * @property {string[]} whyItIsCredible
+ * @property {string[]} whatMakesItRisky
+ * @property {string} firstValidationStep
+ * @property {string} bridgeStrategy
+ * @property {string[]} notRecommendedIf
+ * @property {string[]} evidence
+ * @property {string[]} constraintsAndWarnings
+ */
+
+/**
+ * @typedef {Object} RejectedDirectionV31
+ * @property {string} label
+ * @property {string|null} directionId
+ * @property {string} reasonRejected
+ * @property {string[]} supportingConcerns
+ */
+
+/**
+ * @typedef {Object} UserFacingNarrativeV31
+ * @property {string} headline
+ * @property {string} summary
+ * @property {string} nextStepAdvice
+ * @property {string[]} caveats
+ */
+
+/**
+ * @typedef {Object} FinalDirectionPortfolioV31
+ * @property {"v3.1"} version
+ * @property {"final_direction_portfolio"} stage
+ * @property {string} assessmentId
+ * @property {PortfolioSummaryV31} portfolioSummary
+ * @property {FinalPortfolioDirectionV31[]} directions
+ * @property {RejectedDirectionV31[]} rejectedDirections
+ * @property {UserFacingNarrativeV31} userFacingNarrative
+ * @property {string[]} qualityNotes
+ * @property {string[]} missingInputsAffectingConfidence
+ */
+
+/**
+ * Empty input shape helper for documentation/testing.
+ * Not used by production flow.
+ */
+export const PORTFOLIO_CRITIC_INPUT_V31_EMPTY = Object.freeze({
+  stage: "portfolio_critic_composer_v31",
+  instructionsVersion: "portfolio_critic_composer_v31_001",
+  synthesizedProfile: null,
+  transferabilityMap: null,
+  directionHypotheses: [],
+  financialModel: null,
+  hardConstraints: null,
+});
+
+/**
+ * Empty final portfolio shape helper for documentation/testing.
+ * Not used by production flow.
+ */
+export const FINAL_DIRECTION_PORTFOLIO_V31_EMPTY = Object.freeze({
+  version: "v3.1",
+  stage: "final_direction_portfolio",
+  assessmentId: "",
+  portfolioSummary: {
+    overallInterpretation: "",
+    mainTension: "",
+    recommendedStrategy: "",
+    portfolioLogic: [],
+  },
+  directions: [],
+  rejectedDirections: [],
+  userFacingNarrative: {
+    headline: "",
+    summary: "",
+    nextStepAdvice: "",
+    caveats: [],
+  },
+  qualityNotes: [],
+  missingInputsAffectingConfidence: [],
+});
