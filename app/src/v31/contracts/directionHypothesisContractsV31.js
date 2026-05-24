@@ -19,6 +19,7 @@
  */
 
 /**
+ * @typedef {import("./assessmentSnapshotV31.js").AssessmentSnapshotV31} AssessmentSnapshotV31
  * @typedef {import("./profileSynthesizerContractsV31.js").SynthesizedProfileV31} SynthesizedProfileV31
  * @typedef {import("./transferabilityContractsV31.js").TransferabilityMapV31} TransferabilityMapV31
  */
@@ -27,6 +28,7 @@
  * @typedef {Object} DirectionHypothesisInputV31
  * @property {"direction_hypothesis_generator_v31"} stage
  * @property {string} instructionsVersion
+ * @property {AssessmentSnapshotV31} assessmentSnapshot
  * @property {SynthesizedProfileV31} synthesizedProfile
  * @property {TransferabilityMapV31} transferabilityMap
  * @property {Object|null} financialModel
@@ -86,6 +88,7 @@
 export const DIRECTION_HYPOTHESIS_INPUT_V31_EMPTY = Object.freeze({
   stage: "direction_hypothesis_generator_v31",
   instructionsVersion: "direction_hypothesis_generator_v31_001",
+  assessmentSnapshot: null,
   synthesizedProfile: null,
   transferabilityMap: null,
   financialModel: null,
