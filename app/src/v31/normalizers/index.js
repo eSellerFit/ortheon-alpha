@@ -9,3 +9,4 @@
 
 export * from "./profileSynthesizerOutputNormalizerV31.js";
 export * from "./transferabilityMapOutputNormalizerV31.js";
+export * from "./directionHypothesisOutputNormalizerV31.js";
