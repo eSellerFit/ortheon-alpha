@@ -102,12 +102,15 @@ function validatePortfolioDirection(direction, index, issues) {
     "routeType",
     "label",
     "firstValidationStep",
-    "bridgeStrategy",
   ].forEach((field) => {
     if (!hasString(direction[field])) {
       pushIssue(issues, `${id}.${field}`, `${field} must be a non-empty string.`);
     }
   });
+
+  if (typeof direction.bridgeStrategy !== "string") {
+    pushIssue(issues, `${id}.bridgeStrategy`, "bridgeStrategy must be a string.");
+  }
 
   if (typeof direction.displayOrder !== "number") {
     pushIssue(issues, `${id}.displayOrder`, "displayOrder must be a number.");
