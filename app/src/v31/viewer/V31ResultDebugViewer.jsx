@@ -1,7 +1,7 @@
 /**
  * Ortheon MVP Cut v3.1 — Internal Result Debug Viewer
  *
- * Bundle 16C read-only internal viewer.
+ * Bundle 16C/16D read-only internal viewer.
  * Route: /internal/v31-result?documentId=<id>
  *
  * Rules:
@@ -14,95 +14,194 @@
 import { useEffect, useState } from "react";
 import { readV31ResultViewModelFromFirestoreV31 } from "./readV31ResultViewModelFromFirestore.js";
 
-// ── Minimal local styles ───────────────────────────────────────────────────────
+// ── Pill colors ────────────────────────────────────────────────────────────────
+
+const PILL_THEMES = {
+  green:   { background: "#d4edda", color: "#155724" },
+  red:     { background: "#f8d7da", color: "#721c24" },
+  amber:   { background: "#fff3cd", color: "#856404" },
+  blue:    { background: "#d1ecf1", color: "#0c5460" },
+  purple:  { background: "#e9d6f5", color: "#5a1e8c" },
+  default: { background: "#e2e3e5", color: "#383d41" },
+};
+
+function pillColorFor(field, value) {
+  const v = String(value || "").toLowerCase();
+  if (field === "recommendationType") {
+    if (v === "primary") return "green";
+    if (v === "bridge") return "amber";
+    if (v.includes("explor")) return "blue";
+    return "default";
+  }
+  if (field === "confidence") {
+    if (v === "high") return "green";
+    if (v === "medium" || v === "moderate") return "amber";
+    if (v === "low") return "red";
+    return "default";
+  }
+  if (field === "routeType") return "blue";
+  if (field === "workModel") return "purple";
+  return "default";
+}
+
+// ── Local styles ───────────────────────────────────────────────────────────────
 
 const S = {
   page: {
     fontFamily: "monospace",
     fontSize: "13px",
-    maxWidth: "860px",
+    maxWidth: "880px",
     margin: "0 auto",
-    padding: "24px 16px 64px",
+    padding: "28px 16px 72px",
     color: "#1a1a1a",
-    background: "#f9f9f9",
+    background: "#f5f5f5",
     minHeight: "100vh",
   },
+
+  // Header block (dark bar at top)
   header: {
     background: "#1a1a1a",
     color: "#f0f0f0",
-    padding: "12px 16px",
-    borderRadius: "4px",
-    marginBottom: "20px",
+    padding: "14px 18px",
+    borderRadius: "5px",
+    marginBottom: "22px",
   },
-  h1: { margin: "0 0 6px", fontSize: "15px", fontWeight: "700" },
-  meta: { margin: "2px 0", fontSize: "12px", color: "#aaa" },
+  h1: { margin: "0 0 10px", fontSize: "15px", fontWeight: "700", letterSpacing: "0.02em" },
+  metaGrid: {
+    display: "grid",
+    gridTemplateColumns: "160px 1fr",
+    rowGap: "3px",
+    fontSize: "12px",
+    color: "#aaa",
+  },
+  metaKey: { color: "#777" },
   metaVal: { color: "#e0e0e0" },
+  metaDivider: { gridColumn: "1 / -1", borderTop: "1px solid #333", margin: "7px 0" },
+
+  // Section card
   section: {
     background: "#fff",
     border: "1px solid #e0e0e0",
-    borderRadius: "4px",
-    marginBottom: "16px",
+    borderRadius: "5px",
+    marginBottom: "20px",
     overflow: "hidden",
   },
   sectionHead: {
-    background: "#f0f0f0",
-    padding: "7px 12px",
+    background: "#efefef",
+    padding: "7px 14px",
     fontSize: "11px",
     fontWeight: "700",
     textTransform: "uppercase",
-    letterSpacing: "0.05em",
+    letterSpacing: "0.06em",
     color: "#555",
+    borderBottom: "1px solid #e0e0e0",
   },
-  sectionBody: { padding: "12px 16px" },
-  row: { margin: "4px 0", lineHeight: "1.5" },
-  label: { color: "#888", marginRight: "6px" },
-  pill: (color) => ({
-    display: "inline-block",
-    padding: "1px 7px",
-    borderRadius: "10px",
-    fontSize: "11px",
-    fontWeight: "600",
-    background: color === "green" ? "#d4edda" : color === "red" ? "#f8d7da" : "#e2e3e5",
-    color: color === "green" ? "#155724" : color === "red" ? "#721c24" : "#383d41",
-  }),
-  dirCard: {
-    border: "1px solid #d0d0d0",
-    borderRadius: "4px",
-    marginBottom: "12px",
-    overflow: "hidden",
-  },
-  dirCardHead: {
-    background: "#e8eaf0",
-    padding: "7px 12px",
-    fontSize: "12px",
-    fontWeight: "700",
+  sectionBody: { padding: "14px 16px" },
+
+  // Field rows
+  fieldRow: {
     display: "flex",
     gap: "8px",
-    alignItems: "baseline",
+    margin: "5px 0",
+    lineHeight: "1.5",
   },
-  dirCardBody: { padding: "10px 14px" },
-  listItems: (items) =>
-    items.length === 0 ? null : (
-      <ul style={{ margin: "2px 0 6px 18px", padding: 0, lineHeight: "1.5" }}>
-        {items.map((item, i) => (
-          <li key={i}>{item}</li>
-        ))}
-      </ul>
-    ),
+  fieldLabel: {
+    color: "#888",
+    minWidth: "150px",
+    flexShrink: 0,
+  },
+  fieldValue: { color: "#1a1a1a" },
+
+  // Sub-section label (for lists inside cards)
   subLabel: {
     display: "block",
     fontSize: "11px",
     fontWeight: "700",
     color: "#666",
-    marginTop: "8px",
-    marginBottom: "2px",
+    marginTop: "12px",
+    marginBottom: "3px",
+    textTransform: "uppercase",
+    letterSpacing: "0.04em",
   },
+
+  // Direction card
+  dirCard: {
+    border: "1px solid #d0d0d0",
+    borderRadius: "5px",
+    marginBottom: "14px",
+    overflow: "hidden",
+  },
+  dirCardHead: {
+    background: "#eaecf4",
+    padding: "8px 14px 6px",
+    borderBottom: "1px solid #d0d0d0",
+  },
+  dirCardTitle: {
+    display: "flex",
+    alignItems: "baseline",
+    gap: "8px",
+    marginBottom: "5px",
+  },
+  dirCardOrder: { color: "#777", fontSize: "12px", flexShrink: 0 },
+  dirCardLabel: { fontWeight: "700", fontSize: "13px" },
+  dirCardBadges: { display: "flex", flexWrap: "wrap", gap: "5px" },
+  dirCardArena: {
+    fontSize: "11px",
+    color: "#666",
+    marginTop: "3px",
+  },
+  dirCardBody: { padding: "12px 16px" },
+  dirCardDivider: {
+    borderTop: "1px solid #ebebeb",
+    margin: "10px 0",
+  },
+
+  // First validation step highlight
+  firstStepBox: {
+    background: "#f0f7ff",
+    border: "1px solid #c2d9f0",
+    borderRadius: "4px",
+    padding: "7px 10px",
+    marginTop: "10px",
+  },
+  firstStepLabel: {
+    display: "block",
+    fontSize: "10px",
+    fontWeight: "700",
+    color: "#2563eb",
+    marginBottom: "3px",
+    textTransform: "uppercase",
+    letterSpacing: "0.06em",
+  },
+
+  // Bridge strategy highlight
+  bridgeBox: {
+    background: "#fffbeb",
+    border: "1px solid #fde68a",
+    borderRadius: "4px",
+    padding: "7px 10px",
+    marginTop: "8px",
+  },
+  bridgeLabel: {
+    display: "block",
+    fontSize: "10px",
+    fontWeight: "700",
+    color: "#92400e",
+    marginBottom: "3px",
+    textTransform: "uppercase",
+    letterSpacing: "0.06em",
+  },
+
+  // List
+  ul: { margin: "3px 0 4px 18px", padding: 0, lineHeight: "1.6" },
+
+  // Status/misc boxes
   warningBox: {
     background: "#fff8e1",
     border: "1px solid #ffe082",
     borderRadius: "4px",
-    padding: "8px 12px",
-    marginTop: "8px",
+    padding: "10px 14px",
+    marginBottom: "16px",
     fontSize: "12px",
   },
   errorBox: {
@@ -111,69 +210,142 @@ const S = {
     borderRadius: "4px",
     padding: "12px 16px",
     color: "#721c24",
-    marginTop: "16px",
+    marginBottom: "16px",
   },
   usageBox: {
     background: "#e8f4fd",
     border: "1px solid #bee5eb",
-    borderRadius: "4px",
-    padding: "16px",
+    borderRadius: "5px",
+    padding: "20px",
     color: "#0c5460",
-    marginTop: "24px",
-    fontFamily: "monospace",
+    marginTop: "28px",
+    lineHeight: "1.8",
   },
-  loading: { padding: "32px 0", textAlign: "center", color: "#888" },
+  loading: { padding: "40px 0", textAlign: "center", color: "#888" },
 };
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+function pill(value, field) {
+  const theme = PILL_THEMES[pillColorFor(field, value)] || PILL_THEMES.default;
+  return (
+    <span style={{
+      display: "inline-block",
+      padding: "1px 8px",
+      borderRadius: "10px",
+      fontSize: "11px",
+      fontWeight: "600",
+      ...theme,
+    }}>
+      {value}
+    </span>
+  );
+}
+
+function ItemList({ items }) {
+  if (!Array.isArray(items) || items.length === 0) return null;
+  return (
+    <ul style={S.ul}>
+      {items.map((item, i) => <li key={i}>{item}</li>)}
+    </ul>
+  );
+}
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
 function FieldRow({ label, value }) {
   if (value === null || value === undefined || value === "") return null;
   return (
-    <div style={S.row}>
-      <span style={S.label}>{label}:</span>
-      <span>{String(value)}</span>
+    <div style={S.fieldRow}>
+      <span style={S.fieldLabel}>{label}</span>
+      <span style={S.fieldValue}>{String(value)}</span>
     </div>
   );
 }
 
-function StringList({ label, items }) {
+function SubSection({ label, items }) {
   if (!Array.isArray(items) || items.length === 0) return null;
   return (
     <>
       <span style={S.subLabel}>{label}</span>
-      {S.listItems(items)}
+      <ItemList items={items} />
     </>
   );
 }
 
 function DirectionCard({ direction, index }) {
+  const hasNarrative =
+    direction.whyItFits.length > 0 ||
+    direction.whyItIsCredible.length > 0 ||
+    direction.whatMakesItRisky.length > 0 ||
+    direction.constraintsAndWarnings.length > 0 ||
+    direction.notRecommendedIf.length > 0;
+
   return (
     <div style={S.dirCard}>
+      {/* Card header: order + label + badges */}
       <div style={S.dirCardHead}>
-        <span style={{ color: "#555" }}>#{direction.displayOrder || index + 1}</span>
-        <span>{direction.label || direction.directionId || "Unnamed"}</span>
-        {direction.recommendationType && (
-          <span style={S.pill("default")}>{direction.recommendationType}</span>
-        )}
-        {direction.confidence && (
-          <span style={S.pill("default")}>{direction.confidence}</span>
+        <div style={S.dirCardTitle}>
+          <span style={S.dirCardOrder}>#{direction.displayOrder || index + 1}</span>
+          <span style={S.dirCardLabel}>{direction.label || direction.directionId || "Unnamed"}</span>
+        </div>
+        <div style={S.dirCardBadges}>
+          {direction.recommendationType && pill(direction.recommendationType, "recommendationType")}
+          {direction.confidence && pill(direction.confidence, "confidence")}
+          {direction.routeType && pill(direction.routeType, "routeType")}
+          {direction.workModel && pill(direction.workModel, "workModel")}
+        </div>
+        {direction.directionArena && (
+          <div style={S.dirCardArena}>Arena: {direction.directionArena}</div>
         )}
       </div>
+
+      {/* Card body */}
       <div style={S.dirCardBody}>
         <FieldRow label="directionId" value={direction.directionId} />
-        <FieldRow label="directionArena" value={direction.directionArena} />
-        <FieldRow label="routeType" value={direction.routeType} />
-        <FieldRow label="workModel" value={direction.workModel} />
-        <FieldRow label="firstValidationStep" value={direction.firstValidationStep} />
-        {direction.bridgeStrategy && (
-          <FieldRow label="bridgeStrategy" value={direction.bridgeStrategy} />
+
+        {/* First validation step — highlighted */}
+        {direction.firstValidationStep && (
+          <div style={S.firstStepBox}>
+            <span style={S.firstStepLabel}>First Validation Step</span>
+            {direction.firstValidationStep}
+          </div>
         )}
-        <StringList label="Why it fits" items={direction.whyItFits} />
-        <StringList label="Why it is credible" items={direction.whyItIsCredible} />
-        <StringList label="What makes it risky" items={direction.whatMakesItRisky} />
-        <StringList label="Constraints & warnings" items={direction.constraintsAndWarnings} />
-        <StringList label="Not recommended if" items={direction.notRecommendedIf} />
+
+        {/* Bridge strategy — highlighted */}
+        {direction.bridgeStrategy && (
+          <div style={S.bridgeBox}>
+            <span style={S.bridgeLabel}>Bridge Strategy</span>
+            {direction.bridgeStrategy}
+          </div>
+        )}
+
+        {/* Narrative lists */}
+        {hasNarrative && <div style={S.dirCardDivider} />}
+        <SubSection label="Why it fits" items={direction.whyItFits} />
+        <SubSection label="Why it is credible" items={direction.whyItIsCredible} />
+        <SubSection label="What makes it risky" items={direction.whatMakesItRisky} />
+        <SubSection label="Constraints & warnings" items={direction.constraintsAndWarnings} />
+        <SubSection label="Not recommended if" items={direction.notRecommendedIf} />
+      </div>
+    </div>
+  );
+}
+
+function RejectedDirectionCard({ direction }) {
+  return (
+    <div style={{ ...S.dirCard, marginBottom: "10px" }}>
+      <div style={{ ...S.dirCardHead, background: "#f5e9e9" }}>
+        <div style={S.dirCardTitle}>
+          <span style={S.dirCardLabel}>{direction.label || direction.directionId || "Unnamed"}</span>
+          {direction.directionId && (
+            <span style={{ ...S.dirCardOrder, fontSize: "11px" }}>{direction.directionId}</span>
+          )}
+        </div>
+      </div>
+      <div style={S.dirCardBody}>
+        <FieldRow label="reasonRejected" value={direction.reasonRejected} />
+        <SubSection label="Supporting concerns" items={direction.supportingConcerns} />
       </div>
     </div>
   );
@@ -185,23 +357,21 @@ function GuardrailsSection({ guardrails }) {
     <div style={S.section}>
       <div style={S.sectionHead}>Guardrails</div>
       <div style={S.sectionBody}>
-        <div style={S.row}>
-          <span style={S.label}>passed:</span>
-          <span style={S.pill(passed ? "green" : "red")}>
-            {passed ? "PASS" : "FAIL"}
-          </span>
+        <div style={S.fieldRow}>
+          <span style={S.fieldLabel}>passed</span>
+          {pill(passed ? "PASS" : "FAIL", passed ? "green" : "red")}
         </div>
+        {canShowAsCredibleNowValues.length > 0 && (
+          <FieldRow
+            label="canShowAsCredibleNow"
+            value={canShowAsCredibleNowValues.map(String).join(", ")}
+          />
+        )}
         {guardrailStatuses.length > 0 && (
           <>
-            <span style={S.subLabel}>guardrailStatuses</span>
-            {S.listItems(guardrailStatuses)}
+            <span style={S.subLabel}>Guardrail Statuses</span>
+            <ItemList items={guardrailStatuses} />
           </>
-        )}
-        {canShowAsCredibleNowValues.length > 0 && (
-          <div style={S.row}>
-            <span style={S.label}>canShowAsCredibleNow:</span>
-            <span>{canShowAsCredibleNowValues.map(String).join(", ")}</span>
-          </div>
         )}
       </div>
     </div>
@@ -238,17 +408,16 @@ export default function V31ResultDebugViewer() {
       });
   }, [documentId]);
 
+  // ── No documentId ──
   if (!documentId) {
     return (
       <div style={S.page}>
         <div style={S.usageBox}>
           <strong>v3.1 Result Debug Viewer</strong>
           <br />
-          <br />
           Provide a document ID as a query parameter:
           <br />
           <code>/internal/v31-result?documentId=&lt;assessmentId&gt;</code>
-          <br />
           <br />
           Example:
           <br />
@@ -258,6 +427,7 @@ export default function V31ResultDebugViewer() {
     );
   }
 
+  // ── Loading ──
   if (state.status === "loading") {
     return (
       <div style={S.page}>
@@ -266,12 +436,16 @@ export default function V31ResultDebugViewer() {
     );
   }
 
+  // ── Error ──
   if (state.status === "error") {
     return (
       <div style={S.page}>
         <div style={S.header}>
           <h1 style={S.h1}>v3.1 Result Debug Viewer</h1>
-          <p style={{ ...S.meta, margin: 0 }}>documentId: <span style={S.metaVal}>{documentId}</span></p>
+          <div style={S.metaGrid}>
+            <span style={S.metaKey}>documentId</span>
+            <span style={S.metaVal}>{documentId}</span>
+          </div>
         </div>
         <div style={S.errorBox}>
           <strong>Error:</strong> {state.error}
@@ -283,32 +457,53 @@ export default function V31ResultDebugViewer() {
   if (state.status !== "ok" || !state.result?.viewModel) return null;
 
   const vm = state.result.viewModel;
-  const { summary, directions, guardrails, metrics, caveats, qualityNotes, rejectedDirections, warnings, errors } = vm;
+  const {
+    summary,
+    directions,
+    guardrails,
+    metrics,
+    caveats,
+    qualityNotes,
+    rejectedDirections,
+    warnings,
+    errors,
+  } = vm;
 
   return (
     <div style={S.page}>
+
       {/* ── Header ── */}
       <div style={S.header}>
         <h1 style={S.h1}>v3.1 Result Debug Viewer</h1>
-        <p style={S.meta}>assessmentId: <span style={S.metaVal}>{vm.assessmentId || documentId}</span></p>
-        <p style={S.meta}>
-          pipelineStatus:{" "}
-          <span style={{ ...S.metaVal, ...S.pill(vm.pipelineStatus === "passed" ? "green" : "red") }}>
-            {vm.pipelineStatus}
+        <div style={S.metaGrid}>
+          <span style={S.metaKey}>assessmentId</span>
+          <span style={S.metaVal}>{vm.assessmentId || documentId}</span>
+
+          <span style={S.metaKey}>pipelineStatus</span>
+          <span>{pill(vm.pipelineStatus, "pipelineStatus")}</span>
+
+          <span style={S.metaKey}>generatedAt</span>
+          <span style={S.metaVal}>{vm.generatedAt}</span>
+
+          <span style={S.metaKey}>source</span>
+          <span style={S.metaVal}>{vm.source}</span>
+
+          <div style={S.metaDivider} />
+
+          <span style={S.metaKey}>estimatedCost</span>
+          <span style={S.metaVal}>${metrics.totalEstimatedCostUsd}</span>
+
+          <span style={S.metaKey}>apiCallCount</span>
+          <span style={S.metaVal}>{metrics.apiCallCount}</span>
+
+          <span style={S.metaKey}>directions</span>
+          <span style={S.metaVal}>
+            {metrics.finalDirectionCount} final
+            {metrics.rejectedDirectionCount > 0
+              ? `,  ${metrics.rejectedDirectionCount} rejected`
+              : ""}
           </span>
-        </p>
-        <p style={S.meta}>generatedAt: <span style={S.metaVal}>{vm.generatedAt}</span></p>
-        <p style={S.meta}>source: <span style={S.metaVal}>{vm.source}</span></p>
-        <p style={S.meta}>
-          totalEstimatedCostUsd: <span style={S.metaVal}>${metrics.totalEstimatedCostUsd}</span>
-          {"  "}
-          apiCallCount: <span style={S.metaVal}>{metrics.apiCallCount}</span>
-        </p>
-        <p style={S.meta}>
-          directions: <span style={S.metaVal}>{metrics.finalDirectionCount}</span>
-          {"  "}
-          rejected: <span style={S.metaVal}>{metrics.rejectedDirectionCount}</span>
-        </p>
+        </div>
       </div>
 
       {/* ── Summary ── */}
@@ -317,10 +512,14 @@ export default function V31ResultDebugViewer() {
           <div style={S.sectionHead}>Summary</div>
           <div style={S.sectionBody}>
             {summary.headline && (
-              <div style={{ ...S.row, fontWeight: "600", marginBottom: "8px" }}>{summary.headline}</div>
+              <div style={{ fontWeight: "700", fontSize: "14px", marginBottom: "8px", lineHeight: "1.4" }}>
+                {summary.headline}
+              </div>
             )}
             {summary.summary && (
-              <div style={{ ...S.row, marginBottom: "8px" }}>{summary.summary}</div>
+              <div style={{ marginBottom: "12px", lineHeight: "1.6", color: "#333" }}>
+                {summary.summary}
+              </div>
             )}
             <FieldRow label="recommendedStrategy" value={summary.recommendedStrategy} />
             <FieldRow label="mainTension" value={summary.mainTension} />
@@ -331,7 +530,7 @@ export default function V31ResultDebugViewer() {
       {/* ── Directions ── */}
       {directions.length > 0 && (
         <div style={S.section}>
-          <div style={S.sectionHead}>Directions ({directions.length})</div>
+          <div style={S.sectionHead}>Directions — {directions.length}</div>
           <div style={S.sectionBody}>
             {directions.map((dir, i) => (
               <DirectionCard key={dir.directionId || i} direction={dir} index={i} />
@@ -346,35 +545,30 @@ export default function V31ResultDebugViewer() {
       {/* ── Caveats ── */}
       {caveats.length > 0 && (
         <div style={S.section}>
-          <div style={S.sectionHead}>Caveats</div>
-          <div style={S.sectionBody}>{S.listItems(caveats)}</div>
+          <div style={S.sectionHead}>Caveats — {caveats.length}</div>
+          <div style={S.sectionBody}>
+            <ItemList items={caveats} />
+          </div>
         </div>
       )}
 
       {/* ── Quality notes ── */}
       {qualityNotes.length > 0 && (
         <div style={S.section}>
-          <div style={S.sectionHead}>Quality Notes</div>
-          <div style={S.sectionBody}>{S.listItems(qualityNotes)}</div>
+          <div style={S.sectionHead}>Quality Notes — {qualityNotes.length}</div>
+          <div style={S.sectionBody}>
+            <ItemList items={qualityNotes} />
+          </div>
         </div>
       )}
 
       {/* ── Rejected directions ── */}
       {rejectedDirections.length > 0 && (
         <div style={S.section}>
-          <div style={S.sectionHead}>Rejected Directions ({rejectedDirections.length})</div>
+          <div style={S.sectionHead}>Rejected Directions — {rejectedDirections.length}</div>
           <div style={S.sectionBody}>
             {rejectedDirections.map((dir, i) => (
-              <div key={dir.directionId || i} style={{ ...S.dirCard, marginBottom: "8px" }}>
-                <div style={S.dirCardHead}>
-                  <span>{dir.label || dir.directionId || "Unnamed"}</span>
-                </div>
-                <div style={S.dirCardBody}>
-                  <FieldRow label="directionId" value={dir.directionId} />
-                  <FieldRow label="reasonRejected" value={dir.reasonRejected} />
-                  <StringList label="Supporting concerns" items={dir.supportingConcerns} />
-                </div>
-              </div>
+              <RejectedDirectionCard key={dir.directionId || i} direction={dir} />
             ))}
           </div>
         </div>
@@ -383,18 +577,19 @@ export default function V31ResultDebugViewer() {
       {/* ── Warnings ── */}
       {warnings.length > 0 && (
         <div style={S.warningBox}>
-          <strong>Warnings ({warnings.length}):</strong>
-          {S.listItems(warnings)}
+          <strong>Warnings ({warnings.length})</strong>
+          <ItemList items={warnings} />
         </div>
       )}
 
       {/* ── Errors ── */}
       {errors.length > 0 && (
         <div style={S.errorBox}>
-          <strong>Errors ({errors.length}):</strong>
-          {S.listItems(errors.map((e) => (typeof e === "string" ? e : JSON.stringify(e))))}
+          <strong>Errors ({errors.length})</strong>
+          <ItemList items={errors.map((e) => (typeof e === "string" ? e : JSON.stringify(e)))} />
         </div>
       )}
+
     </div>
   );
 }
