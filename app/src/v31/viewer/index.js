@@ -5,3 +5,4 @@
  */
 
 export * from "./buildV31ResultViewModel.js";
+export * from "./readV31ResultViewModelFromFirestore.js";

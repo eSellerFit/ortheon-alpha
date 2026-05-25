@@ -5,11 +5,16 @@ import DirectionV14Debug from "./components/assessment/DirectionV14Debug";
 import OrtheonLandingPage from "./OrtheonLandingPage";
 import PrivacyPolicy from "./PrivacyPolicy";
 import TermsOfUse from "./TermsOfUse";
+import V31ResultDebugViewer from "./v31/viewer/V31ResultDebugViewer";
 import "./App.css";
 
 function App() {
   const path = window.location.pathname;
   const hash = window.location.hash;
+
+  if (path.includes("/internal/v31-result")) {
+    return <V31ResultDebugViewer />;
+  }
 
   if (
     path.includes("/debug/direction-v14") ||
