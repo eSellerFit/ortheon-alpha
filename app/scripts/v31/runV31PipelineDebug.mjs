@@ -33,6 +33,7 @@ import {
   evaluateHardConstraintsV31,
   validateHypothesisQualityOverDiversityV31,
 } from "../../src/v31/guardrails/index.js";
+import { buildV31PipelineResultPayloadV31 } from "../../src/v31/persistence/buildV31PipelineResultPayload.js";
 
 function loadEnvLocal() {
   const envPath = path.resolve(process.cwd(), ".env.local");
@@ -286,6 +287,13 @@ async function main() {
       qualityOverDiversityValidation.hypothesisQualitySignals.map(
         (signal) => signal.qualityStatus
       ),
+    missingInputCounts: {
+      financial:
+        financialModel.missingFinancialInputs?.length || 0,
+      constraints:
+        hardConstraints.missingConstraintInputs?.length || 0,
+      guardrails: guardrailValidation.missingInputs?.length || 0,
+    },
     passed: guardrailValidation.passed,
   };
 
@@ -329,6 +337,48 @@ async function main() {
 
   summary.totalEstimatedCostUsd = roundCost(summary.totalEstimatedCostUsd);
   summary.finalStatus = "passed";
+
+  const apiUsageSummary = {
+    totalEstimatedCostUsd: summary.totalEstimatedCostUsd,
+    callCount: 4,
+    perStageEstimatedCostUsd: {
+      profileSynthesizer:
+        summary.steps.profileSynthesizer.estimatedCostUsd,
+      transferabilityMapper:
+        summary.steps.transferabilityMapper.estimatedCostUsd,
+      directionHypothesisGenerator:
+        summary.steps.directionHypothesisGenerator.estimatedCostUsd,
+      portfolioComposer:
+        summary.steps.portfolioComposer.estimatedCostUsd,
+    },
+  };
+
+  const pipelineResultPayload = buildV31PipelineResultPayloadV31({
+    assessmentId: assessmentSnapshot.assessmentId,
+    finalPortfolio,
+    pipelineSummary: summary.steps,
+    guardrailSummary: summary.steps.guardrails,
+    apiUsageSummary,
+    auditTrail: [],
+    warnings: [],
+    errors: [],
+    source: "isolated_debug_runner",
+    pipelineStatus: "passed",
+  });
+
+  summary.pipelineResultPayload = {
+    version: pipelineResultPayload.version,
+    stage: pipelineResultPayload.stage,
+    assessmentId: pipelineResultPayload.assessmentId,
+    pipelineStatus: pipelineResultPayload.pipelineStatus,
+    source: pipelineResultPayload.source,
+    hasFinalPortfolio: Boolean(pipelineResultPayload.finalPortfolio),
+    finalDirectionCount:
+      pipelineResultPayload.finalPortfolio?.directions?.length || 0,
+    auditTrailCount: pipelineResultPayload.auditTrail.length,
+    warningCount: pipelineResultPayload.warnings.length,
+    errorCount: pipelineResultPayload.errors.length,
+  };
 
   console.log(JSON.stringify(summary, null, 2));
 }
