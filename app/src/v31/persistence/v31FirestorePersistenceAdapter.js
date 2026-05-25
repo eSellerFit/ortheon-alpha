@@ -61,6 +61,51 @@ function realWriteEnabled(options) {
 }
 
 /**
+ * Verify a Firestore target document for v3.1 persistence without writing.
+ *
+ * @param {Object} options
+ * @param {string} options.collectionName
+ * @param {string} options.documentId
+ * @param {string} options.nestedFieldPath
+ * @returns {Promise<Object>}
+ */
+export async function verifyV31FirestoreTargetDocument(options = {}) {
+  const collectionName =
+    stringOrNull(options.collectionName) || "assessments";
+  const documentId = stringOrNull(options.documentId);
+  const nestedFieldPath =
+    stringOrNull(options.nestedFieldPath) || "v31Result";
+
+  if (!documentId) {
+    throw new Error(
+      "verifyV31FirestoreTargetDocument expected documentId to be a non-empty string."
+    );
+  }
+
+  const assessmentRef = doc(db, collectionName, documentId);
+  const assessmentSnap = await getDoc(assessmentRef);
+  const documentExists = assessmentSnap.exists();
+  const data = documentExists ? assessmentSnap.data() : {};
+  const topLevelKeys = Object.keys(data || {}).sort();
+
+  return {
+    ok: true,
+    readOnly: true,
+    collectionName,
+    documentId,
+    nestedFieldPath,
+    documentExists,
+    hasV31Result: Boolean(data?.[nestedFieldPath]),
+    hasLegacyDirectionRecommendations: Boolean(
+      data?.directionRecommendations
+    ),
+    hasLegacyCareerMap: Boolean(data?.careerMap),
+    hasLegacyPrimaryDirections: Boolean(data?.primaryDirections),
+    topLevelKeys,
+  };
+}
+
+/**
  * Build a dry-run Firestore persistence plan for a v3.1 pipeline result.
  *
  * @param {Object} payload V31PipelineResultPayload
