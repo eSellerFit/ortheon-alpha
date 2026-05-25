@@ -11,3 +11,4 @@ export * from "./assessmentSnapshotAdapterV31.js";
 export * from "./profileSynthesizerInputAdapterV31.js";
 export * from "./transferabilityMapperInputAdapterV31.js";
 export * from "./directionHypothesisInputAdapterV31.js";
+export * from "./portfolioComposerInputAdapterV31.js";

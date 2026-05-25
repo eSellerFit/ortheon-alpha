@@ -10,3 +10,4 @@
 export * from "./profileSynthesizerValidatorV31.js";
 export * from "./transferabilityMapValidatorV31.js";
 export * from "./directionHypothesisValidatorV31.js";
+export * from "./finalPortfolioValidatorV31.js";
