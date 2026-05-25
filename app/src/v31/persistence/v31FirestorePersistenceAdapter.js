@@ -11,7 +11,7 @@
  *   directionRecommendations, careerMap, primaryDirections, or report sections.
  */
 
-import { doc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../../firebase.js";
 
 const FORBIDDEN_LEGACY_FIELDS = new Set([
@@ -49,6 +49,15 @@ function buildNestedPayload(fieldPath, value) {
     .filter(Boolean)
     .reverse()
     .reduce((current, field) => ({ [field]: current }), value);
+}
+
+function realWriteEnabled(options) {
+  return (
+    options.dryRun === false &&
+    options.confirmWrite === true &&
+    options.debugOnly === true &&
+    process.env.V31_ENABLE_FIRESTORE_WRITE === "true"
+  );
 }
 
 /**
@@ -133,13 +142,37 @@ export async function saveV31PipelineResultPayload(payload, options = {}) {
     };
   }
 
+  if (!realWriteEnabled(options)) {
+    throw new Error(
+      "Real Firestore write is blocked. Enable dryRun:false, confirmWrite:true, debugOnly:true, and V31_ENABLE_FIRESTORE_WRITE=true."
+    );
+  }
+
   if (plan.forbiddenLegacyFieldsTouched) {
     throw new Error(
       "Refusing to write v3.1 pipeline result into a legacy result field."
     );
   }
 
+  if (plan.nestedFieldPath !== "v31Result") {
+    throw new Error(
+      "Real Firestore write is restricted to nestedFieldPath v31Result."
+    );
+  }
+
   const assessmentRef = doc(db, plan.collectionName, plan.documentId);
+  const assessmentSnap = await getDoc(assessmentRef);
+  const documentExistsBeforeWrite = assessmentSnap.exists();
+
+  if (
+    options.requireExistingDocument !== false &&
+    !documentExistsBeforeWrite
+  ) {
+    throw new Error(
+      "Target assessment document does not exist. Refusing to create a new document from v31 persistence adapter."
+    );
+  }
+
   const writePayload = buildNestedPayload(plan.nestedFieldPath, payload);
 
   await setDoc(assessmentRef, writePayload, { merge: true });
@@ -149,5 +182,6 @@ export async function saveV31PipelineResultPayload(payload, options = {}) {
     dryRun: false,
     plan,
     wrote: true,
+    documentExistsBeforeWrite,
   };
 }
