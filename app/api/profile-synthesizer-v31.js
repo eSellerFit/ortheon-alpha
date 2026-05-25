@@ -76,7 +76,7 @@ async function callAnthropicWithRetry(apiKey, model, prompt) {
         },
         body: JSON.stringify({
           model,
-          max_tokens: 3500,
+          max_tokens: 6000,
           messages: [{ role: "user", content: prompt }],
         }),
       });
@@ -190,6 +190,15 @@ ${promptSpec.evidenceDiscipline.map((item) => `- ${item}`).join("\n")}
 
 MISSING INFORMATION RULES:
 ${promptSpec.missingInformationRules.map((item) => `- ${item}`).join("\n")}
+
+COMPACT OUTPUT DISCIPLINE:
+- Return compact JSON. No extra whitespace or line breaks inside string values.
+- Keep every string value concise. One or two sentences maximum per string field.
+- Limit each evidence array to at most 3 items. Drop duplicates before selecting.
+- Limit strongestCompetencies to 5 items. Limit supportingCompetencies to 5 items.
+- Do not copy raw CV text into any field.
+- Do not include the rawAssessment field.
+- Do not repeat the same information across multiple fields.
 
 OUTPUT REQUIREMENTS:
 - Return ONLY valid JSON.
