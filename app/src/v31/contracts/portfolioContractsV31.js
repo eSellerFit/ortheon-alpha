@@ -18,22 +18,27 @@
  */
 
 /**
+ * @typedef {import("./assessmentSnapshotV31.js").AssessmentSnapshotV31} AssessmentSnapshotV31
  * @typedef {import("./profileSynthesizerContractsV31.js").SynthesizedProfileV31} SynthesizedProfileV31
  * @typedef {import("./transferabilityContractsV31.js").TransferabilityMapV31} TransferabilityMapV31
  * @typedef {import("./directionHypothesisContractsV31.js").DirectionHypothesisV31} DirectionHypothesisV31
  * @typedef {import("./guardrailContractsV31.js").FinancialModelV31} FinancialModelV31
  * @typedef {import("./guardrailContractsV31.js").HardConstraintResultV31} HardConstraintResultV31
+ * @typedef {import("./guardrailContractsV31.js").GuardrailValidationResultV31} GuardrailValidationResultV31
  */
 
 /**
  * @typedef {Object} PortfolioCriticInputV31
- * @property {"portfolio_critic_composer_v31"} stage
+ * @property {"portfolio_composer_v31"} stage
  * @property {string} instructionsVersion
+ * @property {AssessmentSnapshotV31} assessmentSnapshot
  * @property {SynthesizedProfileV31} synthesizedProfile
  * @property {TransferabilityMapV31} transferabilityMap
  * @property {DirectionHypothesisV31[]} directionHypotheses
  * @property {FinancialModelV31|null} financialModel
  * @property {HardConstraintResultV31|null} hardConstraints
+ * @property {GuardrailValidationResultV31|null} guardrailValidation
+ * @property {Object|null} qualityOverDiversityValidation
  */
 
 /**
@@ -47,7 +52,7 @@
 /**
  * @typedef {Object} FinalPortfolioDirectionV31
  * @property {string} directionId
- * @property {number} rank
+ * @property {number} displayOrder Presentation order only; not a score, rank, or fit metric.
  * @property {string} directionArena
  * @property {string} seniorityComplexityLevel
  * @property {string} workModel
@@ -99,13 +104,16 @@
  * Not used by production flow.
  */
 export const PORTFOLIO_CRITIC_INPUT_V31_EMPTY = Object.freeze({
-  stage: "portfolio_critic_composer_v31",
-  instructionsVersion: "portfolio_critic_composer_v31_001",
+  stage: "portfolio_composer_v31",
+  instructionsVersion: "portfolio_composer_v31_001",
+  assessmentSnapshot: null,
   synthesizedProfile: null,
   transferabilityMap: null,
   directionHypotheses: [],
   financialModel: null,
   hardConstraints: null,
+  guardrailValidation: null,
+  qualityOverDiversityValidation: null,
 });
 
 /**
