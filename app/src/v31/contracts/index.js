@@ -14,3 +14,4 @@ export * from "./directionHypothesisContractsV31.js";
 export * from "./guardrailContractsV31.js";
 export * from "./portfolioContractsV31.js";
 export * from "./auditTrailContractsV31.js";
+export * from "./pipelineResultContractsV31.js";
