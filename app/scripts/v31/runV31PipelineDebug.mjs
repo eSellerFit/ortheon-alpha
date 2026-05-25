@@ -34,6 +34,7 @@ import {
   validateHypothesisQualityOverDiversityV31,
 } from "../../src/v31/guardrails/index.js";
 import { buildV31PipelineResultPayloadV31 } from "../../src/v31/persistence/buildV31PipelineResultPayload.js";
+import { saveV31PipelineResultPayload } from "../../src/v31/persistence/v31FirestorePersistenceAdapter.js";
 
 function loadEnvLocal() {
   const envPath = path.resolve(process.cwd(), ".env.local");
@@ -378,6 +379,24 @@ async function main() {
     auditTrailCount: pipelineResultPayload.auditTrail.length,
     warningCount: pipelineResultPayload.warnings.length,
     errorCount: pipelineResultPayload.errors.length,
+  };
+
+  const persistenceDryRun = await saveV31PipelineResultPayload(
+    pipelineResultPayload,
+    { dryRun: true }
+  );
+  const persistencePlan = persistenceDryRun.plan;
+
+  summary.persistenceDryRun = {
+    ok: persistenceDryRun.ok,
+    dryRun: persistenceDryRun.dryRun,
+    wrote: persistenceDryRun.wrote,
+    assessmentId: persistencePlan.assessmentId,
+    collectionName: persistencePlan.collectionName,
+    documentId: persistencePlan.documentId,
+    nestedFieldPath: persistencePlan.nestedFieldPath,
+    forbiddenLegacyFieldsTouched:
+      persistencePlan.forbiddenLegacyFieldsTouched,
   };
 
   console.log(JSON.stringify(summary, null, 2));
