@@ -7,3 +7,4 @@
  */
 
 export * from "./buildV31PipelineResultPayload.js";
+export * from "./v31FirestorePersistenceAdapter.js";
