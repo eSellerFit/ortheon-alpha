@@ -51,6 +51,13 @@ function buildNestedPayload(fieldPath, value) {
     .reduce((current, field) => ({ [field]: current }), value);
 }
 
+function getNestedValue(source, fieldPath) {
+  return String(fieldPath)
+    .split(".")
+    .filter(Boolean)
+    .reduce((current, field) => current?.[field], source);
+}
+
 function realWriteEnabled(options) {
   return (
     options.dryRun === false &&
@@ -102,6 +109,125 @@ export async function verifyV31FirestoreTargetDocument(options = {}) {
     hasLegacyCareerMap: Boolean(data?.careerMap),
     hasLegacyPrimaryDirections: Boolean(data?.primaryDirections),
     topLevelKeys,
+  };
+}
+
+/**
+ * Read a compact, safe summary of a persisted v3.1 result.
+ *
+ * @param {Object} options
+ * @param {string} options.collectionName
+ * @param {string} options.documentId
+ * @param {string} options.nestedFieldPath
+ * @returns {Promise<Object>}
+ */
+export async function readV31FirestoreResultSummary(options = {}) {
+  const collectionName =
+    stringOrNull(options.collectionName) || "assessments";
+  const documentId = stringOrNull(options.documentId);
+  const nestedFieldPath =
+    stringOrNull(options.nestedFieldPath) || "v31Result";
+
+  if (!documentId) {
+    throw new Error(
+      "readV31FirestoreResultSummary expected documentId to be a non-empty string."
+    );
+  }
+
+  const assessmentRef = doc(db, collectionName, documentId);
+  const assessmentSnap = await getDoc(assessmentRef);
+
+  if (!assessmentSnap.exists()) {
+    return {
+      ok: false,
+      readOnly: true,
+      collectionName,
+      documentId,
+      nestedFieldPath,
+      documentExists: false,
+      error: "Target assessment document does not exist.",
+    };
+  }
+
+  const data = assessmentSnap.data();
+  const v31Result = getNestedValue(data, nestedFieldPath);
+
+  if (!v31Result) {
+    return {
+      ok: false,
+      readOnly: true,
+      collectionName,
+      documentId,
+      nestedFieldPath,
+      documentExists: true,
+      hasV31Result: false,
+      error: "v31Result is missing.",
+    };
+  }
+
+  const directions = Array.isArray(v31Result.finalPortfolio?.directions)
+    ? v31Result.finalPortfolio.directions
+    : [];
+  const guardrailSummary = isObject(v31Result.guardrailSummary)
+    ? v31Result.guardrailSummary
+    : {};
+  const apiUsageSummary = isObject(v31Result.apiUsageSummary)
+    ? v31Result.apiUsageSummary
+    : {};
+
+  return {
+    ok: true,
+    readOnly: true,
+    collectionName,
+    documentId,
+    nestedFieldPath,
+    documentExists: true,
+    hasV31Result: true,
+    version: v31Result.version,
+    stage: v31Result.stage,
+    assessmentId: v31Result.assessmentId,
+    pipelineStatus: v31Result.pipelineStatus,
+    source: v31Result.source,
+    generatedAt: v31Result.generatedAt,
+    apiUsageSummary: {
+      callCount: apiUsageSummary.callCount || 0,
+      totalEstimatedCostUsd:
+        apiUsageSummary.totalEstimatedCostUsd || 0,
+      perStageEstimatedCostUsd:
+        apiUsageSummary.perStageEstimatedCostUsd || {},
+    },
+    finalPortfolioSummary: {
+      finalDirectionCount: directions.length,
+      directionLabels: directions.map((direction) => direction.label || ""),
+      directionArenas: directions.map(
+        (direction) => direction.directionArena || ""
+      ),
+      recommendationTypes: directions.map(
+        (direction) => direction.recommendationType || ""
+      ),
+      displayOrders: directions.map((direction) => direction.displayOrder),
+    },
+    guardrailSummary: {
+      passed: guardrailSummary.passed,
+      guardrailStatuses: Array.isArray(guardrailSummary.guardrailStatuses)
+        ? guardrailSummary.guardrailStatuses
+        : [],
+      canShowAsCredibleNowValues: Array.isArray(
+        guardrailSummary.canShowAsCredibleNowValues
+      )
+        ? guardrailSummary.canShowAsCredibleNowValues
+        : [],
+    },
+    warningCount: Array.isArray(v31Result.warnings)
+      ? v31Result.warnings.length
+      : 0,
+    errorCount: Array.isArray(v31Result.errors)
+      ? v31Result.errors.length
+      : 0,
+    hasLegacyDirectionRecommendations: Boolean(
+      data?.directionRecommendations
+    ),
+    hasLegacyCareerMap: Boolean(data?.careerMap),
   };
 }
 
