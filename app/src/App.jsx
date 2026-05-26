@@ -6,11 +6,16 @@ import OrtheonLandingPage from "./OrtheonLandingPage";
 import PrivacyPolicy from "./PrivacyPolicy";
 import TermsOfUse from "./TermsOfUse";
 import V31ResultDebugViewer from "./v31/viewer/V31ResultDebugViewer";
+import V31UserFacingReportPreview from "./v31/report/V31UserFacingReportPreview";
 import "./App.css";
 
 function App() {
   const path = window.location.pathname;
   const hash = window.location.hash;
+
+  if (path.includes("/internal/v31-report")) {
+    return <V31UserFacingReportPreview />;
+  }
 
   if (path.includes("/internal/v31-result")) {
     return <V31ResultDebugViewer />;

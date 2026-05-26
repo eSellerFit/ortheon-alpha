@@ -6,3 +6,4 @@
  */
 
 export * from "./buildV31UserFacingReportViewModel.js";
+export * from "./readV31UserFacingReportFromFirestore.js";
