@@ -1,7 +1,7 @@
 /**
  * Ortheon MVP Cut v3.1 — User-Facing Report View Model Builder
  *
- * Bundle 18B.
+ * Bundle 18B / 18D.
  * Converts the internal V31ResultViewModelV31 into a cleaner, user-safe
  * V31UserFacingReportViewModel for future report components.
  *
@@ -12,6 +12,7 @@
  * - Does not mutate input.
  * - No scores, fit bands, raw IDs, cost, pipeline diagnostics in output.
  * - qualityNotes, apiCost, source, pipelineStatus, directionId never reach user.
+ * - Same item never appears in more than one section.
  */
 
 // ── Utilities ──────────────────────────────────────────────────────────────────
@@ -47,17 +48,128 @@ function stringArray(value) {
   );
 }
 
-function dedup(items) {
-  const seen = new Set();
+function clamp(items, max) {
+  return items.slice(0, max);
+}
+
+// ── Near-match deduplication ───────────────────────────────────────────────────
+
+const DEDUP_PREFIX_LEN = 100;
+
+function normalizeForDedup(text) {
+  return String(text || "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function dedupByNearMatch(items) {
+  const seenFull = new Set();
+  const seenPrefix = new Set();
+
   return items.filter((item) => {
-    if (seen.has(item)) return false;
-    seen.add(item);
+    const norm = normalizeForDedup(item);
+    const prefix = norm.slice(0, DEDUP_PREFIX_LEN);
+    if (seenFull.has(norm) || seenPrefix.has(prefix)) return false;
+    seenFull.add(norm);
+    seenPrefix.add(prefix);
     return true;
   });
 }
 
-function clamp(items, max) {
-  return items.slice(0, max);
+function excludeAlreadySeen(items, seenItems) {
+  const seenNorms = new Set(seenItems.map(normalizeForDedup));
+  const seenPrefixes = new Set(
+    seenItems.map((s) => normalizeForDedup(s).slice(0, DEDUP_PREFIX_LEN))
+  );
+  return items.filter((item) => {
+    const norm = normalizeForDedup(item);
+    return (
+      !seenNorms.has(norm) && !seenPrefixes.has(norm.slice(0, DEDUP_PREFIX_LEN))
+    );
+  });
+}
+
+// ── Text sanitization — strip internal guardrail / technical language ──────────
+
+const INTERNAL_TERM_PATTERNS = [
+  /\bbridge_required\b/i,
+  /\bnot_viable\b/i,
+  /\bcanShowAsCredibleNow\b/i,
+  /\bcan show as credible now\b/i,
+  /^guardrail\s*(status)?:/i,
+  /^financial viability:/i,
+];
+
+function containsInternalTerm(text) {
+  return INTERNAL_TERM_PATTERNS.some((p) => p.test(text));
+}
+
+function sanitizeConstraintText(text) {
+  const s = String(text || "").trim();
+  if (!s || !containsInternalTerm(s)) return s;
+
+  const lower = s.toLowerCase();
+
+  // bridge_required + financial context
+  if (
+    (lower.includes("bridge_required") || lower.includes("bridge required")) &&
+    (lower.includes("financial") ||
+      lower.includes("runway") ||
+      lower.includes("income"))
+  ) {
+    return "The ramp-up period may be longer than your current financial runway allows.";
+  }
+
+  // not_viable in first year context
+  if (
+    lower.includes("not_viable") &&
+    (lower.includes("12") ||
+      lower.includes("first year") ||
+      lower.includes("month"))
+  ) {
+    return "This path may not be financially realistic in the first year without stable bridge income.";
+  }
+
+  // bridge_required — general
+  if (lower.includes("bridge_required")) {
+    return "This direction requires bridging work before it can be pursued directly.";
+  }
+
+  // not_viable — general
+  if (lower.includes("not_viable")) {
+    return "This path may not be financially viable without additional preparation.";
+  }
+
+  // canShowAsCredibleNow → suppress
+  if (
+    lower.includes("canshowascrediblenow") ||
+    lower.includes("can show as credible now")
+  ) {
+    return "";
+  }
+
+  // guardrail status: label
+  if (/^guardrail\s*(status)?:/i.test(s)) {
+    if (lower.includes("financial") || lower.includes("risky")) {
+      return "The ramp-up period may be longer than your current financial runway allows.";
+    }
+    return "";
+  }
+
+  // financial viability: label
+  if (/^financial viability:/i.test(s)) {
+    if (lower.includes("risky") || lower.includes("not_viable")) {
+      return "The ramp-up period may be longer than your current financial runway allows.";
+    }
+    return "";
+  }
+
+  return s;
+}
+
+function sanitizeTextArray(items) {
+  return items.map((item) => sanitizeConstraintText(item)).filter(Boolean);
 }
 
 // ── Guardrail translation ──────────────────────────────────────────────────────
@@ -66,7 +178,7 @@ const GUARDRAIL_TRANSLATIONS = {
   caution:
     "Proceed with caution — this direction has credibility or financial considerations to resolve.",
   bridge_required:
-    "This direction requires bridging work before it can be pursued directly.",
+    "This path should not be treated as the main move yet because it may take longer to become financially stable than your current runway allows.",
 };
 
 function translateGuardrailStatus(status) {
@@ -143,12 +255,12 @@ function deriveConfidenceLevelSummary(directions) {
   return counts;
 }
 
-// ── shortWhy ─────────────────────────────────────────────────────────────────
+// ── shortWhy (one sentence only) ─────────────────────────────────────────────
 
 function deriveShortWhy(direction) {
-  const fits = stringArray(direction.whyItFits);
+  const fits = sanitizeTextArray(stringArray(direction.whyItFits));
   if (fits.length > 0) return fits[0];
-  const credible = stringArray(direction.whyItIsCredible);
+  const credible = sanitizeTextArray(stringArray(direction.whyItIsCredible));
   if (credible.length > 0) return credible[0];
   return "";
 }
@@ -161,29 +273,85 @@ function deriveWhatThisDirectionMeans(direction) {
   return stringOrEmpty(direction.label);
 }
 
-// ── whatWouldMakeItStronger ───────────────────────────────────────────────────
+// ── Improvement conditions (practical, not copied from risks) ─────────────────
 
-function deriveWhatWouldMakeItStronger(direction) {
-  const candidates = [];
+const IMPROVEMENT_SIGNALS = [
+  {
+    keywords: ["market", "buyer", "target", "niche", "client"],
+    suggestion: "Define a clearer target market and specific buyer problem.",
+  },
+  {
+    keywords: ["quantif", "measurable", "outcome", "result", "impact", "evidence", "proof"],
+    suggestion: "Gather stronger quantified outcome examples from prior work.",
+  },
+  {
+    keywords: ["financial", "runway", "income", "bridge income", "stable"],
+    suggestion: "Secure bridge income before treating this as the primary path.",
+  },
+  {
+    keywords: ["positioning", "generic", "differentiat", "distinct", "broad"],
+    suggestion: "Develop clearer positioning to differentiate from general consulting.",
+  },
+  {
+    keywords: ["advisory", "demand", "acquisition", "buyer proof"],
+    suggestion: "Build evidence of client acquisition or advisory demand.",
+  },
+  {
+    keywords: ["recruit", "compensation", "timeline", "salary", "market rate", "hire"],
+    suggestion: "Validate compensation and timeline with recruiters or hiring managers.",
+  },
+  {
+    keywords: ["bridge", "longer path", "longer-path", "incremental"],
+    suggestion: "Treat this as a longer-path bridge and build toward it incrementally.",
+  },
+];
 
-  const risks = stringArray(direction.whatMakesItRisky);
-  if (risks.length > 0) candidates.push(risks[0]);
+function deriveImprovementConditions(direction) {
+  const allText = sanitizeTextArray([
+    ...stringArray(direction.whatMakesItRisky),
+    ...stringArray(direction.constraintsAndWarnings),
+    stringOrEmpty(direction.bridgeStrategy),
+  ])
+    .join(" ")
+    .toLowerCase();
 
-  const bridge = stringOrEmpty(direction.bridgeStrategy);
-  if (bridge && candidates.length < 2) candidates.push(bridge);
+  const matched = [];
 
-  const constraints = stringArray(direction.constraintsAndWarnings);
-  if (constraints.length > 0 && candidates.length < 2) {
-    candidates.push(constraints[0]);
+  for (const { keywords, suggestion } of IMPROVEMENT_SIGNALS) {
+    if (keywords.some((kw) => allText.includes(kw))) {
+      matched.push(suggestion);
+      if (matched.length >= 2) break;
+    }
   }
 
-  const step = stringOrEmpty(direction.firstValidationStep);
-  if (step && candidates.length < 2) candidates.push(step);
+  if (matched.length === 0) {
+    const conf = stringOrEmpty(direction.confidence).toLowerCase();
+    if (conf === "low" || conf === "insufficient_data") {
+      matched.push(
+        "Validate compensation and timeline with recruiters or hiring managers."
+      );
+    }
+  }
 
-  return clamp(dedup(candidates), 3);
+  return dedupByNearMatch(matched);
 }
 
-// ── directionPortfolioItem (compact) ─────────────────────────────────────────
+// ── cleanFirstStep — take first clause of a multi-clause step ─────────────────
+
+function cleanFirstStep(text) {
+  const s = sanitizeConstraintText(String(text || "").trim());
+  if (!s) return "";
+
+  // If text has multiple sentences (". " followed by non-digit), take first only
+  const dotIdx = s.indexOf(". ");
+  if (dotIdx > 20 && dotIdx < s.length - 10 && !/^\d/.test(s[dotIdx + 2] || "")) {
+    return s.slice(0, dotIdx + 1).trim();
+  }
+
+  return s;
+}
+
+// ── directionPortfolioItem (compact overview) ─────────────────────────────────
 
 function buildDirectionPortfolioItem(direction, guardrailStatus, canShowAsCredibleNow) {
   return {
@@ -200,13 +368,18 @@ function buildDirectionPortfolioItem(direction, guardrailStatus, canShowAsCredib
       canShowAsCredibleNow
     ),
     shortWhy: deriveShortWhy(direction),
-    firstValidationStep: stringOrEmpty(direction.firstValidationStep),
+    firstValidationStep: cleanFirstStep(stringOrEmpty(direction.firstValidationStep)),
   };
 }
 
 // ── directionDeepDive ─────────────────────────────────────────────────────────
 
 function buildDirectionDeepDive(direction, guardrailStatus, canShowAsCredibleNow) {
+  const sanitizedConstraints = clamp(
+    dedupByNearMatch(sanitizeTextArray(stringArray(direction.constraintsAndWarnings))),
+    3
+  );
+
   return {
     displayOrder: numberOrZero(direction.displayOrder),
     label: stringOrEmpty(direction.label),
@@ -221,14 +394,23 @@ function buildDirectionDeepDive(direction, guardrailStatus, canShowAsCredibleNow
       canShowAsCredibleNow
     ),
     whatThisDirectionMeans: deriveWhatThisDirectionMeans(direction),
-    whyItFits: stringArray(direction.whyItFits),
-    whyItIsCredible: stringArray(direction.whyItIsCredible),
-    whatMakesItRisky: stringArray(direction.whatMakesItRisky),
-    constraintsAndWarnings: stringArray(direction.constraintsAndWarnings),
-    firstValidationStep: stringOrEmpty(direction.firstValidationStep),
-    bridgeStrategy: stringOrEmpty(direction.bridgeStrategy),
-    notRecommendedIf: stringArray(direction.notRecommendedIf),
-    whatWouldMakeItStronger: deriveWhatWouldMakeItStronger(direction),
+    whyItFits: clamp(dedupByNearMatch(sanitizeTextArray(stringArray(direction.whyItFits))), 3),
+    whyItIsCredible: clamp(
+      dedupByNearMatch(sanitizeTextArray(stringArray(direction.whyItIsCredible))),
+      3
+    ),
+    whatMakesItRisky: clamp(
+      dedupByNearMatch(sanitizeTextArray(stringArray(direction.whatMakesItRisky))),
+      3
+    ),
+    constraintsAndWarnings: sanitizedConstraints,
+    firstValidationStep: cleanFirstStep(stringOrEmpty(direction.firstValidationStep)),
+    bridgeStrategy: sanitizeConstraintText(stringOrEmpty(direction.bridgeStrategy)),
+    notRecommendedIf: clamp(
+      dedupByNearMatch(sanitizeTextArray(stringArray(direction.notRecommendedIf))),
+      3
+    ),
+    whatWouldMakeItStronger: deriveImprovementConditions(direction),
   };
 }
 
@@ -237,8 +419,13 @@ function buildDirectionDeepDive(direction, guardrailStatus, canShowAsCredibleNow
 function buildNotNowDirection(rejectedDirection) {
   return {
     label: stringOrEmpty(rejectedDirection.label),
-    reason: stringOrEmpty(rejectedDirection.reasonRejected),
-    supportingConcerns: stringArray(rejectedDirection.supportingConcerns),
+    reason: sanitizeConstraintText(stringOrEmpty(rejectedDirection.reasonRejected)),
+    supportingConcerns: clamp(
+      dedupByNearMatch(
+        sanitizeTextArray(stringArray(rejectedDirection.supportingConcerns))
+      ),
+      3
+    ),
     whatWouldChangeThis: "",
   };
 }
@@ -254,44 +441,84 @@ const FINANCIAL_KEYWORDS = [
   "consulting",
   "freelance",
   "independent",
-  "cost",
+  "runway",
 ];
 
-function buildKeySignals(directions, guardrails, caveats) {
+const EVIDENCE_KEYWORDS = [
+  "missing",
+  "incomplete",
+  "not provided",
+  "absent",
+  "no data",
+  "insufficient",
+  "unclear",
+  "limited",
+];
+
+/**
+ * @param {Array} directions
+ * @param {Object} guardrails
+ * @param {string[]} topCaveats - already-limited caveats; used as keySignals.caveats
+ *                                and excluded from missingEvidenceSignals
+ * @param {string[]} allCaveats - full caveats list for evidence filtering
+ */
+function buildKeySignals(directions, guardrails, topCaveats, allCaveats) {
   const guardrailStatuses = arrayOrEmpty(guardrails.guardrailStatuses);
 
   const primaryOrFirst =
     directions.find(
       (d) => stringOrEmpty(d.recommendationType).toLowerCase() === "primary"
-    ) || directions[0] || null;
+    ) ||
+    directions[0] ||
+    null;
 
   const strongestCredibilitySignals = clamp(
-    stringArray(primaryOrFirst?.whyItIsCredible),
+    dedupByNearMatch(
+      sanitizeTextArray(stringArray(primaryOrFirst?.whyItIsCredible))
+    ),
     3
   );
 
-  const allConstraints = dedup(
-    directions.flatMap((d) => stringArray(d.constraintsAndWarnings))
+  const allConstraints = dedupByNearMatch(
+    sanitizeTextArray(
+      directions.flatMap((d) => stringArray(d.constraintsAndWarnings))
+    )
   );
 
   const financialRealitySignals = clamp(
     allConstraints.filter((item) =>
       FINANCIAL_KEYWORDS.some((kw) => item.toLowerCase().includes(kw))
     ),
+    2
+  );
+
+  const financialNorms = new Set(financialRealitySignals.map(normalizeForDedup));
+
+  const constraintSignals = clamp(
+    allConstraints.filter((item) => !financialNorms.has(normalizeForDedup(item))),
     3
   );
 
-  const constraintSignals = clamp(allConstraints, 5);
+  const topCaveatsNorms = new Set(topCaveats.map(normalizeForDedup));
 
-  const missingEvidenceSignals = clamp(stringArray(caveats), 5);
+  const missingEvidenceSignals = clamp(
+    dedupByNearMatch(
+      allCaveats
+        .filter((c) =>
+          EVIDENCE_KEYWORDS.some((kw) => c.toLowerCase().includes(kw))
+        )
+        .filter((c) => !topCaveatsNorms.has(normalizeForDedup(c)))
+    ),
+    3
+  );
 
   const guardrailSignals = clamp(
-    dedup(
+    dedupByNearMatch(
       guardrailStatuses
         .map((gs) => translateGuardrailStatus(gs))
         .filter(Boolean)
     ),
-    3
+    2
   );
 
   return {
@@ -300,56 +527,87 @@ function buildKeySignals(directions, guardrails, caveats) {
     constraintSignals,
     missingEvidenceSignals,
     guardrailSignals,
-    caveats: clamp(stringArray(caveats), 5),
+    caveats: topCaveats,
   };
 }
 
 // ── validationPlan ────────────────────────────────────────────────────────────
 
-function buildValidationPlan(summary, directions, caveats) {
+function buildValidationPlan(summary, directions) {
   const sorted = [...directions].sort(
     (a, b) => numberOrZero(a.displayOrder) - numberOrZero(b.displayOrder)
   );
 
-  const allFirstSteps = dedup(
-    sorted.map((d) => stringOrEmpty(d.firstValidationStep)).filter(Boolean)
+  // Primary/secondary first, then bridge, then others
+  const prioritized = [
+    ...sorted.filter((d) =>
+      ["primary", "secondary"].includes(
+        stringOrEmpty(d.recommendationType).toLowerCase()
+      )
+    ),
+    ...sorted.filter(
+      (d) => stringOrEmpty(d.recommendationType).toLowerCase() === "bridge"
+    ),
+    ...sorted.filter(
+      (d) =>
+        !["primary", "secondary", "bridge"].includes(
+          stringOrEmpty(d.recommendationType).toLowerCase()
+        )
+    ),
+  ];
+
+  const next30Days = clamp(
+    dedupByNearMatch(
+      prioritized
+        .map((d) => cleanFirstStep(stringOrEmpty(d.firstValidationStep)))
+        .filter(Boolean)
+    ),
+    3
   );
 
-  const bridgeAndExploratory = sorted.filter((d) =>
-    ["bridge", "exploratory"].includes(
-      stringOrEmpty(d.recommendationType).toLowerCase()
-    )
+  // evidenceToBuild: from primary direction's risks only (caveats shown elsewhere)
+  const primaryOrFirst = prioritized[0] || null;
+  const evidenceToBuild = clamp(
+    dedupByNearMatch(
+      sanitizeTextArray(stringArray(primaryOrFirst?.whatMakesItRisky))
+    ),
+    3
   );
 
-  const allRisks = dedup(
-    sorted.flatMap((d) => stringArray(d.whatMakesItRisky))
+  // conversationsToHave: bridge directions' first steps, excluding already in next30Days
+  const bridgeDirs = sorted.filter(
+    (d) => stringOrEmpty(d.recommendationType).toLowerCase() === "bridge"
   );
 
-  const allBridgeStrategies = dedup(
-    sorted.map((d) => stringOrEmpty(d.bridgeStrategy)).filter(Boolean)
+  const conversationsToHave = clamp(
+    dedupByNearMatch(
+      excludeAlreadySeen(
+        bridgeDirs
+          .map((d) => cleanFirstStep(stringOrEmpty(d.firstValidationStep)))
+          .filter(Boolean),
+        next30Days
+      )
+    ),
+    2
   );
 
+  // decisionsToMake: mainTension + bridge strategies, max 2
   const mainTension = stringOrEmpty(summary.mainTension);
+  const bridgeStrategies = clamp(
+    dedupByNearMatch(
+      bridgeDirs
+        .map((d) => sanitizeConstraintText(stringOrEmpty(d.bridgeStrategy)))
+        .filter(Boolean)
+    ),
+    2
+  );
 
-  return {
-    next30Days: clamp(allFirstSteps, 5),
-    evidenceToBuild: clamp(
-      dedup([...stringArray(caveats), ...allRisks]),
-      5
-    ),
-    conversationsToHave: clamp(
-      dedup(
-        bridgeAndExploratory
-          .map((d) => stringOrEmpty(d.firstValidationStep))
-          .filter(Boolean)
-      ),
-      3
-    ),
-    decisionsToMake: clamp(
-      dedup([mainTension, ...allBridgeStrategies].filter(Boolean)),
-      5
-    ),
-  };
+  const decisionsToMake = clamp(
+    dedupByNearMatch([mainTension, ...bridgeStrategies].filter(Boolean)),
+    2
+  );
+
+  return { next30Days, evidenceToBuild, conversationsToHave, decisionsToMake };
 }
 
 // ── confidenceNotes ───────────────────────────────────────────────────────────
@@ -365,8 +623,16 @@ const MISSING_KEYWORDS = [
   "limited",
 ];
 
-function buildConfidenceNotes(directions, caveats) {
-  const caveatsArray = stringArray(caveats);
+/**
+ * @param {Array} directions
+ * @param {string[]} allCaveats - full deduped caveats list
+ * @param {string[]} shownCaveats - caveats already shown in keySignals; exclude from output
+ */
+function buildConfidenceNotes(directions, allCaveats, shownCaveats) {
+  const remainingCaveats = clamp(
+    dedupByNearMatch(excludeAlreadySeen(allCaveats, shownCaveats)),
+    3
+  );
 
   const lowConfidenceDirs = directions.filter((d) =>
     ["low", "insufficient_data"].includes(
@@ -375,31 +641,36 @@ function buildConfidenceNotes(directions, caveats) {
   );
 
   const lowConfidenceReasons = clamp(
-    dedup(
-      lowConfidenceDirs.flatMap((d) => [
-        ...stringArray(d.whatMakesItRisky).slice(0, 1),
-        ...stringArray(d.constraintsAndWarnings).slice(0, 1),
-      ])
+    dedupByNearMatch(
+      sanitizeTextArray(
+        lowConfidenceDirs.flatMap((d) => [
+          ...stringArray(d.whatMakesItRisky).slice(0, 1),
+          ...stringArray(d.constraintsAndWarnings).slice(0, 1),
+        ])
+      )
     ),
     3
   );
 
+  // missingEvidence: from low-confidence direction constraints (not caveats, already shown above)
   const missingEvidence = clamp(
-    dedup(
-      [
-        ...caveatsArray,
-        ...lowConfidenceDirs.flatMap((d) =>
-          stringArray(d.constraintsAndWarnings)
+    dedupByNearMatch(
+      excludeAlreadySeen(
+        sanitizeTextArray(
+          lowConfidenceDirs.flatMap((d) =>
+            stringArray(d.constraintsAndWarnings)
+          )
+        ).filter((item) =>
+          MISSING_KEYWORDS.some((kw) => item.toLowerCase().includes(kw))
         ),
-      ].filter((item) =>
-        MISSING_KEYWORDS.some((kw) => item.toLowerCase().includes(kw))
+        [...shownCaveats, ...remainingCaveats]
       )
     ),
     3
   );
 
   return {
-    caveats: caveatsArray,
+    caveats: remainingCaveats,
     missingEvidence,
     lowConfidenceReasons,
   };
@@ -418,7 +689,6 @@ export function buildV31UserFacingReportViewModelV31(internalViewModel) {
   const summary = objectOrEmpty(vm.summary);
   const directions = arrayOrEmpty(vm.directions);
   const rejectedDirections = arrayOrEmpty(vm.rejectedDirections);
-  const caveats = stringArray(vm.caveats);
   const guardrails = objectOrEmpty(vm.guardrails);
   const metrics = objectOrEmpty(vm.metrics);
   const warnings = stringArray(vm.warnings);
@@ -427,6 +697,11 @@ export function buildV31UserFacingReportViewModelV31(internalViewModel) {
   const canShowAsCredibleNowValues = arrayOrEmpty(
     guardrails.canShowAsCredibleNowValues
   );
+
+  // Pre-compute deduped caveats; shared between keySignals and confidenceNotes
+  // so the same caveat never appears in both sections.
+  const allCaveats = dedupByNearMatch(stringArray(vm.caveats));
+  const topCaveats = clamp(allCaveats, 3);
 
   // Index-based guardrail lookup — correlates with directions[] order from view model
   const getGuardrailStatus = (i) => stringOrEmpty(guardrailStatuses[i]);
@@ -453,7 +728,7 @@ export function buildV31UserFacingReportViewModelV31(internalViewModel) {
     )
   );
 
-  // reportMeta — expose counts and confidence summary; never expose cost or call count
+  // reportMeta
   const primaryCount = directions.filter(
     (d) => stringOrEmpty(d.recommendationType).toLowerCase() === "primary"
   ).length;
@@ -484,13 +759,13 @@ export function buildV31UserFacingReportViewModelV31(internalViewModel) {
     statusMix,
   };
 
-  // directionPortfolio — compact overview of all directions
+  // directionPortfolio — compact overview
   const directionPortfolio = directions.map((dir, i) =>
     buildDirectionPortfolioItem(dir, getGuardrailStatus(i), getCanShow(i))
   );
 
-  // keySignals
-  const keySignals = buildKeySignals(directions, guardrails, caveats);
+  // keySignals — topCaveats passed so missingEvidenceSignals excludes them
+  const keySignals = buildKeySignals(directions, guardrails, topCaveats, allCaveats);
 
   // primaryDirection deep dive
   const primaryDirectionDeepDive = primaryDir
@@ -510,7 +785,7 @@ export function buildV31UserFacingReportViewModelV31(internalViewModel) {
     )
   );
 
-  // exploratoryDirections deep dives (includes not_recommended from directions[])
+  // exploratoryDirections deep dives
   const exploratoryDirectionDeepDives = exploratoryDirs.map((dir) =>
     buildDirectionDeepDive(
       dir,
@@ -522,11 +797,11 @@ export function buildV31UserFacingReportViewModelV31(internalViewModel) {
   // notNowDirections — from rejectedDirections[] only
   const notNowDirections = rejectedDirections.map(buildNotNowDirection);
 
-  // validationPlan
-  const validationPlan = buildValidationPlan(summary, directions, caveats);
+  // validationPlan — no longer uses caveats (shown in keySignals)
+  const validationPlan = buildValidationPlan(summary, directions);
 
-  // confidenceNotes
-  const confidenceNotes = buildConfidenceNotes(directions, caveats);
+  // confidenceNotes — receives topCaveats as already-shown set to avoid repeats
+  const confidenceNotes = buildConfidenceNotes(directions, allCaveats, topCaveats);
 
   return {
     version: "v3.1",

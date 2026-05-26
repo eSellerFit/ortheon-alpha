@@ -62,7 +62,12 @@ console.log(
       exploratoryDirectionCount: reportViewModel.exploratoryDirections.length,
       statusMix: reportViewModel.cover.statusMix,
       next30DayActionCount: reportViewModel.validationPlan.next30Days.length,
-      caveatCount: reportViewModel.confidenceNotes.caveats.length,
+      keySignalsCaveatCount: reportViewModel.keySignals.caveats.length,
+      confidenceNotesCaveatCount: reportViewModel.confidenceNotes.caveats.length,
+      confidenceNoteCount:
+        reportViewModel.confidenceNotes.caveats.length +
+        reportViewModel.confidenceNotes.missingEvidence.length +
+        reportViewModel.confidenceNotes.lowConfidenceReasons.length,
     },
     null,
     2
