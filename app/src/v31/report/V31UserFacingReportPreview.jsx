@@ -15,6 +15,10 @@
 import { useEffect, useState } from "react";
 import { readV31UserFacingReportFromFirestoreV31 } from "./readV31UserFacingReportFromFirestore.js";
 import V31DirectionMapPreview from "./V31DirectionMapPreview.jsx";
+import {
+  V31_REPORT_REVIEW_BOOKING_URL,
+  V31_DOWNLOAD_REPORT_ENABLED,
+} from "./reportActionConfigV31.js";
 
 // ── Styles ─────────────────────────────────────────────────────────────────────
 
@@ -46,14 +50,21 @@ const S = {
   brandSep: { color: "#ccc" },
   brandTag: { color: "#888" },
 
-  // Action buttons
+  // Action area
   actionRow: {
     display: "flex",
     gap: "10px",
-    marginBottom: "30px",
+    marginBottom: "8px",
     flexWrap: "wrap",
+    alignItems: "center",
   },
-  actionBtnPrimary: {
+  actionNote: {
+    fontSize: "12px",
+    color: "#888",
+    marginBottom: "28px",
+    lineHeight: "1.5",
+  },
+  actionLinkBtn: {
     display: "inline-flex",
     alignItems: "center",
     padding: "9px 20px",
@@ -63,23 +74,22 @@ const S = {
     fontSize: "13px",
     fontWeight: "600",
     border: "none",
-    cursor: "default",
+    cursor: "pointer",
     letterSpacing: "0.01em",
-    opacity: 0.85,
+    textDecoration: "none",
   },
-  actionBtnSecondary: {
+  actionBtnDisabled: {
     display: "inline-flex",
     alignItems: "center",
     padding: "9px 20px",
     borderRadius: "8px",
     background: "transparent",
-    color: "#245f73",
+    color: "#aaa",
     fontSize: "13px",
     fontWeight: "600",
-    border: "1.5px solid #245f73",
-    cursor: "default",
+    border: "1.5px solid #ddd",
+    cursor: "not-allowed",
     letterSpacing: "0.01em",
-    opacity: 0.85,
   },
 
   // Section divider + title
@@ -1013,14 +1023,25 @@ export default function V31UserFacingReportPreview() {
         <span style={{ fontFamily: "monospace", fontSize: "10px" }}>{assessmentId}</span>
       </div>
 
-      {/* Action buttons */}
+      {/* Action area */}
       <div style={S.actionRow}>
-        <button style={S.actionBtnPrimary} disabled>
-          Download report
-        </button>
-        <button style={S.actionBtnSecondary} disabled>
-          Book 30-minute review
-        </button>
+        <a
+          href={V31_REPORT_REVIEW_BOOKING_URL}
+          target="_blank"
+          rel="noreferrer"
+          style={S.actionLinkBtn}
+        >
+          Book 30-minute report review
+        </a>
+        <span
+          style={S.actionBtnDisabled}
+          title="PDF download is not yet available"
+        >
+          Download report — coming soon
+        </span>
+      </div>
+      <div style={S.actionNote}>
+        Use the same email you used for the assessment when booking.
       </div>
 
       {/* ── 1. Executive Summary ── */}
