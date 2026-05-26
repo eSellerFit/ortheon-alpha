@@ -1,7 +1,7 @@
 /**
  * Ortheon MVP Cut v3.1 — Internal Report Preview
  *
- * Bundle 18G — updated to card-based layout using 18F view model fields.
+ * Bundle 22A/22B — UX redesign.
  * Route: /internal/v31-report?documentId=<id>
  *
  * Rules:
@@ -36,7 +36,7 @@ const S = {
     display: "flex",
     alignItems: "center",
     gap: "8px",
-    marginBottom: "32px",
+    marginBottom: "20px",
     fontSize: "11px",
     textTransform: "uppercase",
     letterSpacing: "0.1em",
@@ -46,77 +46,108 @@ const S = {
   brandSep: { color: "#ccc" },
   brandTag: { color: "#888" },
 
+  // Action buttons
+  actionRow: {
+    display: "flex",
+    gap: "10px",
+    marginBottom: "30px",
+    flexWrap: "wrap",
+  },
+  actionBtnPrimary: {
+    display: "inline-flex",
+    alignItems: "center",
+    padding: "9px 20px",
+    borderRadius: "8px",
+    background: "#245f73",
+    color: "#fff",
+    fontSize: "13px",
+    fontWeight: "600",
+    border: "none",
+    cursor: "default",
+    letterSpacing: "0.01em",
+    opacity: 0.85,
+  },
+  actionBtnSecondary: {
+    display: "inline-flex",
+    alignItems: "center",
+    padding: "9px 20px",
+    borderRadius: "8px",
+    background: "transparent",
+    color: "#245f73",
+    fontSize: "13px",
+    fontWeight: "600",
+    border: "1.5px solid #245f73",
+    cursor: "default",
+    letterSpacing: "0.01em",
+    opacity: 0.85,
+  },
+
   // Section divider + title
-  divider: { borderTop: "1px solid #e8e5e0", margin: "36px 0 20px" },
+  divider: { borderTop: "1px solid #e8e5e0", margin: "40px 0 0" },
   sectionTitle: {
-    fontSize: "11px",
+    fontSize: "12px",
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: "0.1em",
-    color: "#999",
+    color: "#374151",
     marginBottom: "16px",
+    marginTop: "16px",
+    display: "block",
+  },
+
+  // Accordion trigger button
+  accordionTrigger: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+    background: "none",
+    border: "none",
+    padding: "16px 0 0",
+    cursor: "pointer",
+    textAlign: "left",
+  },
+  accordionChevron: {
+    fontSize: "11px",
+    color: "#94a3b8",
+    marginLeft: "8px",
+    flexShrink: 0,
   },
 
   // Executive Summary
   headline: {
-    fontSize: "26px",
+    fontSize: "28px",
     fontWeight: "700",
-    lineHeight: "1.3",
+    lineHeight: "1.25",
     color: "#111",
-    marginBottom: "14px",
+    marginBottom: "18px",
   },
-  coverSummary: {
-    fontSize: "16px",
-    lineHeight: "1.75",
-    color: "#333",
-    marginBottom: "20px",
-  },
-  metaField: {
-    background: "#f9f8f7",
-    border: "1px solid #d4d0ca",
-    borderLeft: "3px solid #245f73",
+
+  // Stronger strategy / tension cards
+  strategyCard: {
+    background: "#f0f7fa",
+    border: "1px solid #b0d0dc",
+    borderLeft: "4px solid #245f73",
     borderRadius: "8px",
-    padding: "14px 18px",
-    marginBottom: "10px",
+    padding: "16px 20px",
+    marginBottom: "12px",
   },
-  metaLabel: {
+  strategyCardLabel: {
     fontSize: "11px",
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: "0.08em",
     color: "#245f73",
-    marginBottom: "6px",
-  },
-  metaValue: { fontSize: "15px", color: "#1a1a1a", lineHeight: "1.55", fontWeight: "500" },
-  statusMixRow: { display: "flex", flexWrap: "wrap", gap: "8px", margin: "10px 0 16px" },
-
-  // Section 2: Decision Dashboard — 2 wide cards only
-  dashGrid: { display: "flex", flexWrap: "wrap", gap: "12px" },
-  dashCard: {
-    flex: "1 1 280px",
-    background: "#fff",
-    border: "1px solid #e8e5e0",
-    borderRadius: "12px",
-    padding: "20px 22px",
-  },
-  dashCardLabel: {
-    fontSize: "11px",
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: "0.08em",
-    color: "#888",
-    marginBottom: "10px",
-  },
-  dashCardValue: {
-    fontSize: "18px",
-    fontWeight: "700",
-    color: "#111",
     marginBottom: "8px",
-    lineHeight: "1.3",
   },
-  dashCardDesc: { fontSize: "13px", color: "#555", lineHeight: "1.55", marginTop: "10px" },
+  strategyCardValue: {
+    fontSize: "16px",
+    color: "#111",
+    lineHeight: "1.55",
+    fontWeight: "500",
+  },
 
-  // Section 4: Input Signal Cards — stronger visual hierarchy
+  // Input Signal Cards
   signalGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fill, minmax(270px, 1fr))",
@@ -159,47 +190,94 @@ const S = {
   },
   signalRowText: { fontSize: "13px", color: "#333", lineHeight: "1.6" },
 
-  // Section 4: Compact Direction Cards
-  compactDirCard: {
+  // Unified direction cards
+  dirCard: {
     background: "#fff",
-    border: "1px solid #e8e5e0",
-    borderRadius: "8px",
-    padding: "14px 16px",
-    marginBottom: "8px",
-  },
-  compactDirHeader: {
-    display: "flex",
-    alignItems: "flex-start",
-    gap: "10px",
-    marginBottom: "6px",
-  },
-  compactDirOrder: { fontSize: "12px", color: "#bbb", flexShrink: 0, paddingTop: "3px" },
-  compactDirLabel: { fontWeight: "600", fontSize: "15px", flex: 1, lineHeight: "1.4" },
-  compactDirBadges: { display: "flex", flexWrap: "wrap", gap: "5px", marginBottom: "8px" },
-  compactDirWhy: { fontSize: "13px", color: "#555", lineHeight: "1.5", marginBottom: "6px" },
-  compactDirRisk: { fontSize: "12px", color: "#b45309", lineHeight: "1.5", marginBottom: "5px" },
-  compactDirStep: { fontSize: "12px", color: "#2563eb", fontStyle: "italic", lineHeight: "1.5" },
-
-  // Section 5: Primary Direction Deep Dive
-  primaryCard: {
-    background: "#fff",
-    border: "1px solid #e8e5e0",
-    borderLeft: "4px solid #16a34a",
-    borderRadius: "8px",
+    border: "1px solid #d4d0ca",
+    borderRadius: "10px",
     marginBottom: "10px",
     overflow: "hidden",
   },
-  cardHead: { padding: "16px 20px 10px" },
-  cardBody: { borderTop: "1px solid #f0ede8", padding: "14px 20px 18px" },
-  dirTitle: { fontSize: "18px", fontWeight: "700", lineHeight: "1.3", marginBottom: "8px" },
-  dirArena: { fontSize: "13px", color: "#888", marginTop: "4px" },
-  badgeRow: { display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "6px" },
-  subTitle: {
+  dirCardPrimary: {
+    background: "#fff",
+    border: "1px solid #d4d0ca",
+    borderLeft: "4px solid #16a34a",
+    borderRadius: "10px",
+    marginBottom: "10px",
+    overflow: "hidden",
+  },
+  dirCardSummary: {
+    padding: "16px 18px",
+    display: "flex",
+    alignItems: "flex-start",
+    gap: "12px",
+  },
+  dirCardSummaryContent: { flex: 1, minWidth: 0 },
+  dirCardOrder: {
     fontSize: "11px",
+    color: "#bbb",
+    flexShrink: 0,
+    paddingTop: "3px",
+    minWidth: "20px",
+  },
+  dirCardLabel: {
+    fontWeight: "700",
+    fontSize: "16px",
+    lineHeight: "1.35",
+    color: "#111",
+    marginBottom: "8px",
+  },
+  dirCardBadges: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "5px",
+    marginBottom: "8px",
+  },
+  dirCardWhy: {
+    fontSize: "13px",
+    color: "#444",
+    lineHeight: "1.55",
+    marginBottom: "6px",
+    marginTop: "8px",
+  },
+  dirCardRisk: {
+    fontSize: "12px",
+    color: "#b45309",
+    lineHeight: "1.5",
+    marginBottom: "5px",
+  },
+  dirCardFirstStep: {
+    fontSize: "12px",
+    color: "#2563eb",
+    fontStyle: "italic",
+    lineHeight: "1.5",
+  },
+  dirExpandBtn: {
+    background: "none",
+    border: "1px solid #e2e8f0",
+    borderRadius: "6px",
+    padding: "4px 10px",
+    fontSize: "12px",
+    color: "#64748b",
+    cursor: "pointer",
+    flexShrink: 0,
+    alignSelf: "flex-start",
+    marginTop: "2px",
+    whiteSpace: "nowrap",
+  },
+
+  // Expanded detail panel
+  dirExpandedPanel: {
+    borderTop: "1px solid #e8e5e0",
+    padding: "16px 20px 18px",
+    background: "#fafaf9",
+  },
+  subTitle: {
+    fontSize: "10px",
     fontWeight: "700",
     textTransform: "uppercase",
-    letterSpacing: "0.07em",
-    color: "#aaa",
+    letterSpacing: "0.08em",
+    color: "#555",
     marginTop: "14px",
     marginBottom: "5px",
     display: "block",
@@ -208,10 +286,10 @@ const S = {
     margin: "0 0 0 16px",
     padding: 0,
     lineHeight: "1.7",
-    fontSize: "14px",
+    fontSize: "13px",
     color: "#333",
   },
-  bodyText: { fontSize: "14px", color: "#333", lineHeight: "1.6" },
+  bodyText: { fontSize: "13px", color: "#333", lineHeight: "1.6" },
   firstStepBox: {
     background: "#eff6ff",
     border: "1px solid #bfdbfe",
@@ -244,41 +322,22 @@ const S = {
     color: "#92400e",
     marginBottom: "4px",
   },
+  targetRolesWrap: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "5px",
+    marginTop: "8px",
+  },
+  targetRoleChip: {
+    background: "#f4f3f1",
+    border: "1px solid #e2e0da",
+    borderRadius: "4px",
+    padding: "3px 9px",
+    fontSize: "12px",
+    color: "#374151",
+  },
 
-  // Section 6: Other Directions Compact
-  otherDirCard: {
-    background: "#fff",
-    border: "1px solid #e8e5e0",
-    borderLeft: "4px solid #d97706",
-    borderRadius: "8px",
-    padding: "14px 18px",
-    marginBottom: "8px",
-  },
-  otherDirHeader: { display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" },
-  otherDirLabel: { fontWeight: "600", fontSize: "14px", flex: 1, lineHeight: "1.4" },
-  otherDirRowLabel: {
-    fontSize: "10px",
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: "0.07em",
-    color: "#aaa",
-    marginBottom: "3px",
-  },
-  otherDirRowText: { fontSize: "13px", color: "#444", lineHeight: "1.55", marginBottom: "8px" },
-  otherDirConditionBox: {
-    background: "#fffbeb",
-    border: "1px solid #fde68a",
-    borderRadius: "6px",
-    padding: "8px 12px",
-    marginTop: "6px",
-    marginBottom: "8px",
-    fontSize: "13px",
-    color: "#78350f",
-    lineHeight: "1.5",
-  },
-  otherDirStep: { fontSize: "12px", color: "#2563eb", fontStyle: "italic" },
-
-  // Section 8: Not-Now Directions — muted but readable
+  // Not-now directions
   notNowCard: {
     background: "#f8fafc",
     border: "1px solid #e2e8f0",
@@ -297,24 +356,30 @@ const S = {
     flexShrink: 0,
     marginTop: "6px",
   },
-  dirTitleSmall: { fontSize: "14px", fontWeight: "600", lineHeight: "1.4", marginBottom: "5px", color: "#374151" },
+  dirTitleSmall: {
+    fontSize: "14px",
+    fontWeight: "600",
+    lineHeight: "1.4",
+    marginBottom: "5px",
+    color: "#374151",
+  },
 
-  // Section 9: Validation Plan — action card style
+  // 30-day validation plan
   planItem: {
     display: "flex",
     gap: "14px",
     padding: "14px 16px",
     background: "#fff",
-    border: "1px solid #e8e5e0",
+    border: "1px solid #e2e0da",
     borderRadius: "8px",
     marginBottom: "8px",
     alignItems: "flex-start",
   },
   planNum: {
-    width: "24px",
-    height: "24px",
+    width: "26px",
+    height: "26px",
     borderRadius: "50%",
-    background: "#1a1a1a",
+    background: "#245f73",
     color: "#fff",
     fontSize: "11px",
     fontWeight: "700",
@@ -323,24 +388,45 @@ const S = {
     justifyContent: "center",
     flexShrink: 0,
   },
-  planText: { fontSize: "14px", color: "#222", lineHeight: "1.6", fontWeight: "500" },
-  planSubCard: {
+  planText: { fontSize: "14px", color: "#1a1a1a", lineHeight: "1.6", fontWeight: "500" },
+  planSubGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+    gap: "10px",
+    marginTop: "10px",
+  },
+  planSubSectionEvidence: {
     background: "#fff",
-    border: "1px solid #e8e5e0",
+    border: "1px solid #d4d0ca",
+    borderLeft: "3px solid #245f73",
     borderRadius: "8px",
-    padding: "12px 16px",
-    marginTop: "8px",
+    padding: "14px 16px",
+  },
+  planSubSectionDecisions: {
+    background: "#fff",
+    border: "1px solid #d4d0ca",
+    borderLeft: "3px solid #92400e",
+    borderRadius: "8px",
+    padding: "14px 16px",
+  },
+  planSubSectionConversations: {
+    background: "#fff",
+    border: "1px solid #d4d0ca",
+    borderLeft: "3px solid #6366f1",
+    borderRadius: "8px",
+    padding: "14px 16px",
+    marginTop: "10px",
   },
   planSubTitle: {
     fontSize: "11px",
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: "0.07em",
-    color: "#555",
-    marginBottom: "8px",
+    color: "#374151",
+    marginBottom: "10px",
   },
 
-  // Section 10: Confidence Notes — card wrapper + stronger chips
+  // Confidence Notes
   confidenceWrapper: {
     background: "#fff",
     border: "1px solid #d4d0ca",
@@ -435,13 +521,6 @@ const CONFIDENCE_THEMES = {
   insufficient_data: { background: "#f1f5f9", color: "#64748b" },
 };
 
-const TYPE_LABELS = {
-  bridge:          "Bridge",
-  secondary:       "Secondary",
-  exploratory:     "Exploratory",
-  not_recommended: "Considered",
-};
-
 function statusBadge(status) {
   const key = String(status || "").toLowerCase();
   const theme = STATUS_THEMES[key] || { background: "#f1f5f9", color: "#64748b" };
@@ -465,35 +544,73 @@ function workBadge(work) {
   return badge(work, { background: "#f5f3ff", color: "#6d28d9" });
 }
 
-// ── Shared layout primitives ───────────────────────────────────────────────────
+// ── AI Durability Badge ────────────────────────────────────────────────────────
 
-const STATUS_MIX_DEFS = [
-  { key: "credibleNow",         label: "Credible now",    theme: STATUS_THEMES["credible now"] },
-  { key: "credibleWithCaution", label: "With caution",    theme: STATUS_THEMES["credible now, with caution"] },
-  { key: "bridgeRequired",      label: "Bridge required", theme: STATUS_THEMES["bridge required"] },
-  { key: "secondaryOption",     label: "Secondary",       theme: STATUS_THEMES["secondary option"] },
-  { key: "exploratory",         label: "Exploratory",     theme: STATUS_THEMES.exploratory },
-  { key: "notNow",              label: "Not now",         theme: STATUS_THEMES["not now"] },
-];
-
-function StatusMixBadges({ statusMix }) {
-  if (!statusMix) return null;
-  const nonZero = STATUS_MIX_DEFS.filter((d) => (statusMix[d.key] || 0) > 0);
-  if (nonZero.length === 0) return null;
+function AiDurabilityBadge({ aiDurability }) {
+  if (!aiDurability?.rating) return null;
+  const label = aiDurability.label
+    ? `${aiDurability.rating} · ${aiDurability.label}`
+    : aiDurability.rating;
+  const tooltip =
+    aiDurability.description ||
+    "AI durability shows how this direction may hold up as AI changes work. " +
+    "D0 Declining · D1 Pressured · D2 Changing · D3 Durable · D4 Future-resilient";
   return (
-    <div style={S.statusMixRow}>
-      {nonZero.map(({ key, label, theme }) => (
-        <span key={key}>{badge(`${statusMix[key]} ${label}`, theme)}</span>
-      ))}
-    </div>
+    <span
+      title={tooltip}
+      style={{
+        display: "inline-block",
+        padding: "2px 8px",
+        borderRadius: "4px",
+        fontSize: "11px",
+        fontWeight: "600",
+        background: "#f0fdf4",
+        color: "#166534",
+        border: "1px solid #bbf7d0",
+        marginTop: "4px",
+        cursor: "help",
+      }}
+    >
+      {label}
+    </span>
   );
 }
+
+// ── Shared layout primitives ───────────────────────────────────────────────────
 
 function SectionDivider({ title }) {
   return (
     <>
       <div style={S.divider} />
       <div style={S.sectionTitle}>{title}</div>
+    </>
+  );
+}
+
+function AccordionSection({ title, defaultOpen = false, children }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <>
+      <div style={S.divider} />
+      <button
+        onClick={() => setOpen((o) => !o)}
+        style={S.accordionTrigger}
+        aria-expanded={open}
+      >
+        <span
+          style={{
+            fontSize: "12px",
+            fontWeight: "700",
+            textTransform: "uppercase",
+            letterSpacing: "0.1em",
+            color: "#374151",
+          }}
+        >
+          {title}
+        </span>
+        <span style={S.accordionChevron}>{open ? "▲" : "▼"}</span>
+      </button>
+      {open && <div style={{ marginTop: "16px" }}>{children}</div>}
     </>
   );
 }
@@ -509,87 +626,212 @@ function BulletList({ items }) {
   );
 }
 
-const META_ICONS = {
-  "Recommended strategy": "→",
-  "Main tension": "⊘",
-};
-
-function MetaField({ label, value }) {
-  if (!value) return null;
-  const icon = META_ICONS[label];
+function TargetRoles({ roles }) {
+  if (!Array.isArray(roles) || roles.length === 0) return null;
   return (
-    <div style={S.metaField}>
-      <div style={S.metaLabel}>{icon ? `${icon}  ` : ""}{label}</div>
-      <div style={S.metaValue}>{value}</div>
-    </div>
-  );
-}
-
-// ── Section 3: Direction Snapshot — top 3 compact direction cards ─────────────
-
-function DirectionSnapshotCard({ dir }) {
-  const text = dir.whyThisIsHere || dir.mainRisk || "";
-  return (
-    <div
-      style={{
-        background: "#fff",
-        border: "1px solid #e8e5e0",
-        borderRadius: "10px",
-        padding: "14px 16px",
-      }}
-    >
-      <div
-        style={{
-          fontSize: "14px",
-          fontWeight: "700",
-          color: "#111",
-          marginBottom: "8px",
-          lineHeight: "1.35",
-        }}
-      >
-        {dir.label}
-      </div>
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "5px",
-          marginBottom: text ? "8px" : 0,
-        }}
-      >
-        {statusBadge(dir.status)}
-        {confidenceBadge(dir.confidence)}
-        {routeBadge(dir.routeType)}
-        {workBadge(dir.workModel)}
-      </div>
-      {text && (
-        <div style={{ fontSize: "13px", color: "#555", lineHeight: "1.5" }}>
-          {text}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function DirectionSnapshot({ cards }) {
-  if (!Array.isArray(cards) || cards.length === 0) return null;
-  const visible = cards.slice(0, 3);
-  return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
-        gap: "10px",
-      }}
-    >
-      {visible.map((dir, i) => (
-        <DirectionSnapshotCard key={i} dir={dir} />
+    <div style={S.targetRolesWrap}>
+      {roles.map((r, i) => (
+        <span key={i} style={S.targetRoleChip}>{r}</span>
       ))}
     </div>
   );
 }
 
-// ── Section 4: Input Signal Cards ─────────────────────────────────────────────
+// ── Stronger strategy / tension card ─────────────────────────────────────────
+
+function StrategyCard({ label, value }) {
+  if (!value) return null;
+  const icons = { "Recommended strategy": "→", "Main tension": "⊘" };
+  const icon = icons[label];
+  return (
+    <div style={S.strategyCard}>
+      <div style={S.strategyCardLabel}>{icon ? `${icon}  ` : ""}{label}</div>
+      <div style={S.strategyCardValue}>{value}</div>
+    </div>
+  );
+}
+
+// ── Expanded panels for direction cards ───────────────────────────────────────
+
+function PrimaryExpandedPanel({ d }) {
+  if (!d) return null;
+  return (
+    <div style={S.dirExpandedPanel}>
+      {d.whatThisDirectionMeans && d.whatThisDirectionMeans !== d.directionArena && (
+        <>
+          <span style={S.subTitle}>What this direction means</span>
+          <div style={S.bodyText}>{d.whatThisDirectionMeans}</div>
+        </>
+      )}
+      {d.firstValidationStep && (
+        <div style={S.firstStepBox}>
+          <span style={S.firstStepBoxLabel}>First validation step</span>
+          {d.firstValidationStep}
+        </div>
+      )}
+      {d.bridgeStrategy && (
+        <div style={S.bridgeBox}>
+          <span style={S.bridgeBoxLabel}>Bridge strategy</span>
+          {d.bridgeStrategy}
+        </div>
+      )}
+      {d.whyItFits?.length > 0 && (
+        <>
+          <span style={S.subTitle}>Why it fits</span>
+          <BulletList items={d.whyItFits} />
+        </>
+      )}
+      {d.whyItIsCredible?.length > 0 && (
+        <>
+          <span style={S.subTitle}>Why it is credible</span>
+          <BulletList items={d.whyItIsCredible} />
+        </>
+      )}
+      {d.whatMakesItRisky?.length > 0 && (
+        <>
+          <span style={S.subTitle}>Main risks</span>
+          <BulletList items={d.whatMakesItRisky} />
+        </>
+      )}
+      {d.whatWouldMakeItStronger?.length > 0 && (
+        <>
+          <span style={S.subTitle}>What would make it stronger</span>
+          <BulletList items={d.whatWouldMakeItStronger} />
+        </>
+      )}
+      {d.targetRoleExamples?.length > 0 && (
+        <>
+          <span style={S.subTitle}>Target role examples</span>
+          <TargetRoles roles={d.targetRoleExamples} />
+        </>
+      )}
+    </div>
+  );
+}
+
+function OtherExpandedPanel({ d, card }) {
+  if (!d) return null;
+  return (
+    <div style={S.dirExpandedPanel}>
+      {d.whyInteresting && (
+        <>
+          <span style={S.subTitle}>Why it is interesting</span>
+          <div style={S.bodyText}>{d.whyInteresting}</div>
+        </>
+      )}
+      {d.whyNotPrimaryNow && (
+        <>
+          <span style={S.subTitle}>Why not primary now</span>
+          <div style={S.bodyText}>{d.whyNotPrimaryNow}</div>
+        </>
+      )}
+      {d.bridgeOrValidationCondition && (
+        <div style={{ ...S.bridgeBox, marginTop: "12px" }}>
+          <span style={S.bridgeBoxLabel}>Condition to pursue</span>
+          {d.bridgeOrValidationCondition}
+        </div>
+      )}
+      {d.firstValidationStep && (
+        <div style={S.firstStepBox}>
+          <span style={S.firstStepBoxLabel}>First validation step</span>
+          {d.firstValidationStep}
+        </div>
+      )}
+      {card?.targetRoleExamples?.length > 0 && (
+        <>
+          <span style={S.subTitle}>Target role examples</span>
+          <TargetRoles roles={card.targetRoleExamples} />
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── Unified expandable direction card ─────────────────────────────────────────
+
+function ExpandableDirectionCard({ card, detail, isPrimary }) {
+  const [expanded, setExpanded] = useState(false);
+  const hasDetail = !!detail;
+
+  return (
+    <div style={isPrimary ? S.dirCardPrimary : S.dirCard}>
+      <div style={S.dirCardSummary}>
+        <span style={S.dirCardOrder}>#{card.displayOrder}</span>
+        <div style={S.dirCardSummaryContent}>
+          <div style={S.dirCardLabel}>{card.label}</div>
+          <div style={S.dirCardBadges}>
+            {statusBadge(card.status)}
+            {confidenceBadge(card.confidence)}
+            {routeBadge(card.routeType)}
+            {workBadge(card.workModel)}
+          </div>
+          {card.aiDurability && <AiDurabilityBadge aiDurability={card.aiDurability} />}
+          {card.whyThisIsHere && (
+            <div style={S.dirCardWhy}>{card.whyThisIsHere}</div>
+          )}
+          {card.mainRisk && (
+            <div style={S.dirCardRisk}>
+              <strong style={{ fontWeight: "600" }}>Risk:</strong> {card.mainRisk}
+            </div>
+          )}
+          {!expanded && card.firstValidationStep && (
+            <div style={S.dirCardFirstStep}>First step: {card.firstValidationStep}</div>
+          )}
+        </div>
+        {hasDetail && (
+          <button
+            onClick={() => setExpanded((e) => !e)}
+            style={S.dirExpandBtn}
+            aria-expanded={expanded}
+          >
+            {expanded ? "Less ▲" : "Detail ▼"}
+          </button>
+        )}
+      </div>
+      {expanded && hasDetail && (
+        isPrimary
+          ? <PrimaryExpandedPanel d={detail} />
+          : <OtherExpandedPanel d={detail} card={card} />
+      )}
+    </div>
+  );
+}
+
+// ── Not-Now Direction Card ─────────────────────────────────────────────────────
+
+function NotNowCard({ direction }) {
+  return (
+    <div style={S.notNowCard}>
+      <div style={S.notNowDot} />
+      <div>
+        <div style={S.dirTitleSmall}>{direction.label}</div>
+        {direction.reason && (
+          <div style={{ fontSize: "13px", color: "#6b7280", lineHeight: "1.55" }}>
+            {direction.reason}
+          </div>
+        )}
+        {direction.whatWouldChangeThis && (
+          <div style={{ fontSize: "12px", color: "#94a3b8", marginTop: "6px", fontStyle: "italic" }}>
+            {direction.whatWouldChangeThis}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Validation Plan Item ───────────────────────────────────────────────────────
+
+function PlanItem({ number, text }) {
+  return (
+    <div style={S.planItem}>
+      <span style={S.planNum}>{number}</span>
+      <span style={S.planText}>{text}</span>
+    </div>
+  );
+}
+
+// ── Input Signal Card ──────────────────────────────────────────────────────────
 
 const SIGNAL_ICONS = {
   careerAnchors: "◇",
@@ -626,180 +868,6 @@ function InputSignalCard({ card }) {
           <div style={S.signalRowText}>{card.impact}</div>
         </div>
       )}
-    </div>
-  );
-}
-
-// ── Section 4: Compact Direction Cards ────────────────────────────────────────
-
-function CompactDirectionCard({ dir }) {
-  return (
-    <div style={S.compactDirCard}>
-      <div style={S.compactDirHeader}>
-        <span style={S.compactDirOrder}>#{dir.displayOrder}</span>
-        <span style={S.compactDirLabel}>{dir.label}</span>
-      </div>
-      <div style={S.compactDirBadges}>
-        {statusBadge(dir.status)}
-        {confidenceBadge(dir.confidence)}
-        {routeBadge(dir.routeType)}
-        {workBadge(dir.workModel)}
-      </div>
-      {dir.whyThisIsHere && (
-        <div style={S.compactDirWhy}>{dir.whyThisIsHere}</div>
-      )}
-      {dir.mainRisk && (
-        <div style={S.compactDirRisk}>
-          <strong style={{ fontWeight: "600" }}>Risk:</strong> {dir.mainRisk}
-        </div>
-      )}
-      {dir.firstValidationStep && (
-        <div style={S.compactDirStep}>First step: {dir.firstValidationStep}</div>
-      )}
-    </div>
-  );
-}
-
-// ── Section 5: Primary Direction Deep Dive ────────────────────────────────────
-
-function PrimaryDeepDive({ direction }) {
-  if (!direction) return null;
-  return (
-    <div style={S.primaryCard}>
-      <div style={S.cardHead}>
-        <div style={S.dirTitle}>{direction.label}</div>
-        <div style={S.badgeRow}>
-          {statusBadge(direction.currentRealismStatus)}
-          {confidenceBadge(direction.confidence)}
-          {routeBadge(direction.routeType)}
-          {workBadge(direction.workModel)}
-        </div>
-        {direction.directionArena && (
-          <div style={S.dirArena}>{direction.directionArena}</div>
-        )}
-      </div>
-
-      <div style={S.cardBody}>
-        {direction.whatThisDirectionMeans &&
-          direction.whatThisDirectionMeans !== direction.directionArena && (
-            <>
-              <span style={S.subTitle}>What this direction means</span>
-              <div style={S.bodyText}>{direction.whatThisDirectionMeans}</div>
-            </>
-          )}
-
-        {direction.firstValidationStep && (
-          <div style={S.firstStepBox}>
-            <span style={S.firstStepBoxLabel}>First validation step</span>
-            {direction.firstValidationStep}
-          </div>
-        )}
-
-        {direction.bridgeStrategy && (
-          <div style={S.bridgeBox}>
-            <span style={S.bridgeBoxLabel}>Bridge strategy</span>
-            {direction.bridgeStrategy}
-          </div>
-        )}
-
-        {direction.whyItFits?.length > 0 && (
-          <>
-            <span style={S.subTitle}>Why it fits</span>
-            <BulletList items={direction.whyItFits} />
-          </>
-        )}
-        {direction.whyItIsCredible?.length > 0 && (
-          <>
-            <span style={S.subTitle}>Why it is credible</span>
-            <BulletList items={direction.whyItIsCredible} />
-          </>
-        )}
-        {direction.whatMakesItRisky?.length > 0 && (
-          <>
-            <span style={S.subTitle}>Main risks</span>
-            <BulletList items={direction.whatMakesItRisky} />
-          </>
-        )}
-        {direction.whatWouldMakeItStronger?.length > 0 && (
-          <>
-            <span style={S.subTitle}>What would make it stronger</span>
-            <BulletList items={direction.whatWouldMakeItStronger} />
-          </>
-        )}
-        {direction.notRecommendedIf?.length > 0 && (
-          <>
-            <span style={S.subTitle}>Not recommended if</span>
-            <BulletList items={direction.notRecommendedIf} />
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ── Section 6: Other Directions Compact ───────────────────────────────────────
-
-function OtherDirectionCard({ dir }) {
-  const typeLabel = TYPE_LABELS[dir.type] || dir.type;
-  return (
-    <div style={S.otherDirCard}>
-      <div style={S.otherDirHeader}>
-        <span style={S.otherDirLabel}>{dir.label}</span>
-        {badge(typeLabel, { background: "#f5f3ff", color: "#5b21b6" })}
-        {statusBadge(dir.status)}
-      </div>
-      {dir.whyInteresting && (
-        <>
-          <div style={S.otherDirRowLabel}>Why it is interesting</div>
-          <div style={S.otherDirRowText}>{dir.whyInteresting}</div>
-        </>
-      )}
-      {dir.whyNotPrimaryNow && (
-        <>
-          <div style={S.otherDirRowLabel}>Why not primary now</div>
-          <div style={S.otherDirRowText}>{dir.whyNotPrimaryNow}</div>
-        </>
-      )}
-      {dir.bridgeOrValidationCondition && (
-        <div style={S.otherDirConditionBox}>{dir.bridgeOrValidationCondition}</div>
-      )}
-      {dir.firstValidationStep && (
-        <div style={S.otherDirStep}>First step: {dir.firstValidationStep}</div>
-      )}
-    </div>
-  );
-}
-
-// ── Section 7: Not-Now Direction Card ─────────────────────────────────────────
-
-function NotNowCard({ direction }) {
-  return (
-    <div style={S.notNowCard}>
-      <div style={S.notNowDot} />
-      <div>
-        <div style={S.dirTitleSmall}>{direction.label}</div>
-        {direction.reason && (
-          <div style={{ fontSize: "13px", color: "#6b7280", lineHeight: "1.55" }}>
-            {direction.reason}
-          </div>
-        )}
-        {direction.whatWouldChangeThis && (
-          <div style={{ fontSize: "12px", color: "#94a3b8", marginTop: "6px", fontStyle: "italic" }}>
-            {direction.whatWouldChangeThis}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ── Section 9: Validation Plan Item ───────────────────────────────────────────
-
-function PlanItem({ number, text }) {
-  return (
-    <div style={S.planItem}>
-      <span style={S.planNum}>{number}</span>
-      <span style={S.planText}>{text}</span>
     </div>
   );
 }
@@ -908,7 +976,6 @@ export default function V31UserFacingReportPreview() {
     reportMeta,
     cover,
     directionMap,
-    decisionDashboard,
     inputSignalCards,
     compactDirectionCards,
     primaryDirectionDeepDive,
@@ -917,6 +984,21 @@ export default function V31UserFacingReportPreview() {
     validationPlan,
     confidenceNotes,
   } = vm;
+
+  // Pair each compact card with its deep dive detail.
+  // Primary is always card[0] when primaryDirectionDeepDive exists.
+  // otherDirectionsCompact[i] maps to compactDirectionCards[i + offset].
+  const primaryDeepDiveExists = !!primaryDirectionDeepDive;
+  const otherOffset = primaryDeepDiveExists ? 1 : 0;
+
+  const hasConfidenceNotes =
+    confidenceNotes.caveats.length > 0 ||
+    confidenceNotes.missingEvidence.length > 0 ||
+    confidenceNotes.lowConfidenceReasons.length > 0;
+
+  const hasPlanSubSections =
+    validationPlan.evidenceToBuild.length > 0 ||
+    validationPlan.decisionsToMake.length > 0;
 
   // ── Report ─────────────────────────────────────────────────────────────────
 
@@ -931,13 +1013,23 @@ export default function V31UserFacingReportPreview() {
         <span style={{ fontFamily: "monospace", fontSize: "10px" }}>{assessmentId}</span>
       </div>
 
+      {/* Action buttons */}
+      <div style={S.actionRow}>
+        <button style={S.actionBtnPrimary} disabled>
+          Download report
+        </button>
+        <button style={S.actionBtnSecondary} disabled>
+          Book 30-minute review
+        </button>
+      </div>
+
       {/* ── 1. Executive Summary ── */}
       {cover.headline && <div style={S.headline}>{cover.headline}</div>}
       {cover.recommendedStrategy && (
-        <MetaField label="Recommended strategy" value={cover.recommendedStrategy} />
+        <StrategyCard label="Recommended strategy" value={cover.recommendedStrategy} />
       )}
       {cover.mainTension && (
-        <MetaField label="Main tension" value={cover.mainTension} />
+        <StrategyCard label="Main tension" value={cover.mainTension} />
       )}
 
       {/* ── 2. Career Direction Map ── */}
@@ -948,35 +1040,26 @@ export default function V31UserFacingReportPreview() {
         </>
       )}
 
-      {/* ── 3. Direction Snapshot ── */}
-      {compactDirectionCards?.length > 0 && (
-        <>
-          <SectionDivider title="Direction snapshot" />
-          <DirectionSnapshot cards={compactDirectionCards} />
-        </>
-      )}
-
-      {/* ── 4. Your Input Signals ── */}
-      {inputSignalCards?.length > 0 && (
-        <>
-          <SectionDivider title="Your input signals" />
-          <div style={S.signalGrid}>
-            {inputSignalCards.map((card) => (
-              <InputSignalCard key={card.id} card={card} />
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* ── 4. Direction Portfolio ── */}
+      {/* ── 3. Your Directions — unified expandable cards ── */}
       {compactDirectionCards?.length > 0 && (
         <>
           <SectionDivider
-            title={`Your directions — ${reportMeta.directionCount} assessed`}
+            title={`Your directions — ${reportMeta.directionCount || compactDirectionCards.length} assessed`}
           />
-          {compactDirectionCards.map((dir, i) => (
-            <CompactDirectionCard key={i} dir={dir} />
-          ))}
+          {compactDirectionCards.map((card, i) => {
+            const isPrimary = i === 0 && primaryDeepDiveExists;
+            const detail = isPrimary
+              ? primaryDirectionDeepDive
+              : otherDirectionsCompact[i - otherOffset] || null;
+            return (
+              <ExpandableDirectionCard
+                key={i}
+                card={card}
+                detail={detail}
+                isPrimary={isPrimary}
+              />
+            );
+          })}
           {reportMeta.rejectedDirectionCount > 0 && (
             <div style={{ fontSize: "13px", color: "#aaa", marginTop: "6px" }}>
               + {reportMeta.rejectedDirectionCount} direction
@@ -986,27 +1069,7 @@ export default function V31UserFacingReportPreview() {
         </>
       )}
 
-      {/* ── 5. Primary Direction Deep Dive ── */}
-      {primaryDirectionDeepDive && (
-        <>
-          <SectionDivider title="Primary direction" />
-          <PrimaryDeepDive direction={primaryDirectionDeepDive} />
-        </>
-      )}
-
-      {/* ── 6. Other Directions ── */}
-      {otherDirectionsCompact?.length > 0 && (
-        <>
-          <SectionDivider
-            title={`Other direction${otherDirectionsCompact.length !== 1 ? "s" : ""}`}
-          />
-          {otherDirectionsCompact.map((dir, i) => (
-            <OtherDirectionCard key={i} dir={dir} />
-          ))}
-        </>
-      )}
-
-      {/* ── 8. Not-Now Directions ── */}
+      {/* ── 4. Not-Now Directions ── */}
       {notNowDirections?.length > 0 && (
         <>
           <SectionDivider title="Not recommended at this time" />
@@ -1016,48 +1079,52 @@ export default function V31UserFacingReportPreview() {
         </>
       )}
 
-      {/* ── 9. 30-Day Validation Plan ── */}
+      {/* ── 5. Your Input Signals — collapsed accordion ── */}
+      {inputSignalCards?.length > 0 && (
+        <AccordionSection title="Your input signals" defaultOpen={false}>
+          <div style={S.signalGrid}>
+            {inputSignalCards.map((card) => (
+              <InputSignalCard key={card.id} card={card} />
+            ))}
+          </div>
+        </AccordionSection>
+      )}
+
+      {/* ── 6. 30-Day Validation Plan — stronger sub-section visuals ── */}
       {validationPlan.next30Days.length > 0 && (
         <>
           <SectionDivider title="What to do in the next 30 days" />
           {validationPlan.next30Days.map((action, i) => (
             <PlanItem key={i} number={i + 1} text={action} />
           ))}
-          {(validationPlan.evidenceToBuild.length > 0 ||
-            validationPlan.conversationsToHave.length > 0 ||
-            validationPlan.decisionsToMake.length > 0) && (
-            <div style={S.planSubCard}>
+          {hasPlanSubSections && (
+            <div style={S.planSubGrid}>
               {validationPlan.evidenceToBuild.length > 0 && (
-                <>
+                <div style={S.planSubSectionEvidence}>
                   <div style={S.planSubTitle}>Evidence to build</div>
                   <BulletList items={validationPlan.evidenceToBuild} />
-                </>
-              )}
-              {validationPlan.conversationsToHave.length > 0 && (
-                <>
-                  <div style={{ ...S.planSubTitle, marginTop: validationPlan.evidenceToBuild.length > 0 ? "12px" : 0 }}>
-                    Conversations to have
-                  </div>
-                  <BulletList items={validationPlan.conversationsToHave} />
-                </>
+                </div>
               )}
               {validationPlan.decisionsToMake.length > 0 && (
-                <>
-                  <div style={{ ...S.planSubTitle, marginTop: "12px" }}>Decisions to make</div>
+                <div style={S.planSubSectionDecisions}>
+                  <div style={S.planSubTitle}>Decisions to make</div>
                   <BulletList items={validationPlan.decisionsToMake} />
-                </>
+                </div>
               )}
+            </div>
+          )}
+          {validationPlan.conversationsToHave.length > 0 && (
+            <div style={S.planSubSectionConversations}>
+              <div style={S.planSubTitle}>Conversations to have</div>
+              <BulletList items={validationPlan.conversationsToHave} />
             </div>
           )}
         </>
       )}
 
-      {/* ── 10. Confidence and Limitations ── */}
-      {(confidenceNotes.caveats.length > 0 ||
-        confidenceNotes.missingEvidence.length > 0 ||
-        confidenceNotes.lowConfidenceReasons.length > 0) && (
-        <>
-          <SectionDivider title="Confidence and limitations" />
+      {/* ── 7. Confidence & Limitations — collapsed accordion at bottom ── */}
+      {hasConfidenceNotes && (
+        <AccordionSection title="Confidence and limitations" defaultOpen={false}>
           <div style={S.confidenceWrapper}>
             {confidenceNotes.missingEvidence.length > 0 && (
               <div>
@@ -1080,7 +1147,15 @@ export default function V31UserFacingReportPreview() {
               </div>
             )}
             {confidenceNotes.caveats.length > 0 && (
-              <div style={{ marginTop: (confidenceNotes.missingEvidence.length > 0 || confidenceNotes.lowConfidenceReasons.length > 0) ? "16px" : 0 }}>
+              <div
+                style={{
+                  marginTop:
+                    confidenceNotes.missingEvidence.length > 0 ||
+                    confidenceNotes.lowConfidenceReasons.length > 0
+                      ? "16px"
+                      : 0,
+                }}
+              >
                 <div style={S.confidenceGroupLabel}>Additional caveats</div>
                 <div style={S.confidenceContainer}>
                   {confidenceNotes.caveats.map((item, i) => (
@@ -1090,7 +1165,7 @@ export default function V31UserFacingReportPreview() {
               </div>
             )}
           </div>
-        </>
+        </AccordionSection>
       )}
 
       {/* Footer */}

@@ -78,9 +78,10 @@ function getStrokeDash(lineStyle) {
 
 // ── Small badge ───────────────────────────────────────────────────────────────
 
-function MapBadge({ label, bg, color }) {
+function MapBadge({ label, bg, color, title }) {
   return (
     <span
+      title={title}
       style={{
         display: "inline-block",
         padding: "2px 7px",
@@ -153,6 +154,14 @@ function DirectionNode({ node }) {
             label={node.routeType || node.workModel}
             bg="#eff6ff"
             color="#1d4ed8"
+          />
+        )}
+        {node.aiDurabilityRating && (
+          <MapBadge
+            label={`AI ${node.aiDurabilityRating}`}
+            bg="#f0fdf4"
+            color="#166534"
+            title="AI durability: how this direction may hold up as AI changes work"
           />
         )}
       </div>
@@ -292,6 +301,73 @@ function MapLegend({ items }) {
   );
 }
 
+// ── AI Durability legend ──────────────────────────────────────────────────────
+
+const AI_DURABILITY_SCALE = [
+  { rating: "D0", label: "Declining" },
+  { rating: "D1", label: "Pressured" },
+  { rating: "D2", label: "Changing" },
+  { rating: "D3", label: "Durable" },
+  { rating: "D4", label: "Future-resilient" },
+];
+
+function AiDurabilityLegend({ nodes }) {
+  if (!Array.isArray(nodes) || !nodes.some((n) => n.aiDurabilityRating)) return null;
+  return (
+    <div
+      style={{
+        marginTop: "8px",
+        padding: "10px 14px",
+        border: "1px solid #e2e0da",
+        borderRadius: "10px",
+        background: "#f9f8f6",
+        fontSize: "12px",
+        color: "#6b7280",
+      }}
+    >
+      <div
+        style={{
+          fontSize: "10px",
+          fontWeight: "700",
+          textTransform: "uppercase",
+          letterSpacing: "0.07em",
+          color: "#374151",
+          marginBottom: "5px",
+        }}
+      >
+        AI Durability
+      </div>
+      <div style={{ marginBottom: "8px", lineHeight: "1.5", color: "#555" }}>
+        AI durability shows how this direction may hold up as AI changes work.
+        D3 = Durable: the role remains valuable, but tools and workflows will become more AI-enabled.
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "5px 14px" }}>
+        {AI_DURABILITY_SCALE.map(({ rating, label }) => (
+          <span
+            key={rating}
+            style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}
+          >
+            <span
+              style={{
+                background: "#f0fdf4",
+                color: "#166534",
+                border: "1px solid #bbf7d0",
+                borderRadius: "3px",
+                padding: "1px 5px",
+                fontSize: "10px",
+                fontWeight: "700",
+              }}
+            >
+              {rating}
+            </span>
+            <span>{label}</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ── Not-now lane ──────────────────────────────────────────────────────────────
 
 function NotNowLane({ lane }) {
@@ -417,6 +493,9 @@ export default function V31DirectionMapPreview({ directionMap }) {
 
       {/* Legend strip */}
       <MapLegend items={legend} />
+
+      {/* AI Durability legend — shown only when nodes carry durability ratings */}
+      <AiDurabilityLegend nodes={nodes} />
 
       {/* Not-now lane (shown only if populated) */}
       <NotNowLane lane={notNowLane} />
