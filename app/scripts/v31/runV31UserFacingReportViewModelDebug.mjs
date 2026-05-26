@@ -47,8 +47,6 @@ const internalViewModel = buildV31ResultViewModelV31(mockPayload);
 const reportViewModel = buildV31UserFacingReportViewModelV31(internalViewModel);
 
 // Print compact summary — no full view model, no raw data
-const primaryDir = reportViewModel.primaryDirection;
-
 console.log(
   JSON.stringify(
     {
@@ -56,18 +54,15 @@ console.log(
       stage: reportViewModel.stage,
       assessmentId: reportViewModel.assessmentId,
       directionCount: reportViewModel.reportMeta.directionCount,
-      rejectedDirectionCount: reportViewModel.reportMeta.rejectedDirectionCount,
-      primaryDirectionLabel: primaryDir?.label || null,
-      bridgeDirectionCount: reportViewModel.bridgeDirections.length,
-      exploratoryDirectionCount: reportViewModel.exploratoryDirections.length,
+      dashboardCardCount: reportViewModel.decisionDashboard.cards.length,
+      inputSignalCardCount: reportViewModel.inputSignalCards.length,
+      compactDirectionCardCount: reportViewModel.compactDirectionCards.length,
+      hasPrimaryDirectionDeepDive: reportViewModel.primaryDirectionDeepDive !== null,
+      otherDirectionsCompactCount: reportViewModel.otherDirectionsCompact.length,
       statusMix: reportViewModel.cover.statusMix,
       next30DayActionCount: reportViewModel.validationPlan.next30Days.length,
       keySignalsCaveatCount: reportViewModel.keySignals.caveats.length,
       confidenceNotesCaveatCount: reportViewModel.confidenceNotes.caveats.length,
-      confidenceNoteCount:
-        reportViewModel.confidenceNotes.caveats.length +
-        reportViewModel.confidenceNotes.missingEvidence.length +
-        reportViewModel.confidenceNotes.lowConfidenceReasons.length,
     },
     null,
     2

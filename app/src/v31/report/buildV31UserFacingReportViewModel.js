@@ -351,6 +351,349 @@ function cleanFirstStep(text) {
   return s;
 }
 
+// ── Named aliases (Task 8 — more readable names for common operations) ────────
+
+const dedupeList = dedupByNearMatch;
+const capList = clamp;
+const translateInternalLanguage = sanitizeConstraintText;
+
+// ── shortenSentence — first sentence of a longer string ───────────────────────
+
+function shortenSentence(text) {
+  const s = String(text || "").trim();
+  if (!s) return "";
+  const dotIdx = s.indexOf(". ");
+  if (dotIdx > 0 && dotIdx < s.length - 2) return s.slice(0, dotIdx + 1).trim();
+  return s;
+}
+
+// ── deriveFinancialRealismStatus ──────────────────────────────────────────────
+
+function deriveFinancialRealismStatus(keySignals) {
+  if (arrayOrEmpty(keySignals.guardrailSignals).length > 0) return "Bridge required";
+  if (arrayOrEmpty(keySignals.financialRealitySignals).length > 0) return "Caution";
+  return "Clear";
+}
+
+// ── deriveOverallConfidenceLevel ──────────────────────────────────────────────
+
+function deriveOverallConfidenceLevel(summary) {
+  const s = objectOrEmpty(summary);
+  const high = numberOrZero(s.high);
+  const medium = numberOrZero(s.medium);
+  const low = numberOrZero(s.low);
+  const insufficient = numberOrZero(s.insufficient_data);
+  const total = high + medium + low + insufficient;
+
+  if (total === 0) {
+    return { value: "Mixed", description: "Confidence could not be assessed from available data." };
+  }
+  if (high >= total) {
+    return {
+      value: "High",
+      description: `All ${high} direction${high !== 1 ? "s" : ""} assessed at high confidence.`,
+    };
+  }
+  if (high > total / 2) {
+    return {
+      value: "High",
+      description: `${high} of ${total} direction${total !== 1 ? "s" : ""} at high confidence.`,
+    };
+  }
+  if (medium > low + insufficient && medium >= total / 2) {
+    return {
+      value: "Medium",
+      description: `${medium} of ${total} direction${total !== 1 ? "s" : ""} at medium confidence.`,
+    };
+  }
+  if (low + insufficient >= total / 2) {
+    return {
+      value: "Low",
+      description: `${low + insufficient} of ${total} direction${total !== 1 ? "s" : ""} show low confidence or insufficient data.`,
+    };
+  }
+  const parts = [];
+  if (high > 0) parts.push(`${high} high`);
+  if (medium > 0) parts.push(`${medium} medium`);
+  if (low > 0) parts.push(`${low} low`);
+  if (insufficient > 0) parts.push(`${insufficient} insufficient data`);
+  return { value: "Mixed", description: `Directions rated: ${parts.join(", ")}.` };
+}
+
+// ── buildDashboardCards ───────────────────────────────────────────────────────
+
+function buildDashboardCards(
+  primaryPortfolioItem,
+  bridgeDirs,
+  notNowDirs,
+  keySignals,
+  confidenceLevelSummary
+) {
+  const bridgeCount = arrayOrEmpty(bridgeDirs).length;
+  const notNowCount = arrayOrEmpty(notNowDirs).length;
+
+  const financialStatus = deriveFinancialRealismStatus(keySignals);
+  const financialDescription =
+    sanitizeConstraintText(
+      arrayOrEmpty(keySignals.guardrailSignals)[0] ||
+        arrayOrEmpty(keySignals.financialRealitySignals)[0] ||
+        ""
+    ) || "No significant financial constraints identified.";
+
+  const confidence = deriveOverallConfidenceLevel(confidenceLevelSummary);
+
+  return [
+    {
+      id: "primaryDirection",
+      label: "Primary direction",
+      value: primaryPortfolioItem
+        ? stringOrEmpty(primaryPortfolioItem.label)
+        : "Not available",
+      status: primaryPortfolioItem
+        ? stringOrEmpty(primaryPortfolioItem.currentRealismStatus)
+        : "Needs validation",
+      description: primaryPortfolioItem
+        ? stringOrEmpty(primaryPortfolioItem.shortWhy) ||
+          "Your strongest direction given current evidence."
+        : "No primary direction could be identified from available evidence.",
+    },
+    {
+      id: "bridgeRequired",
+      label: "Bridge-required options",
+      value: bridgeCount,
+      status: bridgeCount > 0 ? "Bridge required" : "Clear",
+      description:
+        bridgeCount > 0
+          ? `${bridgeCount} path${bridgeCount !== 1 ? "s are" : " is"} viable but not the immediate move.`
+          : "No bridge-required directions identified.",
+    },
+    {
+      id: "notNow",
+      label: "Not-now options",
+      value: notNowCount,
+      status: notNowCount > 0 ? "Not now" : "None",
+      description:
+        notNowCount > 0
+          ? `${notNowCount} direction${notNowCount !== 1 ? "s were" : " was"} considered and set aside for now.`
+          : "No directions were set aside at this time.",
+    },
+    {
+      id: "financialRealism",
+      label: "Financial realism",
+      value: financialStatus,
+      status: financialStatus,
+      description: financialDescription,
+    },
+    {
+      id: "overallConfidence",
+      label: "Overall confidence",
+      value: confidence.value,
+      status: confidence.value,
+      description: confidence.description,
+    },
+  ];
+}
+
+// ── buildInputSignalCards ─────────────────────────────────────────────────────
+
+function buildInputSignalCards(keySignals, directions) {
+  const credibilitySignals = arrayOrEmpty(keySignals.strongestCredibilitySignals);
+  const financialSignals = arrayOrEmpty(keySignals.financialRealitySignals);
+  const guardrailSignals = arrayOrEmpty(keySignals.guardrailSignals);
+  const constraintSignals = arrayOrEmpty(keySignals.constraintSignals);
+  const missingSignals = arrayOrEmpty(keySignals.missingEvidenceSignals);
+
+  const hasStrongCredibility = credibilitySignals.length > 0;
+  const hasFinancialRisk = guardrailSignals.length > 0;
+  const hasFinancialCaution = financialSignals.length > 0;
+  const hasConstraints = constraintSignals.length > 0;
+  const hasMissing = missingSignals.length > 0;
+
+  const workModels = directions.map((d) => stringOrEmpty(d.workModel)).filter(Boolean);
+  const uniqueWorkModels = [...new Set(workModels)];
+
+  return [
+    {
+      id: "careerAnchors",
+      title: "Career anchors / motivation pattern",
+      signal: hasStrongCredibility
+        ? credibilitySignals[0]
+        : "Motivation pattern needs further validation.",
+      interpretation: hasStrongCredibility
+        ? "Your strongest career signals are experience-based. Directions lean on demonstrated competence."
+        : "Career anchors are not clearly defined from available data. Directions rely on what can be credibly demonstrated.",
+      impact: hasStrongCredibility
+        ? "Capability-based confidence supports the primary direction. Focus on what you can demonstrate to buyers or employers."
+        : "Without clear anchors, recommendations are driven by transferable competencies. Adding clearer motivation context would improve direction fit.",
+    },
+    {
+      id: "financialReality",
+      title: "Financial reality",
+      signal: sanitizeConstraintText(
+        guardrailSignals[0] ||
+          financialSignals[0] ||
+          "No significant financial constraints identified."
+      ),
+      interpretation: hasFinancialRisk
+        ? "Some directions may take longer than a typical runway to become financially stable."
+        : hasFinancialCaution
+          ? "Financial context introduces some caution around which paths are immediately realistic."
+          : "Your financial context does not appear to block any of the recommended directions.",
+      impact: hasFinancialRisk
+        ? "Paths requiring bridge income are flagged. Prioritise directions with faster income potential."
+        : hasFinancialCaution
+          ? "Some paths may require bridge income. Consider sequencing rather than switching all at once."
+          : "Financial constraints are not a limiting factor for the primary direction.",
+    },
+    {
+      id: "workModelPreference",
+      title: "Work model preference",
+      signal:
+        uniqueWorkModels.length > 0
+          ? uniqueWorkModels.slice(0, 2).join(" and ") + " roles appear most realistic."
+          : "Work model preference not clearly indicated.",
+      interpretation:
+        uniqueWorkModels.length > 1
+          ? "Multiple work models appear across your directions, suggesting flexibility."
+          : uniqueWorkModels.length === 1
+            ? `Directions are aligned toward ${uniqueWorkModels[0]} work.`
+            : "Work model preference could not be derived from available data.",
+      impact:
+        "Directions that conflict with your preferred work model are deprioritised or flagged as exploratory.",
+    },
+    {
+      id: "constraints",
+      title: "Constraints",
+      signal: sanitizeConstraintText(constraintSignals[0] || "No hard constraints identified."),
+      interpretation: hasConstraints
+        ? "Active constraints limit which directions are immediately viable."
+        : "No binding constraints were identified from the available information.",
+      impact: hasConstraints
+        ? "Some directions are narrowed or deprioritised based on these constraints."
+        : "Constraints are not a limiting factor for the current recommendations.",
+    },
+    {
+      id: "credibilityAssets",
+      title: "Credibility assets",
+      signal: credibilitySignals[0] || "Credibility assets not yet established.",
+      interpretation: hasStrongCredibility
+        ? "These are the experience signals that buyers or employers are most likely to recognise."
+        : "Strong credibility signals were not identified. Directions rely on transferable rather than established experience.",
+      impact: hasStrongCredibility
+        ? "These assets directly support the primary direction's credibility rating."
+        : "Building credibility evidence in the primary direction would improve overall confidence.",
+    },
+    {
+      id: "missingEvidence",
+      title: "Missing evidence",
+      signal: sanitizeConstraintText(
+        missingSignals[0] || "No significant missing evidence identified."
+      ),
+      interpretation: hasMissing
+        ? "This gap affects confidence in one or more directions."
+        : "The available evidence was sufficient to assess all directions.",
+      impact: hasMissing
+        ? "Adding this evidence would improve direction confidence and narrow recommendations."
+        : "No additional evidence is required to refine these recommendations.",
+    },
+  ];
+}
+
+// ── buildCompactDirectionCard ─────────────────────────────────────────────────
+
+function buildCompactDirectionCard(direction, guardrailStatus, canShowAsCredibleNow) {
+  const mainRiskRaw =
+    stringArray(direction.whatMakesItRisky)[0] ||
+    stringArray(direction.constraintsAndWarnings)[0] ||
+    "";
+
+  return {
+    displayOrder: numberOrZero(direction.displayOrder),
+    label: stringOrEmpty(direction.label),
+    status: deriveCurrentRealismStatus(direction, guardrailStatus, canShowAsCredibleNow),
+    confidence: stringOrEmpty(direction.confidence),
+    routeType: stringOrEmpty(direction.routeType),
+    workModel: stringOrEmpty(direction.workModel),
+    whyThisIsHere: shortenSentence(deriveShortWhy(direction)),
+    mainRisk: shortenSentence(sanitizeConstraintText(mainRiskRaw)),
+    firstValidationStep: cleanFirstStep(stringOrEmpty(direction.firstValidationStep)),
+  };
+}
+
+// ── buildOtherDirectionCompact ────────────────────────────────────────────────
+
+function buildOtherDirectionCompact(direction, guardrailStatus, canShowAsCredibleNow) {
+  const whyInteresting = shortenSentence(
+    sanitizeConstraintText(stringArray(direction.whyItFits)[0] || "")
+  );
+  const whyNotPrimaryNow = shortenSentence(
+    sanitizeConstraintText(
+      stringArray(direction.whatMakesItRisky)[0] ||
+        stringArray(direction.constraintsAndWarnings)[0] ||
+        ""
+    )
+  );
+  const rawBridge = sanitizeConstraintText(stringOrEmpty(direction.bridgeStrategy));
+  const rawStep = cleanFirstStep(stringOrEmpty(direction.firstValidationStep));
+
+  return {
+    label: stringOrEmpty(direction.label),
+    type: stringOrEmpty(direction.recommendationType),
+    status: deriveCurrentRealismStatus(direction, guardrailStatus, canShowAsCredibleNow),
+    whyInteresting,
+    whyNotPrimaryNow,
+    bridgeOrValidationCondition: rawBridge || rawStep,
+    firstValidationStep: rawStep,
+  };
+}
+
+// ── buildPrimaryDirectionDeepDive — tighter caps than buildDirectionDeepDive ──
+
+function buildPrimaryDirectionDeepDive(direction, guardrailStatus, canShowAsCredibleNow) {
+  const sanitizedConstraints = clamp(
+    dedupByNearMatch(sanitizeTextArray(stringArray(direction.constraintsAndWarnings))),
+    2
+  );
+  const bridgeStrategy =
+    sanitizeConstraintText(stringOrEmpty(direction.bridgeStrategy)) || null;
+
+  return {
+    displayOrder: numberOrZero(direction.displayOrder),
+    label: stringOrEmpty(direction.label),
+    recommendationType: stringOrEmpty(direction.recommendationType),
+    confidence: stringOrEmpty(direction.confidence),
+    routeType: stringOrEmpty(direction.routeType),
+    workModel: stringOrEmpty(direction.workModel),
+    directionArena: stringOrEmpty(direction.directionArena),
+    currentRealismStatus: deriveCurrentRealismStatus(
+      direction,
+      guardrailStatus,
+      canShowAsCredibleNow
+    ),
+    whatThisDirectionMeans: deriveWhatThisDirectionMeans(direction),
+    whyItFits: clamp(
+      dedupByNearMatch(sanitizeTextArray(stringArray(direction.whyItFits))),
+      3
+    ),
+    whyItIsCredible: clamp(
+      dedupByNearMatch(sanitizeTextArray(stringArray(direction.whyItIsCredible))),
+      3
+    ),
+    whatMakesItRisky: clamp(
+      dedupByNearMatch(sanitizeTextArray(stringArray(direction.whatMakesItRisky))),
+      2
+    ),
+    constraintsAndWarnings: sanitizedConstraints,
+    firstValidationStep: sanitizeConstraintText(stringOrEmpty(direction.firstValidationStep)),
+    bridgeStrategy,
+    notRecommendedIf: clamp(
+      dedupByNearMatch(sanitizeTextArray(stringArray(direction.notRecommendedIf))),
+      2
+    ),
+    whatWouldMakeItStronger: deriveImprovementConditions(direction),
+  };
+}
+
 // ── directionPortfolioItem (compact overview) ─────────────────────────────────
 
 function buildDirectionPortfolioItem(direction, guardrailStatus, canShowAsCredibleNow) {
@@ -417,16 +760,21 @@ function buildDirectionDeepDive(direction, guardrailStatus, canShowAsCredibleNow
 // ── notNowDirection ───────────────────────────────────────────────────────────
 
 function buildNotNowDirection(rejectedDirection) {
+  const supportingConcerns = clamp(
+    dedupByNearMatch(
+      sanitizeTextArray(stringArray(rejectedDirection.supportingConcerns))
+    ),
+    3
+  );
+
   return {
     label: stringOrEmpty(rejectedDirection.label),
     reason: sanitizeConstraintText(stringOrEmpty(rejectedDirection.reasonRejected)),
-    supportingConcerns: clamp(
-      dedupByNearMatch(
-        sanitizeTextArray(stringArray(rejectedDirection.supportingConcerns))
-      ),
-      3
-    ),
-    whatWouldChangeThis: "",
+    supportingConcerns,
+    whatWouldChangeThis:
+      supportingConcerns.length > 0
+        ? "Revisit this path if the conditions above change."
+        : "",
   };
 }
 
@@ -803,6 +1151,60 @@ export function buildV31UserFacingReportViewModelV31(internalViewModel) {
   // confidenceNotes — receives topCaveats as already-shown set to avoid repeats
   const confidenceNotes = buildConfidenceNotes(directions, allCaveats, topCaveats);
 
+  // ── New card-based fields (Bundle 18F — additive, existing shape preserved) ─
+
+  const primaryPortfolioItem =
+    directionPortfolio.find(
+      (item) => stringOrEmpty(item.recommendationType).toLowerCase() === "primary"
+    ) ||
+    directionPortfolio.find(
+      (item) => stringOrEmpty(item.recommendationType).toLowerCase() === "secondary"
+    ) ||
+    directionPortfolio[0] ||
+    null;
+
+  const decisionDashboard = {
+    cards: buildDashboardCards(
+      primaryPortfolioItem,
+      bridgeDirs,
+      notNowDirections,
+      keySignals,
+      reportMeta.confidenceLevelSummary
+    ),
+  };
+
+  const inputSignalCards = buildInputSignalCards(keySignals, directions);
+
+  const compactDirectionCards = directions.map((dir, i) =>
+    buildCompactDirectionCard(dir, getGuardrailStatus(i), getCanShow(i))
+  );
+
+  const compactPrimaryDeepDive = primaryDir
+    ? buildPrimaryDirectionDeepDive(
+        primaryDir,
+        getGuardrailStatus(getDirIndex(primaryDir)),
+        getCanShow(getDirIndex(primaryDir))
+      )
+    : null;
+
+  const OTHER_TYPES_COMPACT = new Set([
+    "bridge",
+    "secondary",
+    "exploratory",
+    "not_recommended",
+  ]);
+  const otherDirectionsCompact = directions
+    .filter((d) =>
+      OTHER_TYPES_COMPACT.has(stringOrEmpty(d.recommendationType).toLowerCase())
+    )
+    .map((dir) =>
+      buildOtherDirectionCompact(
+        dir,
+        getGuardrailStatus(getDirIndex(dir)),
+        getCanShow(getDirIndex(dir))
+      )
+    );
+
   return {
     version: "v3.1",
     stage: "v31_user_facing_report_view_model",
@@ -818,5 +1220,10 @@ export function buildV31UserFacingReportViewModelV31(internalViewModel) {
     notNowDirections,
     validationPlan,
     confidenceNotes,
+    decisionDashboard,
+    inputSignalCards,
+    compactDirectionCards,
+    primaryDirectionDeepDive: compactPrimaryDeepDive,
+    otherDirectionsCompact,
   };
 }
