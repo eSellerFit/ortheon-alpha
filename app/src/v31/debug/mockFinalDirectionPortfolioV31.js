@@ -66,6 +66,12 @@ export const MOCK_FINAL_DIRECTION_PORTFOLIO_V31 = Object.freeze({
       constraintsAndWarnings: [
         "Guardrails indicate bridge income or route validation may be needed.",
       ],
+      aiDurability: {
+        rating: "D3",
+        label: "Durable",
+        reason: "Workforce planning relies on organizational judgment, stakeholder alignment, and contextual decision-making that are not easily automated.",
+        evolutionPath: "The role will increasingly require AI fluency — interpreting workforce analytics, managing AI-augmented planning cycles, and advising on automation impact.",
+      },
     },
     {
       directionId: "hyp-people-workforce-systems-advisory",
@@ -102,6 +108,12 @@ export const MOCK_FINAL_DIRECTION_PORTFOLIO_V31 = Object.freeze({
       constraintsAndWarnings: [
         "Consulting or fractional work should not be treated as immediately stable.",
       ],
+      aiDurability: {
+        rating: "D3",
+        label: "Durable",
+        reason: "Advisory work depends on trust, relationship context, and the interpretation of ambiguous organizational situations — areas where human judgment remains central.",
+        evolutionPath: "Demand is likely to shift toward AI-integration advisory as organizations restructure around automation. Advisors who understand both people systems and AI tooling will be better positioned.",
+      },
     },
     {
       directionId: "hyp-marketplace-operations-leadership",
@@ -137,6 +149,12 @@ export const MOCK_FINAL_DIRECTION_PORTFOLIO_V31 = Object.freeze({
       constraintsAndWarnings: [
         "Bridge-required direction; do not present as immediately credible.",
       ],
+      aiDurability: {
+        rating: "D2",
+        label: "Stable but changing",
+        reason: "Marketplace operations leadership faces moderate automation pressure as platform logistics and structured processes become increasingly AI-managed.",
+        evolutionPath: "Leadership in this space will require stronger AI fluency — managing AI-driven matching, demand forecasting, and automated compliance — while focusing on the human and political dimensions of marketplace governance.",
+      },
     },
   ],
 

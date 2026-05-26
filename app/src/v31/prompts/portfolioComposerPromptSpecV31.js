@@ -52,6 +52,7 @@ export const PORTFOLIO_COMPOSER_PROMPT_SPEC_V31 = Object.freeze({
     "Use transferability evidence and sourceTransferableAssets.",
     "Keep language user-facing but not over-polished.",
     "Avoid hype, motivational fluff, and fake certainty.",
+    "For each included direction, assess AI durability using the D0–D4 scale. Consider: automation exposure, human judgment requirements, regulatory context, stakeholder complexity, trust and relationship requirements, creativity, leadership scope, and domain expertise. Assign one rating, a concise human-readable label, a short user-facing reason, and an evolution path sentence. AI durability is a diagnostic lens — do not use it as a ranking factor or replace the primary confidence/recommendation logic with it.",
   ],
 
   prohibitedBehavior: [
@@ -65,7 +66,19 @@ export const PORTFOLIO_COMPOSER_PROMPT_SPEC_V31 = Object.freeze({
     "Do not invent experience, credentials, work authorization, or market proof.",
     "Do not write generic career advice.",
     "Do not create final directions that are absent from DirectionHypothesisV31[].",
+    "Do not use AI durability rating as a primary ranking or scoring mechanism.",
+    "Do not assign D4 (Future-Resilient) to directions where automation exposure is not clearly low.",
+    "Do not assign D0 (Declining) without clear evidence of automation or structural decline in that arena.",
+    "Do not omit aiDurability from any included direction.",
   ],
+
+  aiDurabilityScale: {
+    D0: { label: "Declining / Exit Risk", description: "High automation exposure or structural decline. The direction may become untenable within 3–5 years without significant pivot." },
+    D1: { label: "Pressured", description: "Meaningful automation or commoditization pressure. The direction remains viable but requires active differentiation and skill evolution." },
+    D2: { label: "Stable but Changing", description: "Moderate exposure. The direction is stable now but will require adaptation as AI tools reshape how the work is done." },
+    D3: { label: "Durable", description: "Low-to-moderate automation exposure. The direction relies on human judgment, stakeholder complexity, trust, leadership, or regulation that protects it." },
+    D4: { label: "Future-Resilient", description: "AI amplifies rather than replaces this direction. The direction becomes more valuable as AI tools proliferate because it requires judgment, context, and human connection AI cannot replicate." },
+  },
 
   evidenceDiscipline: [
     "Every included direction must trace back to an existing DirectionHypothesisV31.",
@@ -155,6 +168,12 @@ export const PORTFOLIO_COMPOSER_PROMPT_SPEC_V31 = Object.freeze({
         notRecommendedIf: ["string"],
         evidence: ["string"],
         constraintsAndWarnings: ["string"],
+        aiDurability: {
+          rating: "D0|D1|D2|D3|D4",
+          label: "string",
+          reason: "string",
+          evolutionPath: "string",
+        },
       },
     ],
     rejectedDirections: [
@@ -186,5 +205,7 @@ export const PORTFOLIO_COMPOSER_PROMPT_SPEC_V31 = Object.freeze({
     "Are financial, credential, and missing-evidence risks stated clearly?",
     "Is the portfolio small enough to reflect quality over diversity?",
     "Is the output valid JSON matching FinalDirectionPortfolioV31?",
+    "Does every included direction contain an aiDurability object with a valid D0–D4 rating, label, reason, and evolutionPath?",
+    "Is aiDurability used as a diagnostic lens, not as a ranking or scoring mechanism?",
   ],
 });

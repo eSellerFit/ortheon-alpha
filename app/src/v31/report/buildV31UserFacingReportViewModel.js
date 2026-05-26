@@ -351,6 +351,14 @@ function cleanFirstStep(text) {
   return s;
 }
 
+// ── safeAiDurability — pass through if shape is valid, otherwise null ─────────
+
+function safeAiDurability(direction) {
+  const d = direction.aiDurability;
+  if (!isObject(d)) return null;
+  return d;
+}
+
 // ── Named aliases (Task 8 — more readable names for common operations) ────────
 
 const dedupeList = dedupByNearMatch;
@@ -615,6 +623,7 @@ function buildCompactDirectionCard(direction, guardrailStatus, canShowAsCredible
     routeType: stringOrEmpty(direction.routeType),
     workModel: stringOrEmpty(direction.workModel),
     seniorityComplexityLevel: stringOrEmpty(direction.seniorityComplexityLevel),
+    aiDurability: safeAiDurability(direction),
     whyThisIsHere: shortenSentence(deriveShortWhy(direction)),
     mainRisk: shortenSentence(sanitizeConstraintText(mainRiskRaw)),
     firstValidationStep: cleanFirstStep(stringOrEmpty(direction.firstValidationStep)),
@@ -642,6 +651,7 @@ function buildOtherDirectionCompact(direction, guardrailStatus, canShowAsCredibl
     type: stringOrEmpty(direction.recommendationType),
     status: deriveCurrentRealismStatus(direction, guardrailStatus, canShowAsCredibleNow),
     seniorityComplexityLevel: stringOrEmpty(direction.seniorityComplexityLevel),
+    aiDurability: safeAiDurability(direction),
     whyInteresting,
     whyNotPrimaryNow,
     bridgeOrValidationCondition: rawBridge || rawStep,
@@ -698,6 +708,7 @@ function buildPrimaryDirectionDeepDive(direction, guardrailStatus, canShowAsCred
       dedupByNearMatch(sanitizeTextArray(stringArray(direction.evidence))),
       3
     ),
+    aiDurability: safeAiDurability(direction),
   };
 }
 
@@ -813,6 +824,7 @@ function buildDirectionMap(compactCards, notNowDirs, currentRole = null) {
       confidence: card.confidence,
       routeType: card.routeType,
       workModel: card.workModel,
+      aiDurabilityRating: card.aiDurability?.rating || null,
       nodeType,
       x: slot.x,
       y: slot.y,

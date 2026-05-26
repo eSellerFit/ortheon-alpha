@@ -76,6 +76,13 @@ console.log(
       directionsWithSeniorityComplexityCount: reportViewModel.compactDirectionCards.filter(
         (d) => d.seniorityComplexityLevel
       ).length,
+      // Bundle 20E — AI durability
+      directionsWithAiDurabilityCount: reportViewModel.compactDirectionCards.filter(
+        (d) => d.aiDurability !== null
+      ).length,
+      aiDurabilityRatings: reportViewModel.compactDirectionCards.map(
+        (d) => d.aiDurability?.rating || null
+      ),
     },
     null,
     2

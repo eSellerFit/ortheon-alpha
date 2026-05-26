@@ -98,6 +98,20 @@ function normalizePortfolioSummary(value) {
   };
 }
 
+const VALID_AI_DURABILITY_RATINGS = new Set(["D0", "D1", "D2", "D3", "D4"]);
+
+function normalizeAiDurability(value) {
+  if (!isObject(value)) return null;
+  const rating = stringOrNull(value.rating);
+  if (!rating || !VALID_AI_DURABILITY_RATINGS.has(rating)) return null;
+  return {
+    rating,
+    label: stringOrEmpty(value.label),
+    reason: stringOrEmpty(value.reason),
+    evolutionPath: stringOrEmpty(value.evolutionPath),
+  };
+}
+
 function normalizePortfolioDirection(item) {
   const source = objectOrEmpty(item);
 
@@ -123,6 +137,7 @@ function normalizePortfolioDirection(item) {
     constraintsAndWarnings: normalizeStringArray(
       source.constraintsAndWarnings
     ),
+    aiDurability: normalizeAiDurability(source.aiDurability),
   };
 }
 

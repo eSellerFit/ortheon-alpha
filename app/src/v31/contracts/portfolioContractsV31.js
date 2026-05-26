@@ -50,6 +50,21 @@
  */
 
 /**
+ * AI Durability lens for a final portfolio direction.
+ *
+ * This is a diagnostic lens, not a score or ranking criterion.
+ * It should not be used to rank directions or reintroduce legacy total scores.
+ * Ratings: D0 = Declining/Exit Risk, D1 = Pressured, D2 = Stable but Changing,
+ *          D3 = Durable, D4 = Future-Resilient.
+ *
+ * @typedef {Object} AiDurabilityV31
+ * @property {"D0"|"D1"|"D2"|"D3"|"D4"} rating
+ * @property {string} label Human-readable label, e.g. "Durable" or "Stable but changing"
+ * @property {string} reason Short user-facing explanation of why this rating applies
+ * @property {string} evolutionPath How this direction may evolve under AI/digital change
+ */
+
+/**
  * @typedef {Object} FinalPortfolioDirectionV31
  * @property {string} directionId
  * @property {number} displayOrder Presentation order only; not a score, rank, or fit metric.
@@ -68,6 +83,7 @@
  * @property {string[]} notRecommendedIf
  * @property {string[]} evidence
  * @property {string[]} constraintsAndWarnings
+ * @property {AiDurabilityV31|null} aiDurability Diagnostic lens only; not a ranking score.
  */
 
 /**

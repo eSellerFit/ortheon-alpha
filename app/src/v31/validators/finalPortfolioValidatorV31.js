@@ -86,6 +86,25 @@ function validatePortfolioSummary(summary, issues) {
   );
 }
 
+const VALID_AI_DURABILITY_RATINGS = new Set(["D0", "D1", "D2", "D3", "D4"]);
+
+function validateAiDurability(value, id, issues) {
+  // aiDurability is optional — absent on older saved v31Result documents.
+  if (value === null || value === undefined) return;
+  if (!isObject(value)) {
+    pushIssue(issues, `${id}.aiDurability`, "aiDurability must be an object or null.", "medium");
+    return;
+  }
+  if (!VALID_AI_DURABILITY_RATINGS.has(value.rating)) {
+    pushIssue(issues, `${id}.aiDurability.rating`, "aiDurability.rating must be D0, D1, D2, D3, or D4.", "medium");
+  }
+  ["label", "reason", "evolutionPath"].forEach((field) => {
+    if (!hasString(value[field])) {
+      pushIssue(issues, `${id}.aiDurability.${field}`, `aiDurability.${field} must be a non-empty string.`, "medium");
+    }
+  });
+}
+
 function validatePortfolioDirection(direction, index, issues) {
   const id = `directions.${index}`;
 
@@ -138,6 +157,8 @@ function validatePortfolioDirection(direction, index, issues) {
   ].forEach((field) => {
     validateStringArray(direction[field], `${id}.${field}`, issues);
   });
+
+  validateAiDurability(direction.aiDurability, id, issues);
 }
 
 function validateRejectedDirection(direction, index, issues) {

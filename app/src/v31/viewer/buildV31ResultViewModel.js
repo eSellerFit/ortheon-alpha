@@ -56,6 +56,7 @@ function normalizeDirection(direction) {
     routeType: stringOrEmpty(source.routeType),
     workModel: stringOrEmpty(source.workModel),
     seniorityComplexityLevel: stringOrEmpty(source.seniorityComplexityLevel),
+    aiDurability: isObject(source.aiDurability) ? source.aiDurability : null,
     whyItFits: stringArray(source.whyItFits),
     whyItIsCredible: stringArray(source.whyItIsCredible),
     whatMakesItRisky: stringArray(source.whatMakesItRisky),
