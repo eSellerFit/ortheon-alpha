@@ -614,6 +614,7 @@ function buildCompactDirectionCard(direction, guardrailStatus, canShowAsCredible
     confidence: stringOrEmpty(direction.confidence),
     routeType: stringOrEmpty(direction.routeType),
     workModel: stringOrEmpty(direction.workModel),
+    seniorityComplexityLevel: stringOrEmpty(direction.seniorityComplexityLevel),
     whyThisIsHere: shortenSentence(deriveShortWhy(direction)),
     mainRisk: shortenSentence(sanitizeConstraintText(mainRiskRaw)),
     firstValidationStep: cleanFirstStep(stringOrEmpty(direction.firstValidationStep)),
@@ -640,6 +641,7 @@ function buildOtherDirectionCompact(direction, guardrailStatus, canShowAsCredibl
     label: stringOrEmpty(direction.label),
     type: stringOrEmpty(direction.recommendationType),
     status: deriveCurrentRealismStatus(direction, guardrailStatus, canShowAsCredibleNow),
+    seniorityComplexityLevel: stringOrEmpty(direction.seniorityComplexityLevel),
     whyInteresting,
     whyNotPrimaryNow,
     bridgeOrValidationCondition: rawBridge || rawStep,
@@ -664,6 +666,7 @@ function buildPrimaryDirectionDeepDive(direction, guardrailStatus, canShowAsCred
     confidence: stringOrEmpty(direction.confidence),
     routeType: stringOrEmpty(direction.routeType),
     workModel: stringOrEmpty(direction.workModel),
+    seniorityComplexityLevel: stringOrEmpty(direction.seniorityComplexityLevel),
     directionArena: stringOrEmpty(direction.directionArena),
     currentRealismStatus: deriveCurrentRealismStatus(
       direction,
@@ -691,6 +694,10 @@ function buildPrimaryDirectionDeepDive(direction, guardrailStatus, canShowAsCred
       2
     ),
     whatWouldMakeItStronger: deriveImprovementConditions(direction),
+    evidence: clamp(
+      dedupByNearMatch(sanitizeTextArray(stringArray(direction.evidence))),
+      3
+    ),
   };
 }
 
@@ -1173,6 +1180,10 @@ export function buildV31UserFacingReportViewModelV31(internalViewModel, { curren
   const guardrails = objectOrEmpty(vm.guardrails);
   const metrics = objectOrEmpty(vm.metrics);
   const warnings = stringArray(vm.warnings);
+  const missingInputsAffectingConfidence = stringArray(
+    vm.missingInputsAffectingConfidence
+  );
+  const nextStepAdvice = stringOrEmpty(summary.nextStepAdvice);
 
   const guardrailStatuses = arrayOrEmpty(guardrails.guardrailStatuses);
   const canShowAsCredibleNowValues = arrayOrEmpty(
@@ -1279,10 +1290,31 @@ export function buildV31UserFacingReportViewModelV31(internalViewModel, { curren
   const notNowDirections = rejectedDirections.map(buildNotNowDirection);
 
   // validationPlan — no longer uses caveats (shown in keySignals)
-  const validationPlan = buildValidationPlan(summary, directions);
+  const validationPlanBase = buildValidationPlan(summary, directions);
+  const validationPlan = {
+    ...validationPlanBase,
+    nextStepAdvice: nextStepAdvice || null,
+  };
 
   // confidenceNotes — receives topCaveats as already-shown set to avoid repeats
-  const confidenceNotes = buildConfidenceNotes(directions, allCaveats, topCaveats);
+  const confidenceNotesBase = buildConfidenceNotes(directions, allCaveats, topCaveats);
+
+  // assessmentImprovementInputs — from missingInputsAffectingConfidence[], max 4,
+  // deduped against existing caveats/missingEvidence to avoid repetition
+  const alreadyShown = [
+    ...topCaveats,
+    ...confidenceNotesBase.caveats,
+    ...confidenceNotesBase.missingEvidence,
+  ];
+  const assessmentImprovementInputs = clamp(
+    dedupByNearMatch(excludeAlreadySeen(missingInputsAffectingConfidence, alreadyShown)),
+    4
+  );
+
+  const confidenceNotes = {
+    ...confidenceNotesBase,
+    assessmentImprovementInputs,
+  };
 
   // ── New card-based fields (Bundle 18F — additive, existing shape preserved) ─
 

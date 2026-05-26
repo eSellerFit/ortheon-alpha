@@ -69,6 +69,13 @@ console.log(
       notNowLaneCount: reportViewModel.directionMap.notNowLane.items.length,
       mapNodeTypes: [...new Set(reportViewModel.directionMap.nodes.map((n) => n.nodeType))],
       mapLineStyles: [...new Set(reportViewModel.directionMap.edges.map((e) => e.lineStyle))],
+      // Bundle 20D — newly surfaced v3.1 fields
+      assessmentImprovementInputCount: reportViewModel.confidenceNotes.assessmentImprovementInputs.length,
+      hasNextStepAdvice: Boolean(reportViewModel.validationPlan.nextStepAdvice),
+      primaryEvidenceCount: reportViewModel.primaryDirectionDeepDive?.evidence?.length ?? 0,
+      directionsWithSeniorityComplexityCount: reportViewModel.compactDirectionCards.filter(
+        (d) => d.seniorityComplexityLevel
+      ).length,
     },
     null,
     2

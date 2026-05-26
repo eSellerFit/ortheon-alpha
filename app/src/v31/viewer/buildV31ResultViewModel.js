@@ -55,6 +55,7 @@ function normalizeDirection(direction) {
     confidence: stringOrEmpty(source.confidence),
     routeType: stringOrEmpty(source.routeType),
     workModel: stringOrEmpty(source.workModel),
+    seniorityComplexityLevel: stringOrEmpty(source.seniorityComplexityLevel),
     whyItFits: stringArray(source.whyItFits),
     whyItIsCredible: stringArray(source.whyItIsCredible),
     whatMakesItRisky: stringArray(source.whatMakesItRisky),
@@ -62,6 +63,7 @@ function normalizeDirection(direction) {
     firstValidationStep: stringOrEmpty(source.firstValidationStep),
     bridgeStrategy: stringOrEmpty(source.bridgeStrategy),
     notRecommendedIf: stringArray(source.notRecommendedIf),
+    evidence: stringArray(source.evidence),
   };
 }
 
@@ -108,6 +110,7 @@ export function buildV31ResultViewModelV31(v31Result) {
     summary: {
       headline: stringOrEmpty(narrative.headline),
       summary: stringOrEmpty(narrative.summary),
+      nextStepAdvice: stringOrEmpty(narrative.nextStepAdvice),
       recommendedStrategy: stringOrEmpty(
         portfolioSummary.recommendedStrategy
       ),
@@ -116,6 +119,9 @@ export function buildV31ResultViewModelV31(v31Result) {
     directions,
     rejectedDirections,
     caveats: stringArray(narrative.caveats),
+    missingInputsAffectingConfidence: stringArray(
+      finalPortfolio.missingInputsAffectingConfidence
+    ),
     qualityNotes: stringArray(finalPortfolio.qualityNotes),
     metrics: {
       finalDirectionCount: directions.length,
