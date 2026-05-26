@@ -1,7 +1,7 @@
 /**
  * Ortheon MVP Cut v3.1 — Internal Report Preview
  *
- * Bundle 18C internal read-only preview.
+ * Bundle 18G — updated to card-based layout using 18F view model fields.
  * Route: /internal/v31-report?documentId=<id>
  *
  * Rules:
@@ -22,7 +22,7 @@ const S = {
     fontFamily: "'system-ui', '-apple-system', 'Segoe UI', sans-serif",
     fontSize: "15px",
     lineHeight: "1.6",
-    maxWidth: "800px",
+    maxWidth: "860px",
     margin: "0 auto",
     padding: "32px 20px 96px",
     color: "#1a1a1a",
@@ -30,6 +30,7 @@ const S = {
     minHeight: "100vh",
   },
 
+  // Brand strip
   brand: {
     display: "flex",
     alignItems: "center",
@@ -55,7 +56,7 @@ const S = {
     marginBottom: "16px",
   },
 
-  // Cover
+  // Executive Summary
   headline: {
     fontSize: "26px",
     fontWeight: "700",
@@ -85,47 +86,101 @@ const S = {
     marginBottom: "4px",
   },
   metaValue: { fontSize: "15px", color: "#1a1a1a", lineHeight: "1.5" },
+  statusMixRow: { display: "flex", flexWrap: "wrap", gap: "8px", margin: "10px 0 16px" },
 
-  // Cards
-  card: {
+  // Section 2: Decision Dashboard
+  dashGrid: { display: "flex", flexWrap: "wrap", gap: "10px" },
+  dashCard: {
+    flex: "1 1 150px",
     background: "#fff",
     border: "1px solid #e8e5e0",
+    borderRadius: "10px",
+    padding: "16px 18px",
+    minWidth: "140px",
+    maxWidth: "240px",
+  },
+  dashCardLabel: {
+    fontSize: "10px",
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: "0.08em",
+    color: "#aaa",
+    marginBottom: "8px",
+  },
+  dashCardValue: {
+    fontSize: "17px",
+    fontWeight: "700",
+    color: "#111",
+    marginBottom: "6px",
+    lineHeight: "1.3",
+  },
+  dashCardDesc: { fontSize: "12px", color: "#666", lineHeight: "1.5", marginTop: "8px" },
+
+  // Section 3: Input Signal Cards
+  signalGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fill, minmax(270px, 1fr))",
+    gap: "10px",
+  },
+  signalCard: {
+    background: "#fff",
+    border: "1px solid #e8e5e0",
+    borderRadius: "10px",
+    padding: "16px 18px",
+  },
+  signalCardTitle: {
+    fontSize: "12px",
+    fontWeight: "700",
+    color: "#333",
+    marginBottom: "12px",
+    lineHeight: "1.4",
+  },
+  signalRow: { marginBottom: "8px" },
+  signalRowLabel: {
+    fontSize: "10px",
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: "0.07em",
+    color: "#aaa",
+    marginBottom: "3px",
+  },
+  signalRowText: { fontSize: "13px", color: "#444", lineHeight: "1.55" },
+
+  // Section 4: Compact Direction Cards
+  compactDirCard: {
+    background: "#fff",
+    border: "1px solid #e8e5e0",
+    borderRadius: "8px",
+    padding: "14px 16px",
+    marginBottom: "8px",
+  },
+  compactDirHeader: {
+    display: "flex",
+    alignItems: "flex-start",
+    gap: "10px",
+    marginBottom: "6px",
+  },
+  compactDirOrder: { fontSize: "12px", color: "#bbb", flexShrink: 0, paddingTop: "3px" },
+  compactDirLabel: { fontWeight: "600", fontSize: "15px", flex: 1, lineHeight: "1.4" },
+  compactDirBadges: { display: "flex", flexWrap: "wrap", gap: "5px", marginBottom: "8px" },
+  compactDirWhy: { fontSize: "13px", color: "#555", lineHeight: "1.5", marginBottom: "6px" },
+  compactDirRisk: { fontSize: "12px", color: "#b45309", lineHeight: "1.5", marginBottom: "5px" },
+  compactDirStep: { fontSize: "12px", color: "#2563eb", fontStyle: "italic", lineHeight: "1.5" },
+
+  // Section 5: Primary Direction Deep Dive
+  primaryCard: {
+    background: "#fff",
+    border: "1px solid #e8e5e0",
+    borderLeft: "4px solid #16a34a",
     borderRadius: "8px",
     marginBottom: "10px",
     overflow: "hidden",
   },
-  cardPrimaryAccent: { borderLeft: "4px solid #16a34a" },
-  cardBridgeAccent: { borderLeft: "4px solid #d97706" },
-  cardExploratoryAccent: { borderLeft: "4px solid #7c3aed" },
-  cardNotNowAccent: { background: "#fafaf9", borderLeft: "4px solid #cbd5e1" },
-
-  cardHead: {
-    padding: "16px 20px 10px",
-  },
-  cardBody: {
-    padding: "0 20px 18px",
-  },
-  cardBodyTop: {
-    borderTop: "1px solid #f0ede8",
-    paddingTop: "14px",
-  },
-
-  // Direction cards
-  dirTitle: {
-    fontSize: "18px",
-    fontWeight: "700",
-    lineHeight: "1.3",
-    marginBottom: "8px",
-  },
-  dirTitleSmall: {
-    fontSize: "15px",
-    fontWeight: "600",
-    lineHeight: "1.4",
-    marginBottom: "6px",
-  },
-  badgeRow: { display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "6px" },
+  cardHead: { padding: "16px 20px 10px" },
+  cardBody: { borderTop: "1px solid #f0ede8", padding: "14px 20px 18px" },
+  dirTitle: { fontSize: "18px", fontWeight: "700", lineHeight: "1.3", marginBottom: "8px" },
   dirArena: { fontSize: "13px", color: "#888", marginTop: "4px" },
-
+  badgeRow: { display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "6px" },
   subTitle: {
     fontSize: "11px",
     fontWeight: "700",
@@ -144,32 +199,6 @@ const S = {
     color: "#333",
   },
   bodyText: { fontSize: "14px", color: "#333", lineHeight: "1.6" },
-
-  // Portfolio row (compact)
-  portRow: {
-    background: "#fff",
-    border: "1px solid #e8e5e0",
-    borderRadius: "6px",
-    padding: "14px 16px",
-    marginBottom: "8px",
-  },
-  portHeader: { display: "flex", alignItems: "flex-start", gap: "10px" },
-  portOrder: { fontSize: "12px", color: "#bbb", flexShrink: 0, paddingTop: "3px" },
-  portLabel: { fontWeight: "600", fontSize: "15px", flex: 1, lineHeight: "1.4" },
-  portShortWhy: {
-    fontSize: "13px",
-    color: "#666",
-    marginTop: "6px",
-    lineHeight: "1.5",
-  },
-  portFirstStep: {
-    fontSize: "12px",
-    color: "#2563eb",
-    marginTop: "5px",
-    fontStyle: "italic",
-  },
-
-  // Highlight boxes
   firstStepBox: {
     background: "#eff6ff",
     border: "1px solid #bfdbfe",
@@ -203,26 +232,58 @@ const S = {
     marginBottom: "4px",
   },
 
-  // Signal block
-  signalBlock: { marginBottom: "16px" },
-  signalBlockTitle: {
-    fontSize: "12px",
+  // Section 6: Other Directions Compact
+  otherDirCard: {
+    background: "#fff",
+    border: "1px solid #e8e5e0",
+    borderLeft: "4px solid #d97706",
+    borderRadius: "8px",
+    padding: "14px 18px",
+    marginBottom: "8px",
+  },
+  otherDirHeader: { display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" },
+  otherDirLabel: { fontWeight: "600", fontSize: "14px", flex: 1, lineHeight: "1.4" },
+  otherDirRowLabel: {
+    fontSize: "10px",
     fontWeight: "700",
-    color: "#555",
-    marginBottom: "6px",
+    textTransform: "uppercase",
+    letterSpacing: "0.07em",
+    color: "#aaa",
+    marginBottom: "3px",
   },
-  signalList: {
-    margin: "0 0 0 16px",
-    padding: 0,
-    lineHeight: "1.7",
-    fontSize: "14px",
-    color: "#333",
+  otherDirRowText: { fontSize: "13px", color: "#444", lineHeight: "1.55", marginBottom: "8px" },
+  otherDirConditionBox: {
+    background: "#fffbeb",
+    border: "1px solid #fde68a",
+    borderRadius: "6px",
+    padding: "8px 12px",
+    marginTop: "6px",
+    marginBottom: "8px",
+    fontSize: "13px",
+    color: "#78350f",
+    lineHeight: "1.5",
   },
+  otherDirStep: { fontSize: "12px", color: "#2563eb", fontStyle: "italic" },
 
-  // Status mix
-  statusMixRow: { display: "flex", flexWrap: "wrap", gap: "8px", margin: "10px 0 4px" },
+  // Section 7: Not-Now Directions
+  notNowCard: {
+    background: "#fafaf9",
+    border: "1px solid #e2e8f0",
+    borderLeft: "4px solid #cbd5e1",
+    borderRadius: "8px",
+    padding: "14px 18px",
+    marginBottom: "8px",
+  },
+  dirTitleSmall: { fontSize: "15px", fontWeight: "600", lineHeight: "1.4", marginBottom: "6px" },
 
-  // Validation plan item
+  // Section 8: Validation Plan
+  planContainer: {
+    background: "#fff",
+    border: "1px solid #e8e5e0",
+    borderRadius: "8px",
+    padding: "4px 20px",
+    marginBottom: "12px",
+  },
   planItem: {
     display: "flex",
     gap: "12px",
@@ -239,6 +300,16 @@ const S = {
     flexShrink: 0,
   },
   planText: { fontSize: "14px", color: "#333", lineHeight: "1.55" },
+  planSubTitle: { fontSize: "13px", fontWeight: "600", color: "#555", marginBottom: "8px" },
+
+  // Section 9: Confidence Notes
+  confidenceContainer: {
+    background: "#fff",
+    border: "1px solid #e8e5e0",
+    borderRadius: "8px",
+    padding: "20px",
+  },
+  confidenceSubTitle: { fontSize: "12px", fontWeight: "700", color: "#555", marginBottom: "6px" },
 
   // States
   loadingText: { padding: "48px 0", textAlign: "center", color: "#aaa" },
@@ -281,13 +352,20 @@ function badge(label, theme) {
 }
 
 const STATUS_THEMES = {
-  "credible now":              { background: "#dcfce7", color: "#166534" },
-  "credible now, with caution":{ background: "#fef3c7", color: "#92400e" },
-  "bridge required":           { background: "#fef9c3", color: "#78350f" },
-  "secondary option":          { background: "#e0f2fe", color: "#0369a1" },
-  exploratory:                 { background: "#ede9fe", color: "#5b21b6" },
-  "not now":                   { background: "#f1f5f9", color: "#475569" },
-  "needs validation":          { background: "#f1f5f9", color: "#64748b" },
+  "credible now":               { background: "#dcfce7", color: "#166534" },
+  "credible now, with caution": { background: "#fef3c7", color: "#92400e" },
+  "bridge required":            { background: "#fef9c3", color: "#78350f" },
+  "secondary option":           { background: "#e0f2fe", color: "#0369a1" },
+  exploratory:                  { background: "#ede9fe", color: "#5b21b6" },
+  "not now":                    { background: "#f1f5f9", color: "#475569" },
+  "needs validation":           { background: "#f1f5f9", color: "#64748b" },
+  clear:                        { background: "#dcfce7", color: "#166534" },
+  caution:                      { background: "#fef3c7", color: "#92400e" },
+  high:                         { background: "#dcfce7", color: "#166534" },
+  medium:                       { background: "#fef3c7", color: "#92400e" },
+  low:                          { background: "#fee2e2", color: "#991b1b" },
+  mixed:                        { background: "#f5f3ff", color: "#5b21b6" },
+  none:                         { background: "#f1f5f9", color: "#64748b" },
 };
 
 const CONFIDENCE_THEMES = {
@@ -297,6 +375,13 @@ const CONFIDENCE_THEMES = {
   insufficient_data: { background: "#f1f5f9", color: "#64748b" },
 };
 
+const TYPE_LABELS = {
+  bridge:          "Bridge",
+  secondary:       "Secondary",
+  exploratory:     "Exploratory",
+  not_recommended: "Considered",
+};
+
 function statusBadge(status) {
   const key = String(status || "").toLowerCase();
   const theme = STATUS_THEMES[key] || { background: "#f1f5f9", color: "#64748b" };
@@ -304,7 +389,8 @@ function statusBadge(status) {
 }
 
 function confidenceBadge(confidence) {
-  const key = String(confidence || "").toLowerCase();
+  if (!confidence) return null;
+  const key = String(confidence).toLowerCase();
   const theme = CONFIDENCE_THEMES[key] || { background: "#f1f5f9", color: "#64748b" };
   return badge(confidence + " confidence", theme);
 }
@@ -319,15 +405,15 @@ function workBadge(work) {
   return badge(work, { background: "#f5f3ff", color: "#6d28d9" });
 }
 
-// ── Status mix display ─────────────────────────────────────────────────────────
+// ── Shared layout primitives ───────────────────────────────────────────────────
 
 const STATUS_MIX_DEFS = [
-  { key: "credibleNow",        label: "Credible now",     theme: STATUS_THEMES["credible now"] },
-  { key: "credibleWithCaution",label: "With caution",     theme: STATUS_THEMES["credible now, with caution"] },
-  { key: "bridgeRequired",     label: "Bridge required",  theme: STATUS_THEMES["bridge required"] },
-  { key: "secondaryOption",    label: "Secondary",        theme: STATUS_THEMES["secondary option"] },
-  { key: "exploratory",        label: "Exploratory",      theme: STATUS_THEMES.exploratory },
-  { key: "notNow",             label: "Not now",          theme: STATUS_THEMES["not now"] },
+  { key: "credibleNow",         label: "Credible now",    theme: STATUS_THEMES["credible now"] },
+  { key: "credibleWithCaution", label: "With caution",    theme: STATUS_THEMES["credible now, with caution"] },
+  { key: "bridgeRequired",      label: "Bridge required", theme: STATUS_THEMES["bridge required"] },
+  { key: "secondaryOption",     label: "Secondary",       theme: STATUS_THEMES["secondary option"] },
+  { key: "exploratory",         label: "Exploratory",     theme: STATUS_THEMES.exploratory },
+  { key: "notNow",              label: "Not now",         theme: STATUS_THEMES["not now"] },
 ];
 
 function StatusMixBadges({ statusMix }) {
@@ -337,15 +423,11 @@ function StatusMixBadges({ statusMix }) {
   return (
     <div style={S.statusMixRow}>
       {nonZero.map(({ key, label, theme }) => (
-        <span key={key}>
-          {badge(`${statusMix[key]} ${label}`, theme)}
-        </span>
+        <span key={key}>{badge(`${statusMix[key]} ${label}`, theme)}</span>
       ))}
     </div>
   );
 }
-
-// ── Reusable layout pieces ─────────────────────────────────────────────────────
 
 function SectionDivider({ title }) {
   return (
@@ -360,20 +442,10 @@ function BulletList({ items }) {
   if (!Array.isArray(items) || items.length === 0) return null;
   return (
     <ul style={S.bodyList}>
-      {items.map((item, i) => <li key={i}>{item}</li>)}
+      {items.map((item, i) => (
+        <li key={i}>{item}</li>
+      ))}
     </ul>
-  );
-}
-
-function SignalBlock({ title, items }) {
-  if (!Array.isArray(items) || items.length === 0) return null;
-  return (
-    <div style={S.signalBlock}>
-      <div style={S.signalBlockTitle}>{title}</div>
-      <ul style={S.signalList}>
-        {items.map((item, i) => <li key={i}>{item}</li>)}
-      </ul>
-    </div>
   );
 }
 
@@ -387,47 +459,94 @@ function MetaField({ label, value }) {
   );
 }
 
-// ── Direction portfolio row (compact overview) ─────────────────────────────────
+// ── Section 2: Decision Dashboard ─────────────────────────────────────────────
 
-function DirectionPortfolioRow({ direction }) {
+function DashboardCard({ card }) {
   return (
-    <div style={S.portRow}>
-      <div style={S.portHeader}>
-        <span style={S.portOrder}>#{direction.displayOrder}</span>
-        <span style={S.portLabel}>{direction.label}</span>
-      </div>
-      <div style={{ ...S.badgeRow, marginTop: "6px" }}>
-        {statusBadge(direction.currentRealismStatus)}
-        {confidenceBadge(direction.confidence)}
-        {routeBadge(direction.routeType)}
-        {workBadge(direction.workModel)}
-      </div>
-      {direction.shortWhy && (
-        <div style={S.portShortWhy}>{direction.shortWhy}</div>
+    <div style={S.dashCard}>
+      <div style={S.dashCardLabel}>{card.label}</div>
+      <div style={S.dashCardValue}>{String(card.value)}</div>
+      <div>{statusBadge(card.status)}</div>
+      <div style={S.dashCardDesc}>{card.description}</div>
+    </div>
+  );
+}
+
+function DecisionDashboard({ cards }) {
+  if (!Array.isArray(cards) || cards.length === 0) return null;
+  return (
+    <div style={S.dashGrid}>
+      {cards.map((card) => (
+        <DashboardCard key={card.id} card={card} />
+      ))}
+    </div>
+  );
+}
+
+// ── Section 3: Input Signal Cards ─────────────────────────────────────────────
+
+function InputSignalCard({ card }) {
+  return (
+    <div style={S.signalCard}>
+      <div style={S.signalCardTitle}>{card.title}</div>
+      {card.signal && (
+        <div style={S.signalRow}>
+          <div style={S.signalRowLabel}>Signal</div>
+          <div style={S.signalRowText}>{card.signal}</div>
+        </div>
       )}
-      {direction.firstValidationStep && (
-        <div style={S.portFirstStep}>
-          First step: {direction.firstValidationStep}
+      {card.interpretation && (
+        <div style={S.signalRow}>
+          <div style={S.signalRowLabel}>Interpretation</div>
+          <div style={S.signalRowText}>{card.interpretation}</div>
+        </div>
+      )}
+      {card.impact && (
+        <div style={{ ...S.signalRow, marginBottom: 0 }}>
+          <div style={S.signalRowLabel}>Impact</div>
+          <div style={S.signalRowText}>{card.impact}</div>
         </div>
       )}
     </div>
   );
 }
 
-// ── Direction deep dive card ───────────────────────────────────────────────────
+// ── Section 4: Compact Direction Cards ────────────────────────────────────────
 
-function DirectionDeepDive({ direction, accentStyle }) {
-  const cardStyle = { ...S.card, ...accentStyle };
-  const hasNarrative =
-    direction.whyItFits?.length > 0 ||
-    direction.whyItIsCredible?.length > 0 ||
-    direction.whatMakesItRisky?.length > 0 ||
-    direction.constraintsAndWarnings?.length > 0 ||
-    direction.notRecommendedIf?.length > 0 ||
-    direction.whatWouldMakeItStronger?.length > 0;
-
+function CompactDirectionCard({ dir }) {
   return (
-    <div style={cardStyle}>
+    <div style={S.compactDirCard}>
+      <div style={S.compactDirHeader}>
+        <span style={S.compactDirOrder}>#{dir.displayOrder}</span>
+        <span style={S.compactDirLabel}>{dir.label}</span>
+      </div>
+      <div style={S.compactDirBadges}>
+        {statusBadge(dir.status)}
+        {confidenceBadge(dir.confidence)}
+        {routeBadge(dir.routeType)}
+        {workBadge(dir.workModel)}
+      </div>
+      {dir.whyThisIsHere && (
+        <div style={S.compactDirWhy}>{dir.whyThisIsHere}</div>
+      )}
+      {dir.mainRisk && (
+        <div style={S.compactDirRisk}>
+          <strong style={{ fontWeight: "600" }}>Risk:</strong> {dir.mainRisk}
+        </div>
+      )}
+      {dir.firstValidationStep && (
+        <div style={S.compactDirStep}>First step: {dir.firstValidationStep}</div>
+      )}
+    </div>
+  );
+}
+
+// ── Section 5: Primary Direction Deep Dive ────────────────────────────────────
+
+function PrimaryDeepDive({ direction }) {
+  if (!direction) return null;
+  return (
+    <div style={S.primaryCard}>
       <div style={S.cardHead}>
         <div style={S.dirTitle}>{direction.label}</div>
         <div style={S.badgeRow}>
@@ -441,7 +560,7 @@ function DirectionDeepDive({ direction, accentStyle }) {
         )}
       </div>
 
-      <div style={{ ...S.cardBody, ...S.cardBodyTop }}>
+      <div style={S.cardBody}>
         {direction.whatThisDirectionMeans &&
           direction.whatThisDirectionMeans !== direction.directionArena && (
             <>
@@ -464,44 +583,34 @@ function DirectionDeepDive({ direction, accentStyle }) {
           </div>
         )}
 
-        {hasNarrative && (
+        {direction.whyItFits?.length > 0 && (
           <>
-            {direction.whyItFits?.length > 0 && (
-              <>
-                <span style={S.subTitle}>Why it fits</span>
-                <BulletList items={direction.whyItFits} />
-              </>
-            )}
-            {direction.whyItIsCredible?.length > 0 && (
-              <>
-                <span style={S.subTitle}>Why it is credible</span>
-                <BulletList items={direction.whyItIsCredible} />
-              </>
-            )}
-            {direction.whatMakesItRisky?.length > 0 && (
-              <>
-                <span style={S.subTitle}>What makes it risky</span>
-                <BulletList items={direction.whatMakesItRisky} />
-              </>
-            )}
-            {direction.constraintsAndWarnings?.length > 0 && (
-              <>
-                <span style={S.subTitle}>Constraints and warnings</span>
-                <BulletList items={direction.constraintsAndWarnings} />
-              </>
-            )}
-            {direction.notRecommendedIf?.length > 0 && (
-              <>
-                <span style={S.subTitle}>Not recommended if</span>
-                <BulletList items={direction.notRecommendedIf} />
-              </>
-            )}
-            {direction.whatWouldMakeItStronger?.length > 0 && (
-              <>
-                <span style={S.subTitle}>What would make it stronger</span>
-                <BulletList items={direction.whatWouldMakeItStronger} />
-              </>
-            )}
+            <span style={S.subTitle}>Why it fits</span>
+            <BulletList items={direction.whyItFits} />
+          </>
+        )}
+        {direction.whyItIsCredible?.length > 0 && (
+          <>
+            <span style={S.subTitle}>Why it is credible</span>
+            <BulletList items={direction.whyItIsCredible} />
+          </>
+        )}
+        {direction.whatMakesItRisky?.length > 0 && (
+          <>
+            <span style={S.subTitle}>Main risks</span>
+            <BulletList items={direction.whatMakesItRisky} />
+          </>
+        )}
+        {direction.whatWouldMakeItStronger?.length > 0 && (
+          <>
+            <span style={S.subTitle}>What would make it stronger</span>
+            <BulletList items={direction.whatWouldMakeItStronger} />
+          </>
+        )}
+        {direction.notRecommendedIf?.length > 0 && (
+          <>
+            <span style={S.subTitle}>Not recommended if</span>
+            <BulletList items={direction.notRecommendedIf} />
           </>
         )}
       </div>
@@ -509,36 +618,63 @@ function DirectionDeepDive({ direction, accentStyle }) {
   );
 }
 
-// ── Not-now direction card ─────────────────────────────────────────────────────
+// ── Section 6: Other Directions Compact ───────────────────────────────────────
+
+function OtherDirectionCard({ dir }) {
+  const typeLabel = TYPE_LABELS[dir.type] || dir.type;
+  return (
+    <div style={S.otherDirCard}>
+      <div style={S.otherDirHeader}>
+        <span style={S.otherDirLabel}>{dir.label}</span>
+        {badge(typeLabel, { background: "#f5f3ff", color: "#5b21b6" })}
+        {statusBadge(dir.status)}
+      </div>
+      {dir.whyInteresting && (
+        <>
+          <div style={S.otherDirRowLabel}>Why it is interesting</div>
+          <div style={S.otherDirRowText}>{dir.whyInteresting}</div>
+        </>
+      )}
+      {dir.whyNotPrimaryNow && (
+        <>
+          <div style={S.otherDirRowLabel}>Why not primary now</div>
+          <div style={S.otherDirRowText}>{dir.whyNotPrimaryNow}</div>
+        </>
+      )}
+      {dir.bridgeOrValidationCondition && (
+        <div style={S.otherDirConditionBox}>{dir.bridgeOrValidationCondition}</div>
+      )}
+      {dir.firstValidationStep && (
+        <div style={S.otherDirStep}>First step: {dir.firstValidationStep}</div>
+      )}
+    </div>
+  );
+}
+
+// ── Section 7: Not-Now Direction Card ─────────────────────────────────────────
 
 function NotNowCard({ direction }) {
   return (
-    <div style={{ ...S.card, ...S.cardNotNowAccent }}>
-      <div style={S.cardHead}>
-        <div style={S.dirTitleSmall}>{direction.label}</div>
-      </div>
-      <div style={{ ...S.cardBody, ...S.cardBodyTop }}>
-        {direction.reason && (
-          <div style={S.bodyText}>{direction.reason}</div>
-        )}
-        {direction.supportingConcerns?.length > 0 && (
-          <>
-            <span style={S.subTitle}>Supporting concerns</span>
-            <BulletList items={direction.supportingConcerns} />
-          </>
-        )}
-        {direction.whatWouldChangeThis && (
-          <>
-            <span style={S.subTitle}>What would change this</span>
-            <div style={S.bodyText}>{direction.whatWouldChangeThis}</div>
-          </>
-        )}
-      </div>
+    <div style={S.notNowCard}>
+      <div style={S.dirTitleSmall}>{direction.label}</div>
+      {direction.reason && <div style={S.bodyText}>{direction.reason}</div>}
+      {direction.supportingConcerns?.length > 0 && (
+        <>
+          <span style={{ ...S.subTitle, marginTop: "10px" }}>Supporting concerns</span>
+          <BulletList items={direction.supportingConcerns} />
+        </>
+      )}
+      {direction.whatWouldChangeThis && (
+        <>
+          <span style={{ ...S.subTitle, marginTop: "10px" }}>What would change this</span>
+          <div style={S.bodyText}>{direction.whatWouldChangeThis}</div>
+        </>
+      )}
     </div>
   );
 }
 
-// ── Validation plan item ───────────────────────────────────────────────────────
+// ── Section 8: Validation Plan Item ───────────────────────────────────────────
 
 function PlanItem({ number, text }) {
   return (
@@ -563,17 +699,11 @@ export default function V31UserFacingReportPreview() {
 
   useEffect(() => {
     if (!documentId) return;
-
     setState({ status: "loading", reportViewModel: null, error: null });
-
     readV31UserFacingReportFromFirestoreV31({ documentId })
       .then((result) => {
         if (result.ok) {
-          setState({
-            status: "ok",
-            reportViewModel: result.reportViewModel,
-            error: null,
-          });
+          setState({ status: "ok", reportViewModel: result.reportViewModel, error: null });
         } else {
           setState({
             status: "error",
@@ -606,7 +736,14 @@ export default function V31UserFacingReportPreview() {
           <br />
           Provide a document ID to load a saved v3.1 result:
           <br />
-          <code style={{ fontFamily: "monospace", background: "#f0f0f0", padding: "2px 6px", borderRadius: "3px" }}>
+          <code
+            style={{
+              fontFamily: "monospace",
+              background: "#f0f0f0",
+              padding: "2px 6px",
+              borderRadius: "3px",
+            }}
+          >
             /internal/v31-report?documentId=&lt;assessmentId&gt;
           </code>
         </div>
@@ -651,11 +788,11 @@ export default function V31UserFacingReportPreview() {
     generatedAt,
     reportMeta,
     cover,
-    directionPortfolio,
-    keySignals,
-    primaryDirection,
-    bridgeDirections,
-    exploratoryDirections,
+    decisionDashboard,
+    inputSignalCards,
+    compactDirectionCards,
+    primaryDirectionDeepDive,
+    otherDirectionsCompact,
     notNowDirections,
     validationPlan,
     confidenceNotes,
@@ -665,27 +802,19 @@ export default function V31UserFacingReportPreview() {
 
   return (
     <div style={S.page}>
-
       {/* Brand strip */}
       <div style={S.brand}>
         <span style={S.brandName}>Ortheon</span>
         <span style={S.brandSep}>·</span>
         <span style={S.brandTag}>Career Report Preview</span>
         <span style={S.brandSep}>·</span>
-        <span style={{ fontFamily: "monospace", fontSize: "10px" }}>
-          {assessmentId}
-        </span>
+        <span style={{ fontFamily: "monospace", fontSize: "10px" }}>{assessmentId}</span>
       </div>
 
-      {/* ── 1. Cover / Executive Summary ── */}
-      {cover.headline && (
-        <div style={S.headline}>{cover.headline}</div>
-      )}
-      {cover.summary && (
-        <div style={S.coverSummary}>{cover.summary}</div>
-      )}
+      {/* ── 1. Executive Summary ── */}
+      {cover.headline && <div style={S.headline}>{cover.headline}</div>}
+      {cover.summary && <div style={S.coverSummary}>{cover.summary}</div>}
       <StatusMixBadges statusMix={cover.statusMix} />
-
       {cover.recommendedStrategy && (
         <MetaField label="Recommended strategy" value={cover.recommendedStrategy} />
       )}
@@ -693,14 +822,34 @@ export default function V31UserFacingReportPreview() {
         <MetaField label="Main tension" value={cover.mainTension} />
       )}
 
-      {/* ── 2. Direction Portfolio Overview ── */}
-      {directionPortfolio.length > 0 && (
+      {/* ── 2. Decision Dashboard ── */}
+      {decisionDashboard?.cards?.length > 0 && (
+        <>
+          <SectionDivider title="Decision dashboard" />
+          <DecisionDashboard cards={decisionDashboard.cards} />
+        </>
+      )}
+
+      {/* ── 3. Your Input Signals ── */}
+      {inputSignalCards?.length > 0 && (
+        <>
+          <SectionDivider title="Your input signals" />
+          <div style={S.signalGrid}>
+            {inputSignalCards.map((card) => (
+              <InputSignalCard key={card.id} card={card} />
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* ── 4. Direction Portfolio ── */}
+      {compactDirectionCards?.length > 0 && (
         <>
           <SectionDivider
             title={`Your directions — ${reportMeta.directionCount} assessed`}
           />
-          {directionPortfolio.map((dir, i) => (
-            <DirectionPortfolioRow key={i} direction={dir} />
+          {compactDirectionCards.map((dir, i) => (
+            <CompactDirectionCard key={i} dir={dir} />
           ))}
           {reportMeta.rejectedDirectionCount > 0 && (
             <div style={{ fontSize: "13px", color: "#aaa", marginTop: "6px" }}>
@@ -711,105 +860,32 @@ export default function V31UserFacingReportPreview() {
         </>
       )}
 
-      {/* ── 3. Key Signals ── */}
-      {(keySignals.strongestCredibilitySignals.length > 0 ||
-        keySignals.guardrailSignals.length > 0 ||
-        keySignals.constraintSignals.length > 0 ||
-        keySignals.caveats.length > 0) && (
-        <>
-          <SectionDivider title="What drives this result" />
-          <div
-            style={{
-              background: "#fff",
-              border: "1px solid #e8e5e0",
-              borderRadius: "8px",
-              padding: "20px",
-            }}
-          >
-            <SignalBlock
-              title="Strongest credibility signals"
-              items={keySignals.strongestCredibilitySignals}
-            />
-            <SignalBlock
-              title="Financial or stability considerations"
-              items={keySignals.financialRealitySignals}
-            />
-            <SignalBlock
-              title="Active constraints"
-              items={keySignals.constraintSignals}
-            />
-            <SignalBlock
-              title="What could strengthen this result"
-              items={keySignals.missingEvidenceSignals}
-            />
-            <SignalBlock
-              title="Guardrail guidance"
-              items={keySignals.guardrailSignals}
-            />
-            <SignalBlock
-              title="Caveats"
-              items={keySignals.caveats}
-            />
-          </div>
-        </>
-      )}
-
-      {/* ── 4. Primary Direction Deep Dive ── */}
-      {primaryDirection && (
+      {/* ── 5. Primary Direction Deep Dive ── */}
+      {primaryDirectionDeepDive && (
         <>
           <SectionDivider title="Primary direction" />
-          <DirectionDeepDive
-            direction={primaryDirection}
-            accentStyle={S.cardPrimaryAccent}
-          />
+          <PrimaryDeepDive direction={primaryDirectionDeepDive} />
         </>
       )}
 
-      {/* ── 5. Bridge Directions ── */}
-      {bridgeDirections.length > 0 && (
+      {/* ── 6. Other Directions ── */}
+      {otherDirectionsCompact?.length > 0 && (
         <>
           <SectionDivider
-            title={`Bridge direction${bridgeDirections.length !== 1 ? "s" : ""}`}
+            title={`Other direction${otherDirectionsCompact.length !== 1 ? "s" : ""}`}
           />
-          {bridgeDirections.map((dir, i) => (
-            <DirectionDeepDive
-              key={i}
-              direction={dir}
-              accentStyle={S.cardBridgeAccent}
-            />
+          {otherDirectionsCompact.map((dir, i) => (
+            <OtherDirectionCard key={i} dir={dir} />
           ))}
         </>
       )}
 
-      {/* ── 5b. Exploratory Directions ── */}
-      {exploratoryDirections.length > 0 && (
-        <>
-          <SectionDivider
-            title={`Exploratory direction${exploratoryDirections.length !== 1 ? "s" : ""}`}
-          />
-          {exploratoryDirections.map((dir, i) => (
-            <DirectionDeepDive
-              key={i}
-              direction={dir}
-              accentStyle={S.cardExploratoryAccent}
-            />
-          ))}
-        </>
-      )}
-
-      {/* ── 6. Not-Now Directions ── */}
-      {notNowDirections.length > 0 && (
+      {/* ── 7. Not-Now Directions ── */}
+      {notNowDirections?.length > 0 && (
         <>
           <SectionDivider title="Not recommended at this time" />
-          <div
-            style={{
-              fontSize: "13px",
-              color: "#aaa",
-              marginBottom: "12px",
-            }}
-          >
-            These directions were considered but are not the right move given
-            current evidence.
+          <div style={{ fontSize: "13px", color: "#aaa", marginBottom: "12px" }}>
+            These directions were considered but are not the right move given current evidence.
           </div>
           {notNowDirections.map((dir, i) => (
             <NotNowCard key={i} direction={dir} />
@@ -817,97 +893,69 @@ export default function V31UserFacingReportPreview() {
         </>
       )}
 
-      {/* ── 7. Validation Plan ── */}
+      {/* ── 8. 30-Day Validation Plan ── */}
       {validationPlan.next30Days.length > 0 && (
         <>
           <SectionDivider title="What to do in the next 30 days" />
-          <div
-            style={{
-              background: "#fff",
-              border: "1px solid #e8e5e0",
-              borderRadius: "8px",
-              padding: "4px 20px 4px",
-              marginBottom: "12px",
-            }}
-          >
+          <div style={S.planContainer}>
             {validationPlan.next30Days.map((action, i) => (
               <PlanItem key={i} number={i + 1} text={action} />
             ))}
           </div>
-
           {validationPlan.evidenceToBuild.length > 0 && (
             <>
-              <div
-                style={{ fontSize: "13px", fontWeight: "600", color: "#555", marginBottom: "8px" }}
-              >
-                Evidence to build
-              </div>
+              <div style={S.planSubTitle}>Evidence to build</div>
               <BulletList items={validationPlan.evidenceToBuild} />
             </>
           )}
-
           {validationPlan.conversationsToHave.length > 0 && (
             <>
-              <div
-                style={{
-                  fontSize: "13px",
-                  fontWeight: "600",
-                  color: "#555",
-                  marginTop: "14px",
-                  marginBottom: "8px",
-                }}
-              >
+              <div style={{ ...S.planSubTitle, marginTop: "14px" }}>
                 Conversations to have
               </div>
               <BulletList items={validationPlan.conversationsToHave} />
             </>
           )}
-
           {validationPlan.decisionsToMake.length > 0 && (
             <>
-              <div
-                style={{
-                  fontSize: "13px",
-                  fontWeight: "600",
-                  color: "#555",
-                  marginTop: "14px",
-                  marginBottom: "8px",
-                }}
-              >
-                Decisions to make
-              </div>
+              <div style={{ ...S.planSubTitle, marginTop: "14px" }}>Decisions to make</div>
               <BulletList items={validationPlan.decisionsToMake} />
             </>
           )}
         </>
       )}
 
-      {/* ── 8. Confidence Notes ── */}
+      {/* ── 9. Confidence and Limitations ── */}
       {(confidenceNotes.caveats.length > 0 ||
         confidenceNotes.missingEvidence.length > 0 ||
         confidenceNotes.lowConfidenceReasons.length > 0) && (
         <>
           <SectionDivider title="Confidence and limitations" />
-          <div
-            style={{
-              background: "#fff",
-              border: "1px solid #e8e5e0",
-              borderRadius: "8px",
-              padding: "20px",
-            }}
-          >
-            <SignalBlock
-              title="Caveats"
-              items={confidenceNotes.caveats}
-            />
-            <SignalBlock
-              title="Missing evidence affecting confidence"
-              items={confidenceNotes.missingEvidence}
-            />
-            <SignalBlock
-              title="Why some directions show lower confidence"
-              items={confidenceNotes.lowConfidenceReasons}
-            />
+          <div style={S.confidenceContainer}>
+            {confidenceNotes.missingEvidence.length > 0 && (
+              <>
+                <div style={S.confidenceSubTitle}>Missing evidence</div>
+                <BulletList items={confidenceNotes.missingEvidence} />
+              </>
+            )}
+            {confidenceNotes.lowConfidenceReasons.length > 0 && (
+              <>
+                <div
+                  style={{ ...S.confidenceSubTitle, marginTop: "12px" }}
+                >
+                  Why some directions show lower confidence
+                </div>
+                <BulletList items={confidenceNotes.lowConfidenceReasons} />
+              </>
+            )}
+            {confidenceNotes.caveats.length > 0 && (
+              <>
+                <div style={{ ...S.confidenceSubTitle, marginTop: "12px" }}>
+                  Additional caveats
+                </div>
+                <BulletList items={confidenceNotes.caveats} />
+              </>
+            )}
           </div>
         </>
       )}
