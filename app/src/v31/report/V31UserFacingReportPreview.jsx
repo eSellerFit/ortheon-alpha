@@ -980,28 +980,41 @@ export default function V31UserFacingReportPreview() {
   // ── No documentId ──────────────────────────────────────────────────────────
 
   if (!documentId) {
+    const isUserRoute = window.location.pathname === "/report";
     return (
       <div style={S.page}>
         <div style={S.brand}>
           <span style={S.brandName}>Ortheon</span>
           <span style={S.brandSep}>·</span>
-          <span style={S.brandTag}>Career Report Preview</span>
+          <span style={S.brandTag}>Career Report</span>
         </div>
         <div style={S.usageBox}>
-          <strong style={{ color: "#1a1a1a" }}>v3.1 Report Preview</strong>
-          <br />
-          Provide a document ID to load a saved v3.1 result:
-          <br />
-          <code
-            style={{
-              fontFamily: "monospace",
-              background: "#f0f0f0",
-              padding: "2px 6px",
-              borderRadius: "3px",
-            }}
-          >
-            /internal/v31-report?documentId=&lt;assessmentId&gt;
-          </code>
+          {isUserRoute ? (
+            <>
+              <strong style={{ color: "#1a1a1a" }}>
+                Report link is missing an assessment ID.
+              </strong>
+              <br />
+              Please use the link you received to access your report.
+            </>
+          ) : (
+            <>
+              <strong style={{ color: "#1a1a1a" }}>v3.1 Report Preview</strong>
+              <br />
+              Provide a document ID to load a saved v3.1 result:
+              <br />
+              <code
+                style={{
+                  fontFamily: "monospace",
+                  background: "#f0f0f0",
+                  padding: "2px 6px",
+                  borderRadius: "3px",
+                }}
+              >
+                /internal/v31-report?documentId=&lt;assessmentId&gt;
+              </code>
+            </>
+          )}
         </div>
       </div>
     );

@@ -13,7 +13,7 @@ function App() {
   const path = window.location.pathname;
   const hash = window.location.hash;
 
-  if (path.includes("/internal/v31-report")) {
+  if (path.includes("/internal/v31-report") || path === "/report") {
     return <V31UserFacingReportPreview />;
   }
 
