@@ -12,13 +12,15 @@
  * - Does not show API cost, pipeline status, source, qualityNotes, or raw IDs.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { readV31UserFacingReportFromFirestoreV31 } from "./readV31UserFacingReportFromFirestore.js";
 import V31DirectionMapPreview from "./V31DirectionMapPreview.jsx";
 import {
   V31_REPORT_REVIEW_BOOKING_URL,
   V31_DOWNLOAD_REPORT_ENABLED,
 } from "./reportActionConfigV31.js";
+import V31PdfReportLayout from "./V31PdfReportLayout.jsx";
 
 // ── Styles ─────────────────────────────────────────────────────────────────────
 
@@ -893,6 +895,8 @@ export default function V31UserFacingReportPreview() {
     reportViewModel: null,
     error: null,
   });
+  const [pdfStatus, setPdfStatus] = useState("idle");
+  const pdfContainerRef = useRef(null);
 
   useEffect(() => {
     if (!documentId) return;
@@ -917,6 +921,61 @@ export default function V31UserFacingReportPreview() {
         });
       });
   }, [documentId]);
+
+  async function handleDownloadPdf() {
+    if (!pdfContainerRef.current) return;
+    setPdfStatus("generating");
+    const container = pdfContainerRef.current;
+    const savedLeft = container.style.left;
+    try {
+      const html2canvasModule = await import("html2canvas");
+      const html2canvas = html2canvasModule.default ?? html2canvasModule;
+      const { jsPDF } = await import("jspdf");
+      const pages = Array.from(
+        container.querySelectorAll('[data-v31-pdf-page="true"]')
+      );
+      if (pages.length === 0) throw new Error("No PDF pages found");
+      container.style.left = "0px";
+      await new Promise((r) => requestAnimationFrame(r));
+      await new Promise((r) => requestAnimationFrame(r));
+      const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      for (let i = 0; i < pages.length; i++) {
+        const canvas = await html2canvas(pages[i], {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: "#ffffff",
+          windowWidth: 1200,
+        });
+        const imgData = canvas.toDataURL("image/jpeg", 0.92);
+        const naturalH = (canvas.height / canvas.width) * pdfWidth;
+        if (i > 0) pdf.addPage();
+        if (naturalH <= pdfHeight) {
+          pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, naturalH);
+        } else {
+          const scale = pdfHeight / naturalH;
+          const scaledW = pdfWidth * scale;
+          pdf.addImage(
+            imgData,
+            "JPEG",
+            (pdfWidth - scaledW) / 2,
+            0,
+            scaledW,
+            pdfHeight
+          );
+        }
+      }
+      pdf.save("ortheon-v31-career-report.pdf");
+      setPdfStatus("idle");
+    } catch (err) {
+      console.error("[V31 PDF] generation failed:", err.message);
+      setPdfStatus("error");
+    } finally {
+      container.style.left = savedLeft;
+    }
+  }
 
   // ── No documentId ──────────────────────────────────────────────────────────
 
@@ -1013,6 +1072,7 @@ export default function V31UserFacingReportPreview() {
   // ── Report ─────────────────────────────────────────────────────────────────
 
   return (
+    <>
     <div style={S.page}>
       {/* Brand strip */}
       <div style={S.brand}>
@@ -1033,12 +1093,33 @@ export default function V31UserFacingReportPreview() {
         >
           Book 30-minute report review
         </a>
-        <span
-          style={S.actionBtnDisabled}
-          title="PDF download is not yet available"
-        >
-          Download report — coming soon
-        </span>
+        {V31_DOWNLOAD_REPORT_ENABLED ? (
+          <button
+            onClick={handleDownloadPdf}
+            disabled={pdfStatus === "generating"}
+            style={
+              pdfStatus === "generating" ? S.actionBtnDisabled : S.actionLinkBtn
+            }
+            title={
+              pdfStatus === "error"
+                ? "PDF generation failed — try again"
+                : undefined
+            }
+          >
+            {pdfStatus === "generating"
+              ? "Generating PDF…"
+              : pdfStatus === "error"
+                ? "Error — try again"
+                : "Download report"}
+          </button>
+        ) : (
+          <span
+            style={S.actionBtnDisabled}
+            title="PDF download is not yet available"
+          >
+            Download report — coming soon
+          </span>
+        )}
       </div>
       <div style={S.actionNote}>
         Use the same email you used for the assessment when booking.
@@ -1208,5 +1289,10 @@ export default function V31UserFacingReportPreview() {
           : ""}
       </div>
     </div>
+    {createPortal(
+      <V31PdfReportLayout vm={vm} containerRef={pdfContainerRef} />,
+      document.body
+    )}
+    </>
   );
 }
