@@ -618,12 +618,14 @@ function buildCompactDirectionCard(direction, guardrailStatus, canShowAsCredible
   return {
     displayOrder: numberOrZero(direction.displayOrder),
     label: stringOrEmpty(direction.label),
+    pathFamily: stringOrEmpty(direction.pathFamily),
     status: deriveCurrentRealismStatus(direction, guardrailStatus, canShowAsCredibleNow),
     confidence: stringOrEmpty(direction.confidence),
     routeType: stringOrEmpty(direction.routeType),
     workModel: stringOrEmpty(direction.workModel),
     seniorityComplexityLevel: stringOrEmpty(direction.seniorityComplexityLevel),
     aiDurability: safeAiDurability(direction),
+    targetRoleExamples: clamp(stringArray(direction.targetRoleExamples), 6),
     whyThisIsHere: shortenSentence(deriveShortWhy(direction)),
     mainRisk: shortenSentence(sanitizeConstraintText(mainRiskRaw)),
     firstValidationStep: cleanFirstStep(stringOrEmpty(direction.firstValidationStep)),
@@ -648,10 +650,12 @@ function buildOtherDirectionCompact(direction, guardrailStatus, canShowAsCredibl
 
   return {
     label: stringOrEmpty(direction.label),
+    pathFamily: stringOrEmpty(direction.pathFamily),
     type: stringOrEmpty(direction.recommendationType),
     status: deriveCurrentRealismStatus(direction, guardrailStatus, canShowAsCredibleNow),
     seniorityComplexityLevel: stringOrEmpty(direction.seniorityComplexityLevel),
     aiDurability: safeAiDurability(direction),
+    targetRoleExamples: clamp(stringArray(direction.targetRoleExamples), 6),
     whyInteresting,
     whyNotPrimaryNow,
     bridgeOrValidationCondition: rawBridge || rawStep,
@@ -672,6 +676,7 @@ function buildPrimaryDirectionDeepDive(direction, guardrailStatus, canShowAsCred
   return {
     displayOrder: numberOrZero(direction.displayOrder),
     label: stringOrEmpty(direction.label),
+    pathFamily: stringOrEmpty(direction.pathFamily),
     recommendationType: stringOrEmpty(direction.recommendationType),
     confidence: stringOrEmpty(direction.confidence),
     routeType: stringOrEmpty(direction.routeType),
@@ -709,6 +714,7 @@ function buildPrimaryDirectionDeepDive(direction, guardrailStatus, canShowAsCred
       3
     ),
     aiDurability: safeAiDurability(direction),
+    targetRoleExamples: clamp(stringArray(direction.targetRoleExamples), 6),
   };
 }
 

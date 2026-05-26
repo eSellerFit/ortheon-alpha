@@ -10,6 +10,53 @@
  * - No real user data.
  * - No AI calls.
  * - No production imports.
+ *
+ * Regression expectations (Bundle 21A) — for a senior HR executive profile
+ * with regional/interim CHRO evidence:
+ *
+ * Direction 1 — Senior HR Leadership / Talent Operations:
+ *   recommendationType: primary
+ *   routeType: direct
+ *   profileCredibility.level: high
+ *   confidence: high or medium
+ *   financialRisk may be low or medium
+ *   executionRisk may be low or medium
+ *
+ * Direction 2 — HR Transformation Consulting / Advisory:
+ *   routeType: bridge (consulting proof and BD proof are genuinely missing)
+ *   profileCredibility.level: medium or high depending on evidence
+ *   financialRisk may be high
+ *   executionRisk may be high
+ *   confidence should NOT be low solely because BD is hard
+ *
+ * Direction 3 — Interim / Fractional CHRO:
+ *   routeType: direct or portfolio — NOT bridge (prior CHRO-level evidence exists)
+ *   profileCredibility.level: high (prior interim CHRO evidence)
+ *   financialRisk: high (income ramp, client acquisition)
+ *   executionRisk: high (client acquisition, market visibility)
+ *   confidence: medium — NOT low solely because income ramp is hard
+ *
+ * Key invariant: financial risk must not force routeType=bridge or confidence=low
+ * when profile credibility evidence is strong.
+ *
+ * Bundle 21A — Prioritization regression expectations:
+ * For a senior HR executive with multinational/regional/interim CHRO evidence:
+ *
+ * 1. Enterprise Senior HR Leadership (direct, lower financial/execution risk) should
+ *    usually be displayOrder 1 / recommendationType primary over Interim CHRO
+ *    (direct, high financial/execution risk) unless there is clear current client
+ *    pipeline or employer demand for the fractional path.
+ *
+ * 2. Interim/Fractional CHRO can be secondary with profileCredibility high,
+ *    routeType direct, confidence medium — high financialRisk does not demote it
+ *    to bridge or low confidence, but does make it secondary in priority.
+ *
+ * 3. HR Transformation Consulting/Advisory should be bridge or secondary when
+ *    consulting proof or business development evidence is absent.
+ *
+ * 4. Enterprise HR sub-tracks (Regional CHRO, HRBP Leader, Workforce Planning,
+ *    HR Transformation, People Analytics) should appear as targetRoleExamples
+ *    under the primary enterprise direction, not as separate final directions.
  */
 
 export const MOCK_FINAL_DIRECTION_PORTFOLIO_V31 = Object.freeze({
@@ -41,6 +88,7 @@ export const MOCK_FINAL_DIRECTION_PORTFOLIO_V31 = Object.freeze({
       label: "Talent Operations / Workforce Planning",
       recommendationType: "primary",
       confidence: "medium",
+      pathFamily: "enterprise_employment",
       whyItFits: [
         "This direction is closest to the strongest workforce systems evidence.",
         "It can use both people systems and operating model design assets.",
@@ -66,6 +114,24 @@ export const MOCK_FINAL_DIRECTION_PORTFOLIO_V31 = Object.freeze({
       constraintsAndWarnings: [
         "Guardrails indicate bridge income or route validation may be needed.",
       ],
+      profileCredibility: {
+        level: "high",
+        reason: "Direct workforce systems and talent operations experience across complex organisations.",
+      },
+      financialRisk: {
+        level: "low",
+        reason: "Employment route is stable; consulting variant carries income ramp risk.",
+      },
+      executionRisk: {
+        level: "medium",
+        reason: "Requires clear business outcome framing; financial route details still incomplete.",
+      },
+      targetRoleExamples: [
+        "Head of Talent Operations / Workforce Planning",
+        "Senior HRBP or People Partner Leader",
+        "Workforce Planning or Talent Intelligence Leader",
+        "HR Transformation or Shared Services Leader",
+      ],
       aiDurability: {
         rating: "D3",
         label: "Durable",
@@ -83,6 +149,7 @@ export const MOCK_FINAL_DIRECTION_PORTFOLIO_V31 = Object.freeze({
       label: "People and Workforce Systems Advisory",
       recommendationType: "bridge",
       confidence: "medium",
+      pathFamily: "consulting_advisory",
       whyItFits: [
         "The direction uses people systems experience and relationship-based influence.",
       ],
@@ -108,6 +175,19 @@ export const MOCK_FINAL_DIRECTION_PORTFOLIO_V31 = Object.freeze({
       constraintsAndWarnings: [
         "Consulting or fractional work should not be treated as immediately stable.",
       ],
+      targetRoleExamples: [],
+      profileCredibility: {
+        level: "medium",
+        reason: "People systems experience is present but consulting packaging and buyer proof are still thin.",
+      },
+      financialRisk: {
+        level: "high",
+        reason: "Consulting or fractional income is variable and ramp time is uncertain.",
+      },
+      executionRisk: {
+        level: "high",
+        reason: "No specific buyer problem defined yet; business development proof is missing.",
+      },
       aiDurability: {
         rating: "D3",
         label: "Durable",
@@ -125,6 +205,7 @@ export const MOCK_FINAL_DIRECTION_PORTFOLIO_V31 = Object.freeze({
       label: "Marketplace Operations Leadership",
       recommendationType: "bridge",
       confidence: "low",
+      pathFamily: "interim_fractional",
       whyItFits: [
         "The direction uses operating model design in ambiguous contexts.",
       ],
@@ -149,6 +230,19 @@ export const MOCK_FINAL_DIRECTION_PORTFOLIO_V31 = Object.freeze({
       constraintsAndWarnings: [
         "Bridge-required direction; do not present as immediately credible.",
       ],
+      targetRoleExamples: [],
+      profileCredibility: {
+        level: "low",
+        reason: "Marketplace-specific execution outcomes are not yet evidenced; transition from HR operations is a stretch.",
+      },
+      financialRisk: {
+        level: "high",
+        reason: "Bridge path with uncertain monetisation and long ramp to stable income.",
+      },
+      executionRisk: {
+        level: "high",
+        reason: "Marketplace operations scope is broad; differentiating from HR operations without proof points is difficult.",
+      },
       aiDurability: {
         rating: "D2",
         label: "Stable but changing",

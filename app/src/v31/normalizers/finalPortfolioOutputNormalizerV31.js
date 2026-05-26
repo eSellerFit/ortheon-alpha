@@ -99,6 +99,41 @@ function normalizePortfolioSummary(value) {
 }
 
 const VALID_AI_DURABILITY_RATINGS = new Set(["D0", "D1", "D2", "D3", "D4"]);
+const VALID_CREDIBILITY_LEVELS = new Set(["high", "medium", "low"]);
+const VALID_RISK_LEVELS = new Set(["low", "medium", "high"]);
+const KNOWN_PATH_FAMILIES = new Set([
+  "enterprise_employment",
+  "interim_fractional",
+  "consulting_advisory",
+  "entrepreneurial_operator",
+  "regulated_profession",
+  "education_training",
+  "nonprofit_public",
+  "technical_specialist",
+  "operations_leadership",
+  "other",
+]);
+
+function normalizePathFamily(value) {
+  const s = stringOrNull(value);
+  if (!s) return "";
+  const lower = s.toLowerCase().trim();
+  return KNOWN_PATH_FAMILIES.has(lower) ? lower : "other";
+}
+
+function normalizeProfileCredibility(value) {
+  if (!isObject(value)) return null;
+  const level = stringOrNull(value.level);
+  if (!level || !VALID_CREDIBILITY_LEVELS.has(level)) return null;
+  return { level, reason: stringOrEmpty(value.reason) };
+}
+
+function normalizeDirectionRisk(value) {
+  if (!isObject(value)) return null;
+  const level = stringOrNull(value.level);
+  if (!level || !VALID_RISK_LEVELS.has(level)) return null;
+  return { level, reason: stringOrEmpty(value.reason) };
+}
 
 function normalizeAiDurability(value) {
   if (!isObject(value)) return null;
@@ -127,6 +162,11 @@ function normalizePortfolioDirection(item) {
     label: stringOrEmpty(source.label),
     recommendationType: stringOrEmpty(source.recommendationType),
     confidence: stringOrEmpty(source.confidence),
+    profileCredibility: normalizeProfileCredibility(source.profileCredibility),
+    financialRisk: normalizeDirectionRisk(source.financialRisk),
+    executionRisk: normalizeDirectionRisk(source.executionRisk),
+    pathFamily: normalizePathFamily(source.pathFamily),
+    targetRoleExamples: normalizeStringArray(source.targetRoleExamples).slice(0, 6),
     whyItFits: normalizeStringArray(source.whyItFits),
     whyItIsCredible: normalizeStringArray(source.whyItIsCredible),
     whatMakesItRisky: normalizeStringArray(source.whatMakesItRisky),

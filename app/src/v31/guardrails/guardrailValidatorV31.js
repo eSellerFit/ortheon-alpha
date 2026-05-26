@@ -80,6 +80,7 @@ function buildDirectionGuardrail(
       canShowAsCredibleNow: false,
       requiredDowngrade: false,
       downgradeReason: "Guardrail signals are missing.",
+      financialBridgeLikelyRequired: false,
       reasons: ["Guardrail signals are missing."],
     };
   }
@@ -120,15 +121,22 @@ function buildDirectionGuardrail(
     reasons.push("Financial risk detected for a higher-ramp route.");
   }
 
+  // Financial bridge-likely signals income ramp risk, not a capability or
+  // credibility gap. It raises caution and blocks credible-now display, but
+  // does NOT elevate guardrailStatus to bridge_required. That status is
+  // reserved for true capability/credential/proof bridges from hard constraints.
+  // The financialBridgeLikelyRequired flag is surfaced separately so the
+  // portfolio composer can communicate financial risk without conflating it
+  // with a missing capability bridge.
   if (financialSignal?.bridgeLikelyRequired) {
-    if (!["blocked", "bridge_required"].includes(guardrailStatus)) {
-      guardrailStatus = "bridge_required";
+    if (guardrailStatus === "clear") {
+      guardrailStatus = "caution";
     }
     canShowAsCredibleNow = false;
     requiredDowngrade = true;
     downgradeReason =
-      downgradeReason || "Bridge income or bridge path is likely required.";
-    reasons.push("Bridge income or bridge path is likely required.");
+      downgradeReason || "Bridge income or income ramp is likely required.";
+    reasons.push("Bridge income or income ramp is likely required for this transition route.");
   }
 
   if (financialSignal?.financialViability === "not_enough_data") {
@@ -154,6 +162,7 @@ function buildDirectionGuardrail(
     canShowAsCredibleNow,
     requiredDowngrade,
     downgradeReason,
+    financialBridgeLikelyRequired: Boolean(financialSignal?.bridgeLikelyRequired),
     reasons,
   };
 }

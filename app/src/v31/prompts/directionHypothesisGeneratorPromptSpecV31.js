@@ -81,6 +81,9 @@ export const DIRECTION_HYPOTHESIS_GENERATOR_PROMPT_SPEC_V31 = Object.freeze({
     "Use requiredBridge to explain what would make the move more credible.",
     "Use financialSignal and constraintSignal only as preliminary signals; deterministic checks happen later.",
     "Include validationQuestions and firstProofSteps that help a later layer test the hypothesis.",
+    "CREDIBILITY SEPARATION: credibilityLevel must reflect capability and experience evidence only — not financial risk. If the person has direct prior experience or transferable assets that credibly cover this direction, credibilityLevel should be credible_now or credible_with_packaging even if the financial ramp is uncertain or difficult.",
+    "ROUTE TYPE: routeType must reflect whether a capability, credential, or proof bridge is genuinely required. A fractional, interim, or portfolio work model does not automatically mean routeType bridge. If the person has prior fractional or executive experience for that arena, use routeType direct or portfolio, not bridge.",
+    "BRIDGE DEFINITION: requiredBridge should describe only a real capability, credential, market access, or proof gap — not an income ramp challenge. Financial ramp difficulty belongs in financialSignal.notes, not in requiredBridge.",
   ],
 
   sourceAssetRules: [

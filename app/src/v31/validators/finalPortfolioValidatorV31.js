@@ -87,6 +87,73 @@ function validatePortfolioSummary(summary, issues) {
 }
 
 const VALID_AI_DURABILITY_RATINGS = new Set(["D0", "D1", "D2", "D3", "D4"]);
+const VALID_CREDIBILITY_LEVELS = new Set(["high", "medium", "low"]);
+const VALID_RISK_LEVELS = new Set(["low", "medium", "high"]);
+const KNOWN_PATH_FAMILIES = new Set([
+  "enterprise_employment",
+  "interim_fractional",
+  "consulting_advisory",
+  "entrepreneurial_operator",
+  "regulated_profession",
+  "education_training",
+  "nonprofit_public",
+  "technical_specialist",
+  "operations_leadership",
+  "other",
+]);
+
+function validateOptionalCredibility(value, id, issues) {
+  if (value === null || value === undefined) return;
+  if (!isObject(value)) {
+    pushIssue(issues, `${id}.profileCredibility`, "profileCredibility must be an object or null.", "medium");
+    return;
+  }
+  if (!VALID_CREDIBILITY_LEVELS.has(value.level)) {
+    pushIssue(issues, `${id}.profileCredibility.level`, "profileCredibility.level must be high, medium, or low.", "medium");
+  }
+  if (!hasString(value.reason)) {
+    pushIssue(issues, `${id}.profileCredibility.reason`, "profileCredibility.reason must be a non-empty string.", "medium");
+  }
+}
+
+function validateOptionalRiskDimension(value, fieldName, id, issues) {
+  if (value === null || value === undefined) return;
+  if (!isObject(value)) {
+    pushIssue(issues, `${id}.${fieldName}`, `${fieldName} must be an object or null.`, "medium");
+    return;
+  }
+  if (!VALID_RISK_LEVELS.has(value.level)) {
+    pushIssue(issues, `${id}.${fieldName}.level`, `${fieldName}.level must be low, medium, or high.`, "medium");
+  }
+  if (!hasString(value.reason)) {
+    pushIssue(issues, `${id}.${fieldName}.reason`, `${fieldName}.reason must be a non-empty string.`, "medium");
+  }
+}
+
+const LABEL_STATUS_PARENTHETICALS = [
+  "(bridge)",
+  "(bridge required)",
+  "(high risk)",
+  "(longer path)",
+  "(longer-path)",
+  "(exploratory)",
+  "(caution)",
+  "(not recommended)",
+];
+
+function warnIfLabelContainsStatusParenthetical(label, id, issues) {
+  if (typeof label !== "string") return;
+  const lower = label.toLowerCase();
+  const match = LABEL_STATUS_PARENTHETICALS.find((term) => lower.includes(term));
+  if (match) {
+    pushIssue(
+      issues,
+      `${id}.label`,
+      `Direction label contains a status parenthetical '${match}'. Status should go in recommendationType, routeType, financialRisk, or constraintsAndWarnings, not inside the label.`,
+      "low"
+    );
+  }
+}
 
 function validateAiDurability(value, id, issues) {
   // aiDurability is optional — absent on older saved v31Result documents.
@@ -127,6 +194,16 @@ function validatePortfolioDirection(direction, index, issues) {
     }
   });
 
+  warnIfLabelContainsStatusParenthetical(direction.label, id, issues);
+
+  if (direction.pathFamily !== undefined && direction.pathFamily !== null && direction.pathFamily !== "") {
+    if (typeof direction.pathFamily !== "string") {
+      pushIssue(issues, `${id}.pathFamily`, "pathFamily must be a string if present.", "low");
+    } else if (!KNOWN_PATH_FAMILIES.has(direction.pathFamily.toLowerCase().trim())) {
+      pushIssue(issues, `${id}.pathFamily`, `pathFamily "${direction.pathFamily}" is not a known value. Use a known value or "other".`, "low");
+    }
+  }
+
   if (typeof direction.bridgeStrategy !== "string") {
     pushIssue(issues, `${id}.bridgeStrategy`, "bridgeStrategy must be a string.");
   }
@@ -159,6 +236,24 @@ function validatePortfolioDirection(direction, index, issues) {
   });
 
   validateAiDurability(direction.aiDurability, id, issues);
+  validateOptionalCredibility(direction.profileCredibility, id, issues);
+  validateOptionalRiskDimension(direction.financialRisk, "financialRisk", id, issues);
+  validateOptionalRiskDimension(direction.executionRisk, "executionRisk", id, issues);
+
+  if (direction.targetRoleExamples !== undefined && direction.targetRoleExamples !== null) {
+    if (!isArray(direction.targetRoleExamples)) {
+      pushIssue(issues, `${id}.targetRoleExamples`, "targetRoleExamples must be an array if present.", "low");
+    } else {
+      if (direction.targetRoleExamples.length > 6) {
+        pushIssue(issues, `${id}.targetRoleExamples`, "targetRoleExamples should contain at most 6 items.", "low");
+      }
+      direction.targetRoleExamples.forEach((item, j) => {
+        if (typeof item !== "string" || item.trim() === "") {
+          pushIssue(issues, `${id}.targetRoleExamples.${j}`, "Each targetRoleExamples item must be a non-empty string.", "low");
+        }
+      });
+    }
+  }
 }
 
 function validateRejectedDirection(direction, index, issues) {
@@ -288,6 +383,59 @@ export function validateFinalDirectionPortfolioV31(finalPortfolio) {
     "missingInputsAffectingConfidence",
     issues
   );
+
+  // Soft cross-direction pathFamily duplicate warning: two final directions with the
+  // same non-empty pathFamily may indicate unnecessary splitting of one path family
+  // into multiple directions. Low severity — backward compatible.
+  if (isArray(finalPortfolio.directions) && finalPortfolio.directions.length > 1) {
+    const familySeen = {};
+    finalPortfolio.directions.forEach((d, i) => {
+      const pf = typeof d.pathFamily === "string" ? d.pathFamily.toLowerCase().trim() : "";
+      if (!pf || pf === "other") return;
+      if (familySeen[pf] !== undefined) {
+        pushIssue(
+          issues,
+          `directions.${i}.pathFamily`,
+          `directions.${i} and directions.${familySeen[pf]} share pathFamily "${pf}". Consider consolidating them into one direction with targetRoleExamples unless they represent genuinely different career moves.`,
+          "low"
+        );
+      } else {
+        familySeen[pf] = i;
+      }
+    });
+  }
+
+  // Soft cross-direction overlap warning: if a targetRoleExample under one direction
+  // closely matches the label of another final direction, flag it so the model learns
+  // to keep directions distinct. Low severity — backward compatible.
+  if (isArray(finalPortfolio.directions) && finalPortfolio.directions.length > 1) {
+    const directionLabels = finalPortfolio.directions
+      .map((d) => (typeof d.label === "string" ? d.label.toLowerCase().trim() : ""))
+      .filter(Boolean);
+
+    finalPortfolio.directions.forEach((direction, i) => {
+      if (!isArray(direction.targetRoleExamples)) return;
+      direction.targetRoleExamples.forEach((example) => {
+        if (typeof example !== "string") return;
+        const exampleLower = example.toLowerCase().trim();
+        directionLabels.forEach((otherLabel, j) => {
+          if (j === i) return;
+          if (
+            otherLabel.length > 6 &&
+            (exampleLower.includes(otherLabel.slice(0, 20)) ||
+              otherLabel.includes(exampleLower.slice(0, 20)))
+          ) {
+            pushIssue(
+              issues,
+              `directions.${i}.targetRoleExamples`,
+              `targetRoleExample "${example}" appears to overlap with the label of directions.${j} ("${finalPortfolio.directions[j].label}"). Final directions should be distinct from targetRoleExamples across the portfolio.`,
+              "low"
+            );
+          }
+        });
+      });
+    });
+  }
 
   return {
     passed: issues.length === 0,

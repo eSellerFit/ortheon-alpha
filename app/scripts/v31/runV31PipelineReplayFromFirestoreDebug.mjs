@@ -38,6 +38,7 @@ import {
 } from "../../src/v31/guardrails/index.js";
 import { buildV31PipelineResultPayloadV31 } from "../../src/v31/persistence/buildV31PipelineResultPayload.js";
 import { saveV31PipelineResultPayload } from "../../src/v31/persistence/v31FirestorePersistenceAdapter.js";
+import { applyFinalPortfolioPolicyV31 } from "../../src/v31/portfolio/applyFinalPortfolioPolicyV31.js";
 
 function loadEnvLocal() {
   const envPath = path.resolve(process.cwd(), ".env.local");
@@ -207,6 +208,47 @@ function printFailure(summary, failedStep, failedStepSummary) {
     )
   );
   process.exitCode = 1;
+}
+
+function buildFinalPortfolioSummary(directions, policyApplied, policyNotes) {
+  if (!Array.isArray(directions) || directions.length === 0) {
+    return { directionCount: 0, policyApplied: Boolean(policyApplied), policyNotes: [] };
+  }
+
+  const seenFamilies = {};
+  const duplicatePathFamilies = [];
+  directions.forEach((d) => {
+    const pf = typeof d.pathFamily === "string" ? d.pathFamily.toLowerCase().trim() : "";
+    if (!pf || pf === "other") return;
+    if (seenFamilies[pf] !== undefined) {
+      if (!duplicatePathFamilies.includes(pf)) duplicatePathFamilies.push(pf);
+    } else {
+      seenFamilies[pf] = true;
+    }
+  });
+
+  return {
+    policyApplied: Boolean(policyApplied),
+    policyNotes: Array.isArray(policyNotes) ? policyNotes : [],
+    directionCount: directions.length,
+    finalDirectionLabels: directions.map((d) => d.label || ""),
+    pathFamilies: directions.map((d) => d.pathFamily || null),
+    duplicatePathFamilies,
+    recommendationTypes: directions.map((d) => d.recommendationType || ""),
+    routeTypes: directions.map((d) => d.routeType || ""),
+    confidenceValues: directions.map((d) => d.confidence || ""),
+    profileCredibilityLevels: directions.map((d) => d.profileCredibility?.level || null),
+    financialRiskLevels: directions.map((d) => d.financialRisk?.level || null),
+    executionRiskLevels: directions.map((d) => d.executionRisk?.level || null),
+    targetRoleExampleCounts: directions.map((d) => (Array.isArray(d.targetRoleExamples) ? d.targetRoleExamples.length : 0)),
+    primaryTargetRoleExamples: Array.isArray(directions[0]?.targetRoleExamples) ? directions[0].targetRoleExamples : [],
+    aiDurabilityRatings: directions.map((d) => d.aiDurability?.rating || null),
+    aiDurabilityLabels: directions.map((d) => d.aiDurability?.label || null),
+    firstValidationStepsShort: directions.map((d) => {
+      const step = String(d.firstValidationStep || "").trim();
+      return step.length > 60 ? step.slice(0, 58) + "…" : step;
+    }),
+  };
 }
 
 function buildPayloadSummary(payload) {
@@ -474,7 +516,10 @@ async function main() {
   const portfolioResult = await callHandler(portfolioComposerHandler, {
     portfolioComposerInput,
   });
-  const finalPortfolio = portfolioResult.body.finalPortfolio || null;
+  const rawFinalPortfolio = portfolioResult.body.finalPortfolio || null;
+  const finalPortfolio = rawFinalPortfolio
+    ? applyFinalPortfolioPolicyV31(rawFinalPortfolio)
+    : null;
   const finalDirections = finalPortfolio?.directions || [];
   const portfolioCost = apiCost(portfolioResult.body);
   summary.totalEstimatedCostUsd += portfolioCost;
@@ -497,6 +542,11 @@ async function main() {
 
   summary.totalEstimatedCostUsd = roundCost(summary.totalEstimatedCostUsd);
   summary.finalStatus = "passed";
+  summary.finalPortfolioSummary = buildFinalPortfolioSummary(
+    finalDirections,
+    finalPortfolio?.policyApplied,
+    finalPortfolio?.policyNotes
+  );
 
   const apiUsageSummary = {
     totalEstimatedCostUsd: summary.totalEstimatedCostUsd,

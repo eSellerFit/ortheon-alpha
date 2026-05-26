@@ -76,7 +76,7 @@ async function callAnthropicWithRetry(apiKey, model, prompt) {
         },
         body: JSON.stringify({
           model,
-          max_tokens: 6000,
+          max_tokens: 8192,
           messages: [{ role: "user", content: prompt }],
         }),
       });
@@ -297,6 +297,18 @@ ${promptSpec.guardrailRules.map((item) => `- ${item}`).join("\n")}
 
 PORTFOLIO COMPOSITION RULES:
 ${promptSpec.portfolioCompositionRules.map((item) => `- ${item}`).join("\n")}
+
+DIRECTION CONSOLIDATION RULES:
+${promptSpec.directionConsolidationRules.map((item) => `- ${item}`).join("\n")}
+
+PRIORITIZATION RULES:
+${promptSpec.prioritizationRules.map((item) => `- ${item}`).join("\n")}
+
+ENTERPRISE HR HANDLING:
+${promptSpec.enterpriseHrHandling.map((item) => `- ${item}`).join("\n")}
+
+AI DURABILITY SCALE:
+${Object.entries(promptSpec.aiDurabilityScale).map(([k, v]) => `- ${k}: ${v.label} — ${v.description}`).join("\n")}
 
 OUTPUT REQUIREMENTS:
 ${JSON.stringify(promptSpec.outputRequirements, null, 2)}

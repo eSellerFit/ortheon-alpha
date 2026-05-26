@@ -50,6 +50,37 @@
  */
 
 /**
+ * Profile credibility for a final portfolio direction.
+ * Reflects how well-evidenced the person is for this specific direction
+ * based on experience, credentials, and transferable assets.
+ * This is independent of financial risk or execution risk.
+ *
+ * @typedef {Object} ProfileCredibilityV31
+ * @property {"high"|"medium"|"low"} level
+ * @property {string} reason Short explanation grounded in evidence
+ */
+
+/**
+ * Financial risk for a final portfolio direction.
+ * Reflects income ramp risk, monetization uncertainty, or transition cost.
+ * A direction can be high-credibility AND high-financial-risk simultaneously.
+ *
+ * @typedef {Object} DirectionFinancialRiskV31
+ * @property {"low"|"medium"|"high"} level
+ * @property {string} reason Short explanation of the specific financial risk
+ */
+
+/**
+ * Execution risk for a final portfolio direction.
+ * Reflects business development, market access, client acquisition, or
+ * operational complexity risk independent of profile credibility.
+ *
+ * @typedef {Object} DirectionExecutionRiskV31
+ * @property {"low"|"medium"|"high"} level
+ * @property {string} reason Short explanation of the specific execution risk
+ */
+
+/**
  * AI Durability lens for a final portfolio direction.
  *
  * This is a diagnostic lens, not a score or ranking criterion.
@@ -74,7 +105,16 @@
  * @property {string} routeType
  * @property {string} label
  * @property {"primary"|"secondary"|"bridge"|"exploratory"|"not_recommended"} recommendationType
- * @property {"high"|"medium"|"low"|"insufficient_data"} confidence
+ * @property {"high"|"medium"|"low"|"insufficient_data"} confidence Evidence-based profile credibility strength; not financial or overall life viability.
+ * @property {ProfileCredibilityV31|null} profileCredibility Optional structured credibility lens. Null on older saved documents.
+ * @property {DirectionFinancialRiskV31|null} financialRisk Optional financial risk lens. Independent of profileCredibility.
+ * @property {DirectionExecutionRiskV31|null} executionRisk Optional execution/BD risk lens. Independent of profileCredibility.
+ * @property {string} [pathFamily] Optional path family classifier. Groups directions by career move type.
+ *   Allowed values: enterprise_employment | interim_fractional | consulting_advisory |
+ *   entrepreneurial_operator | regulated_profession | education_training |
+ *   nonprofit_public | technical_specialist | operations_leadership | other.
+ *   Not a score. Optional and backward compatible.
+ * @property {string[]} [targetRoleExamples] Optional market-facing role examples under this direction. Max 6 items. Not separate recommendations.
  * @property {string[]} whyItFits
  * @property {string[]} whyItIsCredible
  * @property {string[]} whatMakesItRisky

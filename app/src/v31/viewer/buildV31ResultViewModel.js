@@ -56,7 +56,14 @@ function normalizeDirection(direction) {
     routeType: stringOrEmpty(source.routeType),
     workModel: stringOrEmpty(source.workModel),
     seniorityComplexityLevel: stringOrEmpty(source.seniorityComplexityLevel),
+    pathFamily: typeof source.pathFamily === "string" ? source.pathFamily : "",
     aiDurability: isObject(source.aiDurability) ? source.aiDurability : null,
+    profileCredibility: isObject(source.profileCredibility) ? source.profileCredibility : null,
+    financialRisk: isObject(source.financialRisk) ? source.financialRisk : null,
+    executionRisk: isObject(source.executionRisk) ? source.executionRisk : null,
+    targetRoleExamples: Array.isArray(source.targetRoleExamples)
+      ? source.targetRoleExamples.filter((s) => typeof s === "string" && s.trim() !== "")
+      : [],
     whyItFits: stringArray(source.whyItFits),
     whyItIsCredible: stringArray(source.whyItIsCredible),
     whatMakesItRisky: stringArray(source.whatMakesItRisky),
