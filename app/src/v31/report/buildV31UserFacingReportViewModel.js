@@ -694,6 +694,139 @@ function buildPrimaryDirectionDeepDive(direction, guardrailStatus, canShowAsCred
   };
 }
 
+// ── Bundle 18I — directionMap helpers ────────────────────────────────────────
+
+const MAP_SLOTS = {
+  primary: [{ x: 50, y: 18 }],
+  secondary: [
+    { x: 30, y: 32 },
+    { x: 70, y: 32 },
+  ],
+  bridge: [
+    { x: 22, y: 42 },
+    { x: 78, y: 42 },
+    { x: 50, y: 46 },
+  ],
+  exploratory: [
+    { x: 18, y: 62 },
+    { x: 82, y: 62 },
+    { x: 50, y: 64 },
+  ],
+};
+
+function deriveNodeType(status, displayOrder) {
+  if (displayOrder === 1) return "primary";
+  const s = String(status || "").toLowerCase();
+  if (s.includes("bridge")) return "bridge";
+  if (s.includes("exploratory")) return "exploratory";
+  if (s.includes("credible")) return "secondary";
+  return "direction";
+}
+
+function getMapSlot(nodeType, index) {
+  const slots = MAP_SLOTS[nodeType] || MAP_SLOTS.exploratory;
+  return slots[Math.min(index, slots.length - 1)];
+}
+
+function deriveLineStyle(status) {
+  const s = String(status || "").toLowerCase();
+  if (s.includes("bridge")) return "dashed";
+  if (s.includes("exploratory")) return "dotted";
+  if (s.includes("not now")) return "muted";
+  return "solid";
+}
+
+function deriveEdgeLabel(lineStyle) {
+  if (lineStyle === "dashed") return "Bridge required";
+  if (lineStyle === "dotted") return "Exploratory";
+  if (lineStyle === "muted") return "Needs validation";
+  return "Direct path";
+}
+
+const MAP_LEGEND_ITEMS = [
+  { lineStyle: "solid", label: "Credible now", colorMeaning: "Green — immediately actionable" },
+  {
+    lineStyle: "dashed",
+    label: "Bridge required",
+    colorMeaning: "Amber — viable after a step",
+  },
+  { lineStyle: "dotted", label: "Exploratory", colorMeaning: "Blue — worth investigating" },
+  {
+    lineStyle: "muted",
+    label: "Not recommended now",
+    colorMeaning: "Grey — set aside for now",
+  },
+];
+
+function buildMapLegend(lineStylesPresent) {
+  const present = new Set(lineStylesPresent);
+  return MAP_LEGEND_ITEMS.filter((item) => present.has(item.lineStyle));
+}
+
+function buildNotNowLane(notNowDirs) {
+  return {
+    label: "Not recommended now",
+    items: notNowDirs.map((d) => ({
+      label: stringOrEmpty(d.label),
+      reason: stringOrEmpty(d.reason),
+      whatWouldChangeThis: stringOrEmpty(d.whatWouldChangeThis),
+    })),
+  };
+}
+
+function buildDirectionMap(compactCards, notNowDirs) {
+  const centerNode = {
+    id: "current-profile",
+    label: "Your current profile",
+    subtitle: "Starting point",
+    x: 50,
+    y: 76,
+  };
+
+  const typeCounts = {};
+  const nodes = [];
+  const edges = [];
+  const lineStylesUsed = [];
+
+  for (const card of compactCards) {
+    const nodeType = deriveNodeType(card.status, card.displayOrder);
+    const typeIndex = typeCounts[nodeType] ?? 0;
+    typeCounts[nodeType] = typeIndex + 1;
+
+    const slot = getMapSlot(nodeType, typeIndex);
+    const lineStyle = deriveLineStyle(card.status);
+    lineStylesUsed.push(lineStyle);
+
+    const nodeId = `direction-${card.displayOrder}`;
+    nodes.push({
+      id: nodeId,
+      displayOrder: card.displayOrder,
+      label: card.label,
+      status: card.status,
+      confidence: card.confidence,
+      routeType: card.routeType,
+      workModel: card.workModel,
+      nodeType,
+      x: slot.x,
+      y: slot.y,
+      shortReason: card.whyThisIsHere,
+      mainRisk: card.mainRisk,
+    });
+
+    edges.push({
+      from: "current-profile",
+      to: nodeId,
+      lineStyle,
+      label: deriveEdgeLabel(lineStyle),
+    });
+  }
+
+  const legend = buildMapLegend(lineStylesUsed);
+  const notNowLane = buildNotNowLane(notNowDirs);
+
+  return { centerNode, nodes, edges, legend, notNowLane };
+}
+
 // ── directionPortfolioItem (compact overview) ─────────────────────────────────
 
 function buildDirectionPortfolioItem(direction, guardrailStatus, canShowAsCredibleNow) {
@@ -1205,6 +1338,9 @@ export function buildV31UserFacingReportViewModelV31(internalViewModel) {
       )
     );
 
+  // directionMap — Bundle 18I (additive, existing fields preserved)
+  const directionMap = buildDirectionMap(compactDirectionCards, notNowDirections);
+
   return {
     version: "v3.1",
     stage: "v31_user_facing_report_view_model",
@@ -1225,5 +1361,6 @@ export function buildV31UserFacingReportViewModelV31(internalViewModel) {
     compactDirectionCards,
     primaryDirectionDeepDive: compactPrimaryDeepDive,
     otherDirectionsCompact,
+    directionMap,
   };
 }

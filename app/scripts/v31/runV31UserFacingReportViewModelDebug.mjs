@@ -63,6 +63,12 @@ console.log(
       next30DayActionCount: reportViewModel.validationPlan.next30Days.length,
       keySignalsCaveatCount: reportViewModel.keySignals.caveats.length,
       confidenceNotesCaveatCount: reportViewModel.confidenceNotes.caveats.length,
+      directionMapNodeCount: reportViewModel.directionMap.nodes.length,
+      directionMapEdgeCount: reportViewModel.directionMap.edges.length,
+      directionMapLegendCount: reportViewModel.directionMap.legend.length,
+      notNowLaneCount: reportViewModel.directionMap.notNowLane.items.length,
+      mapNodeTypes: [...new Set(reportViewModel.directionMap.nodes.map((n) => n.nodeType))],
+      mapLineStyles: [...new Set(reportViewModel.directionMap.edges.map((e) => e.lineStyle))],
     },
     null,
     2
