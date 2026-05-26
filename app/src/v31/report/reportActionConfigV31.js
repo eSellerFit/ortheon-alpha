@@ -14,4 +14,4 @@ export const V31_REPORT_REVIEW_BOOKING_URL =
   "https://calendar.app.google/St1tMoVAvbjQc5hP9";
 
 // Set to true once PDF export is implemented to enable the download button.
-export const V31_DOWNLOAD_REPORT_ENABLED = false;
+export const V31_DOWNLOAD_REPORT_ENABLED = true;
