@@ -61,6 +61,11 @@ export async function readV31ResultViewModelFromFirestoreV31({
 
   const viewModel = buildV31ResultViewModelV31(v31Result);
 
+  const currentRole =
+    typeof data?.currentRole === "string" && data.currentRole.trim()
+      ? data.currentRole.trim()
+      : null;
+
   return {
     ok: true,
     documentExists: true,
@@ -68,5 +73,6 @@ export async function readV31ResultViewModelFromFirestoreV31({
     documentId: trimmedId,
     collectionName,
     viewModel,
+    currentRole,
   };
 }

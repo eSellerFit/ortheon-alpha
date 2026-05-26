@@ -14,6 +14,7 @@
 
 import { useEffect, useState } from "react";
 import { readV31UserFacingReportFromFirestoreV31 } from "./readV31UserFacingReportFromFirestore.js";
+import V31DirectionMapPreview from "./V31DirectionMapPreview.jsx";
 
 // ── Styles ─────────────────────────────────────────────────────────────────────
 
@@ -71,80 +72,92 @@ const S = {
     marginBottom: "20px",
   },
   metaField: {
-    background: "#fff",
-    border: "1px solid #e8e5e0",
+    background: "#f9f8f7",
+    border: "1px solid #d4d0ca",
+    borderLeft: "3px solid #245f73",
     borderRadius: "8px",
-    padding: "12px 16px",
+    padding: "14px 18px",
     marginBottom: "10px",
   },
   metaLabel: {
-    fontSize: "10px",
+    fontSize: "11px",
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: "0.08em",
-    color: "#aaa",
-    marginBottom: "4px",
+    color: "#245f73",
+    marginBottom: "6px",
   },
-  metaValue: { fontSize: "15px", color: "#1a1a1a", lineHeight: "1.5" },
+  metaValue: { fontSize: "15px", color: "#1a1a1a", lineHeight: "1.55", fontWeight: "500" },
   statusMixRow: { display: "flex", flexWrap: "wrap", gap: "8px", margin: "10px 0 16px" },
 
-  // Section 2: Decision Dashboard
-  dashGrid: { display: "flex", flexWrap: "wrap", gap: "10px" },
+  // Section 2: Decision Dashboard — 2 wide cards only
+  dashGrid: { display: "flex", flexWrap: "wrap", gap: "12px" },
   dashCard: {
-    flex: "1 1 150px",
+    flex: "1 1 280px",
     background: "#fff",
     border: "1px solid #e8e5e0",
-    borderRadius: "10px",
-    padding: "16px 18px",
-    minWidth: "140px",
-    maxWidth: "240px",
+    borderRadius: "12px",
+    padding: "20px 22px",
   },
   dashCardLabel: {
-    fontSize: "10px",
+    fontSize: "11px",
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: "0.08em",
-    color: "#aaa",
-    marginBottom: "8px",
+    color: "#888",
+    marginBottom: "10px",
   },
   dashCardValue: {
-    fontSize: "17px",
+    fontSize: "18px",
     fontWeight: "700",
     color: "#111",
-    marginBottom: "6px",
+    marginBottom: "8px",
     lineHeight: "1.3",
   },
-  dashCardDesc: { fontSize: "12px", color: "#666", lineHeight: "1.5", marginTop: "8px" },
+  dashCardDesc: { fontSize: "13px", color: "#555", lineHeight: "1.55", marginTop: "10px" },
 
-  // Section 3: Input Signal Cards
+  // Section 4: Input Signal Cards — stronger visual hierarchy
   signalGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fill, minmax(270px, 1fr))",
-    gap: "10px",
+    gap: "12px",
   },
   signalCard: {
     background: "#fff",
-    border: "1px solid #e8e5e0",
+    border: "1px solid #d4d0ca",
+    borderLeft: "3px solid #245f73",
     borderRadius: "10px",
     padding: "16px 18px",
   },
-  signalCardTitle: {
-    fontSize: "12px",
+  signalCardHeader: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    marginBottom: "14px",
+  },
+  signalCardIcon: {
+    fontSize: "14px",
+    color: "#245f73",
     fontWeight: "700",
-    color: "#333",
-    marginBottom: "12px",
+    lineHeight: 1,
+    flexShrink: 0,
+  },
+  signalCardTitle: {
+    fontSize: "14px",
+    fontWeight: "700",
+    color: "#111",
     lineHeight: "1.4",
   },
-  signalRow: { marginBottom: "8px" },
+  signalRow: { marginBottom: "10px" },
   signalRowLabel: {
     fontSize: "10px",
     fontWeight: "700",
     textTransform: "uppercase",
-    letterSpacing: "0.07em",
-    color: "#aaa",
-    marginBottom: "3px",
+    letterSpacing: "0.08em",
+    color: "#555",
+    marginBottom: "4px",
   },
-  signalRowText: { fontSize: "13px", color: "#444", lineHeight: "1.55" },
+  signalRowText: { fontSize: "13px", color: "#333", lineHeight: "1.6" },
 
   // Section 4: Compact Direction Cards
   compactDirCard: {
@@ -265,51 +278,98 @@ const S = {
   },
   otherDirStep: { fontSize: "12px", color: "#2563eb", fontStyle: "italic" },
 
-  // Section 7: Not-Now Directions
+  // Section 8: Not-Now Directions — muted but readable
   notNowCard: {
-    background: "#fafaf9",
+    background: "#f8fafc",
     border: "1px solid #e2e8f0",
-    borderLeft: "4px solid #cbd5e1",
     borderRadius: "8px",
     padding: "14px 18px",
     marginBottom: "8px",
+    display: "flex",
+    gap: "14px",
+    alignItems: "flex-start",
   },
-  dirTitleSmall: { fontSize: "15px", fontWeight: "600", lineHeight: "1.4", marginBottom: "6px" },
+  notNowDot: {
+    width: "8px",
+    height: "8px",
+    borderRadius: "50%",
+    background: "#cbd5e1",
+    flexShrink: 0,
+    marginTop: "6px",
+  },
+  dirTitleSmall: { fontSize: "14px", fontWeight: "600", lineHeight: "1.4", marginBottom: "5px", color: "#374151" },
 
-  // Section 8: Validation Plan
-  planContainer: {
+  // Section 9: Validation Plan — action card style
+  planItem: {
+    display: "flex",
+    gap: "14px",
+    padding: "14px 16px",
     background: "#fff",
     border: "1px solid #e8e5e0",
     borderRadius: "8px",
-    padding: "4px 20px",
-    marginBottom: "12px",
-  },
-  planItem: {
-    display: "flex",
-    gap: "12px",
-    padding: "10px 0",
-    borderBottom: "1px solid #f0ede8",
+    marginBottom: "8px",
     alignItems: "flex-start",
   },
   planNum: {
-    fontSize: "12px",
+    width: "24px",
+    height: "24px",
+    borderRadius: "50%",
+    background: "#1a1a1a",
+    color: "#fff",
+    fontSize: "11px",
     fontWeight: "700",
-    color: "#bbb",
-    minWidth: "22px",
-    paddingTop: "2px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
     flexShrink: 0,
   },
-  planText: { fontSize: "14px", color: "#333", lineHeight: "1.55" },
-  planSubTitle: { fontSize: "13px", fontWeight: "600", color: "#555", marginBottom: "8px" },
-
-  // Section 9: Confidence Notes
-  confidenceContainer: {
+  planText: { fontSize: "14px", color: "#222", lineHeight: "1.6", fontWeight: "500" },
+  planSubCard: {
     background: "#fff",
     border: "1px solid #e8e5e0",
     borderRadius: "8px",
-    padding: "20px",
+    padding: "12px 16px",
+    marginTop: "8px",
   },
-  confidenceSubTitle: { fontSize: "12px", fontWeight: "700", color: "#555", marginBottom: "6px" },
+  planSubTitle: {
+    fontSize: "11px",
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: "0.07em",
+    color: "#555",
+    marginBottom: "8px",
+  },
+
+  // Section 10: Confidence Notes — card wrapper + stronger chips
+  confidenceWrapper: {
+    background: "#fff",
+    border: "1px solid #d4d0ca",
+    borderLeft: "3px solid #245f73",
+    borderRadius: "10px",
+    padding: "16px 20px 18px",
+  },
+  confidenceContainer: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+    gap: "8px",
+  },
+  confidenceChip: {
+    background: "#f4f3f1",
+    border: "1px solid #bbb8b2",
+    borderRadius: "6px",
+    padding: "10px 14px",
+    fontSize: "13px",
+    color: "#1f2937",
+    lineHeight: "1.5",
+  },
+  confidenceGroupLabel: {
+    fontSize: "11px",
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: "0.07em",
+    color: "#374151",
+    marginBottom: "8px",
+  },
 
   // States
   loadingText: { padding: "48px 0", textAlign: "center", color: "#aaa" },
@@ -449,46 +509,105 @@ function BulletList({ items }) {
   );
 }
 
+const META_ICONS = {
+  "Recommended strategy": "→",
+  "Main tension": "⊘",
+};
+
 function MetaField({ label, value }) {
   if (!value) return null;
+  const icon = META_ICONS[label];
   return (
     <div style={S.metaField}>
-      <div style={S.metaLabel}>{label}</div>
+      <div style={S.metaLabel}>{icon ? `${icon}  ` : ""}{label}</div>
       <div style={S.metaValue}>{value}</div>
     </div>
   );
 }
 
-// ── Section 2: Decision Dashboard ─────────────────────────────────────────────
+// ── Section 3: Direction Snapshot — top 3 compact direction cards ─────────────
 
-function DashboardCard({ card }) {
+function DirectionSnapshotCard({ dir }) {
+  const text = dir.whyThisIsHere || dir.mainRisk || "";
   return (
-    <div style={S.dashCard}>
-      <div style={S.dashCardLabel}>{card.label}</div>
-      <div style={S.dashCardValue}>{String(card.value)}</div>
-      <div>{statusBadge(card.status)}</div>
-      <div style={S.dashCardDesc}>{card.description}</div>
+    <div
+      style={{
+        background: "#fff",
+        border: "1px solid #e8e5e0",
+        borderRadius: "10px",
+        padding: "14px 16px",
+      }}
+    >
+      <div
+        style={{
+          fontSize: "14px",
+          fontWeight: "700",
+          color: "#111",
+          marginBottom: "8px",
+          lineHeight: "1.35",
+        }}
+      >
+        {dir.label}
+      </div>
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "5px",
+          marginBottom: text ? "8px" : 0,
+        }}
+      >
+        {statusBadge(dir.status)}
+        {confidenceBadge(dir.confidence)}
+        {routeBadge(dir.routeType)}
+        {workBadge(dir.workModel)}
+      </div>
+      {text && (
+        <div style={{ fontSize: "13px", color: "#555", lineHeight: "1.5" }}>
+          {text}
+        </div>
+      )}
     </div>
   );
 }
 
-function DecisionDashboard({ cards }) {
+function DirectionSnapshot({ cards }) {
   if (!Array.isArray(cards) || cards.length === 0) return null;
+  const visible = cards.slice(0, 3);
   return (
-    <div style={S.dashGrid}>
-      {cards.map((card) => (
-        <DashboardCard key={card.id} card={card} />
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+        gap: "10px",
+      }}
+    >
+      {visible.map((dir, i) => (
+        <DirectionSnapshotCard key={i} dir={dir} />
       ))}
     </div>
   );
 }
 
-// ── Section 3: Input Signal Cards ─────────────────────────────────────────────
+// ── Section 4: Input Signal Cards ─────────────────────────────────────────────
+
+const SIGNAL_ICONS = {
+  careerAnchors: "◇",
+  financialReality: "$",
+  workModelPreference: "⚙",
+  constraints: "!",
+  credibilityAssets: "✓",
+  missingEvidence: "?",
+};
 
 function InputSignalCard({ card }) {
+  const icon = SIGNAL_ICONS[card.id] || "◉";
   return (
     <div style={S.signalCard}>
-      <div style={S.signalCardTitle}>{card.title}</div>
+      <div style={S.signalCardHeader}>
+        <span style={S.signalCardIcon}>{icon}</span>
+        <span style={S.signalCardTitle}>{card.title}</span>
+      </div>
       {card.signal && (
         <div style={S.signalRow}>
           <div style={S.signalRowLabel}>Signal</div>
@@ -656,30 +775,30 @@ function OtherDirectionCard({ dir }) {
 function NotNowCard({ direction }) {
   return (
     <div style={S.notNowCard}>
-      <div style={S.dirTitleSmall}>{direction.label}</div>
-      {direction.reason && <div style={S.bodyText}>{direction.reason}</div>}
-      {direction.supportingConcerns?.length > 0 && (
-        <>
-          <span style={{ ...S.subTitle, marginTop: "10px" }}>Supporting concerns</span>
-          <BulletList items={direction.supportingConcerns} />
-        </>
-      )}
-      {direction.whatWouldChangeThis && (
-        <>
-          <span style={{ ...S.subTitle, marginTop: "10px" }}>What would change this</span>
-          <div style={S.bodyText}>{direction.whatWouldChangeThis}</div>
-        </>
-      )}
+      <div style={S.notNowDot} />
+      <div>
+        <div style={S.dirTitleSmall}>{direction.label}</div>
+        {direction.reason && (
+          <div style={{ fontSize: "13px", color: "#6b7280", lineHeight: "1.55" }}>
+            {direction.reason}
+          </div>
+        )}
+        {direction.whatWouldChangeThis && (
+          <div style={{ fontSize: "12px", color: "#94a3b8", marginTop: "6px", fontStyle: "italic" }}>
+            {direction.whatWouldChangeThis}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
-// ── Section 8: Validation Plan Item ───────────────────────────────────────────
+// ── Section 9: Validation Plan Item ───────────────────────────────────────────
 
 function PlanItem({ number, text }) {
   return (
     <div style={S.planItem}>
-      <span style={S.planNum}>{number}.</span>
+      <span style={S.planNum}>{number}</span>
       <span style={S.planText}>{text}</span>
     </div>
   );
@@ -788,6 +907,7 @@ export default function V31UserFacingReportPreview() {
     generatedAt,
     reportMeta,
     cover,
+    directionMap,
     decisionDashboard,
     inputSignalCards,
     compactDirectionCards,
@@ -813,8 +933,6 @@ export default function V31UserFacingReportPreview() {
 
       {/* ── 1. Executive Summary ── */}
       {cover.headline && <div style={S.headline}>{cover.headline}</div>}
-      {cover.summary && <div style={S.coverSummary}>{cover.summary}</div>}
-      <StatusMixBadges statusMix={cover.statusMix} />
       {cover.recommendedStrategy && (
         <MetaField label="Recommended strategy" value={cover.recommendedStrategy} />
       )}
@@ -822,15 +940,23 @@ export default function V31UserFacingReportPreview() {
         <MetaField label="Main tension" value={cover.mainTension} />
       )}
 
-      {/* ── 2. Decision Dashboard ── */}
-      {decisionDashboard?.cards?.length > 0 && (
+      {/* ── 2. Career Direction Map ── */}
+      {directionMap && (
         <>
-          <SectionDivider title="Decision dashboard" />
-          <DecisionDashboard cards={decisionDashboard.cards} />
+          <SectionDivider title="Career direction map" />
+          <V31DirectionMapPreview directionMap={directionMap} />
         </>
       )}
 
-      {/* ── 3. Your Input Signals ── */}
+      {/* ── 3. Direction Snapshot ── */}
+      {compactDirectionCards?.length > 0 && (
+        <>
+          <SectionDivider title="Direction snapshot" />
+          <DirectionSnapshot cards={compactDirectionCards} />
+        </>
+      )}
+
+      {/* ── 4. Your Input Signals ── */}
       {inputSignalCards?.length > 0 && (
         <>
           <SectionDivider title="Your input signals" />
@@ -880,81 +1006,88 @@ export default function V31UserFacingReportPreview() {
         </>
       )}
 
-      {/* ── 7. Not-Now Directions ── */}
+      {/* ── 8. Not-Now Directions ── */}
       {notNowDirections?.length > 0 && (
         <>
           <SectionDivider title="Not recommended at this time" />
-          <div style={{ fontSize: "13px", color: "#aaa", marginBottom: "12px" }}>
-            These directions were considered but are not the right move given current evidence.
-          </div>
           {notNowDirections.map((dir, i) => (
             <NotNowCard key={i} direction={dir} />
           ))}
         </>
       )}
 
-      {/* ── 8. 30-Day Validation Plan ── */}
+      {/* ── 9. 30-Day Validation Plan ── */}
       {validationPlan.next30Days.length > 0 && (
         <>
           <SectionDivider title="What to do in the next 30 days" />
-          <div style={S.planContainer}>
-            {validationPlan.next30Days.map((action, i) => (
-              <PlanItem key={i} number={i + 1} text={action} />
-            ))}
-          </div>
-          {validationPlan.evidenceToBuild.length > 0 && (
-            <>
-              <div style={S.planSubTitle}>Evidence to build</div>
-              <BulletList items={validationPlan.evidenceToBuild} />
-            </>
-          )}
-          {validationPlan.conversationsToHave.length > 0 && (
-            <>
-              <div style={{ ...S.planSubTitle, marginTop: "14px" }}>
-                Conversations to have
-              </div>
-              <BulletList items={validationPlan.conversationsToHave} />
-            </>
-          )}
-          {validationPlan.decisionsToMake.length > 0 && (
-            <>
-              <div style={{ ...S.planSubTitle, marginTop: "14px" }}>Decisions to make</div>
-              <BulletList items={validationPlan.decisionsToMake} />
-            </>
+          {validationPlan.next30Days.map((action, i) => (
+            <PlanItem key={i} number={i + 1} text={action} />
+          ))}
+          {(validationPlan.evidenceToBuild.length > 0 ||
+            validationPlan.conversationsToHave.length > 0 ||
+            validationPlan.decisionsToMake.length > 0) && (
+            <div style={S.planSubCard}>
+              {validationPlan.evidenceToBuild.length > 0 && (
+                <>
+                  <div style={S.planSubTitle}>Evidence to build</div>
+                  <BulletList items={validationPlan.evidenceToBuild} />
+                </>
+              )}
+              {validationPlan.conversationsToHave.length > 0 && (
+                <>
+                  <div style={{ ...S.planSubTitle, marginTop: validationPlan.evidenceToBuild.length > 0 ? "12px" : 0 }}>
+                    Conversations to have
+                  </div>
+                  <BulletList items={validationPlan.conversationsToHave} />
+                </>
+              )}
+              {validationPlan.decisionsToMake.length > 0 && (
+                <>
+                  <div style={{ ...S.planSubTitle, marginTop: "12px" }}>Decisions to make</div>
+                  <BulletList items={validationPlan.decisionsToMake} />
+                </>
+              )}
+            </div>
           )}
         </>
       )}
 
-      {/* ── 9. Confidence and Limitations ── */}
+      {/* ── 10. Confidence and Limitations ── */}
       {(confidenceNotes.caveats.length > 0 ||
         confidenceNotes.missingEvidence.length > 0 ||
         confidenceNotes.lowConfidenceReasons.length > 0) && (
         <>
           <SectionDivider title="Confidence and limitations" />
-          <div style={S.confidenceContainer}>
+          <div style={S.confidenceWrapper}>
             {confidenceNotes.missingEvidence.length > 0 && (
-              <>
-                <div style={S.confidenceSubTitle}>Missing evidence</div>
-                <BulletList items={confidenceNotes.missingEvidence} />
-              </>
+              <div>
+                <div style={S.confidenceGroupLabel}>Missing evidence</div>
+                <div style={S.confidenceContainer}>
+                  {confidenceNotes.missingEvidence.map((item, i) => (
+                    <div key={i} style={S.confidenceChip}>{item}</div>
+                  ))}
+                </div>
+              </div>
             )}
             {confidenceNotes.lowConfidenceReasons.length > 0 && (
-              <>
-                <div
-                  style={{ ...S.confidenceSubTitle, marginTop: "12px" }}
-                >
-                  Why some directions show lower confidence
+              <div style={{ marginTop: confidenceNotes.missingEvidence.length > 0 ? "16px" : 0 }}>
+                <div style={S.confidenceGroupLabel}>Why some directions show lower confidence</div>
+                <div style={S.confidenceContainer}>
+                  {confidenceNotes.lowConfidenceReasons.map((item, i) => (
+                    <div key={i} style={S.confidenceChip}>{item}</div>
+                  ))}
                 </div>
-                <BulletList items={confidenceNotes.lowConfidenceReasons} />
-              </>
+              </div>
             )}
             {confidenceNotes.caveats.length > 0 && (
-              <>
-                <div style={{ ...S.confidenceSubTitle, marginTop: "12px" }}>
-                  Additional caveats
+              <div style={{ marginTop: (confidenceNotes.missingEvidence.length > 0 || confidenceNotes.lowConfidenceReasons.length > 0) ? "16px" : 0 }}>
+                <div style={S.confidenceGroupLabel}>Additional caveats</div>
+                <div style={S.confidenceContainer}>
+                  {confidenceNotes.caveats.map((item, i) => (
+                    <div key={i} style={S.confidenceChip}>{item}</div>
+                  ))}
                 </div>
-                <BulletList items={confidenceNotes.caveats} />
-              </>
+              </div>
             )}
           </div>
         </>

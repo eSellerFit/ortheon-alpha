@@ -44,7 +44,8 @@ export async function readV31UserFacingReportFromFirestoreV31({
   }
 
   const reportViewModel = buildV31UserFacingReportViewModelV31(
-    readResult.viewModel
+    readResult.viewModel,
+    { currentRole: readResult.currentRole || null }
   );
 
   return {

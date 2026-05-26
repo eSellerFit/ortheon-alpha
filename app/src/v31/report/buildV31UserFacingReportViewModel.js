@@ -774,11 +774,11 @@ function buildNotNowLane(notNowDirs) {
   };
 }
 
-function buildDirectionMap(compactCards, notNowDirs) {
+function buildDirectionMap(compactCards, notNowDirs, currentRole = null) {
   const centerNode = {
     id: "current-profile",
-    label: "Your current profile",
-    subtitle: "Starting point",
+    label: currentRole || "Your current profile",
+    subtitle: currentRole ? "Current role" : "Starting point",
     x: 50,
     y: 76,
   };
@@ -1165,7 +1165,7 @@ function buildConfidenceNotes(directions, allCaveats, shownCaveats) {
  * @param {Object} internalViewModel Output of buildV31ResultViewModelV31.
  * @returns {Object} V31UserFacingReportViewModel
  */
-export function buildV31UserFacingReportViewModelV31(internalViewModel) {
+export function buildV31UserFacingReportViewModelV31(internalViewModel, { currentRole = null } = {}) {
   const vm = objectOrEmpty(internalViewModel);
   const summary = objectOrEmpty(vm.summary);
   const directions = arrayOrEmpty(vm.directions);
@@ -1339,7 +1339,7 @@ export function buildV31UserFacingReportViewModelV31(internalViewModel) {
     );
 
   // directionMap — Bundle 18I (additive, existing fields preserved)
-  const directionMap = buildDirectionMap(compactDirectionCards, notNowDirections);
+  const directionMap = buildDirectionMap(compactDirectionCards, notNowDirections, currentRole);
 
   return {
     version: "v3.1",
