@@ -738,6 +738,12 @@ const MAP_SLOTS = {
   ],
 };
 
+// Two-direction layout: symmetric top-left / top-right, center stays at bottom.
+const TWO_DIRECTION_SLOTS = [
+  { x: 25, y: 22 },
+  { x: 75, y: 22 },
+];
+
 function deriveNodeType(status, displayOrder) {
   if (displayOrder === 1) return "primary";
   const s = String(status || "").toLowerCase();
@@ -807,17 +813,25 @@ function buildDirectionMap(compactCards, notNowDirs, currentRole = null) {
     y: 76,
   };
 
+  const twoDirection = compactCards.length === 2;
   const typeCounts = {};
   const nodes = [];
   const edges = [];
   const lineStylesUsed = [];
 
-  for (const card of compactCards) {
+  for (let cardIndex = 0; cardIndex < compactCards.length; cardIndex++) {
+    const card = compactCards[cardIndex];
     const nodeType = deriveNodeType(card.status, card.displayOrder);
-    const typeIndex = typeCounts[nodeType] ?? 0;
-    typeCounts[nodeType] = typeIndex + 1;
 
-    const slot = getMapSlot(nodeType, typeIndex);
+    let slot;
+    if (twoDirection) {
+      slot = TWO_DIRECTION_SLOTS[cardIndex];
+    } else {
+      const typeIndex = typeCounts[nodeType] ?? 0;
+      typeCounts[nodeType] = typeIndex + 1;
+      slot = getMapSlot(nodeType, typeIndex);
+    }
+
     const lineStyle = deriveLineStyle(card.status);
     lineStylesUsed.push(lineStyle);
 
