@@ -6,7 +6,7 @@ import TransitionConstraintsStep from "../components/assessment/TransitionConstr
 import ProfessionalCredentialsStep from "../components/assessment/ProfessionalCredentialsStep";
 import CVUploadStep from "../components/assessment/CVUploadStep";
 import PriorityWeightsStep from "../components/assessment/PriorityWeightsStep";
-import ResultsStep from "../components/assessment/ResultsStep";
+import V31ReportHandoff from "../v31/report/V31ReportHandoff";
 
 const TOTAL_STEPS = 8;
 
@@ -141,7 +141,7 @@ function AssessmentFlow() {
           />
         )}
 
-        {currentStep === 8 && <ResultsStep assessmentId={assessmentId} />}
+        {currentStep === 8 && <V31ReportHandoff assessmentId={assessmentId} />}
       </section>
     </main>
   );

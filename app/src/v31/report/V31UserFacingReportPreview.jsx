@@ -1096,8 +1096,17 @@ export default function V31UserFacingReportPreview() {
         <span style={{ fontFamily: "monospace", fontSize: "10px" }}>{assessmentId}</span>
       </div>
 
+      {/* ── 1. Executive Summary ── */}
+      {cover.headline && <div style={S.headline}>{cover.headline}</div>}
+      {cover.recommendedStrategy && (
+        <StrategyCard label="Recommended strategy" value={cover.recommendedStrategy} />
+      )}
+      {cover.mainTension && (
+        <StrategyCard label="Main tension" value={cover.mainTension} />
+      )}
+
       {/* Action area */}
-      <div style={S.actionRow}>
+      <div style={{ ...S.actionRow, marginTop: "20px" }}>
         <a
           href={V31_REPORT_REVIEW_BOOKING_URL}
           target="_blank"
@@ -1137,15 +1146,6 @@ export default function V31UserFacingReportPreview() {
       <div style={S.actionNote}>
         Use the same email you used for the assessment when booking.
       </div>
-
-      {/* ── 1. Executive Summary ── */}
-      {cover.headline && <div style={S.headline}>{cover.headline}</div>}
-      {cover.recommendedStrategy && (
-        <StrategyCard label="Recommended strategy" value={cover.recommendedStrategy} />
-      )}
-      {cover.mainTension && (
-        <StrategyCard label="Main tension" value={cover.mainTension} />
-      )}
 
       {/* ── 2. Career Direction Map ── */}
       {directionMap && (
