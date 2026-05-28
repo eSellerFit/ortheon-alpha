@@ -76,7 +76,7 @@ async function callAnthropicWithRetry(apiKey, model, prompt) {
         },
         body: JSON.stringify({
           model,
-          max_tokens: 7000,
+          max_tokens: 3500,
           messages: [{ role: "user", content: prompt }],
         }),
       });
@@ -187,6 +187,15 @@ function buildPrompt(transferabilityMapperInput) {
   delete cleanAssessmentSnapshot.rawAssessment;
   delete cleanAssessmentSnapshot.legacyPriorityWeights;
 
+  // Strip raw CV competency signals — already absorbed and re-expressed in
+  // synthesizedProfile.competencySignals. Keeping both duplicates ~1,200 input
+  // tokens without adding information the transferability step can use.
+  if (cleanAssessmentSnapshot.cvProfile) {
+    const { competencySignals: _dropped, ...restCvProfile } =
+      cleanAssessmentSnapshot.cvProfile;
+    cleanAssessmentSnapshot.cvProfile = restCvProfile;
+  }
+
   return `You are executing Ortheon MVP Cut v3.1 AI Call 2: Transferability Mapper.
 
 SYSTEM ROLE:
@@ -236,6 +245,20 @@ OUTPUT REQUIREMENTS:
 - missingEvidence: maximum 6 items.
 - If evidence is repetitive, consolidate rather than adding more objects.
 - For likelyWorkModels and likelyRouteTypes fields, use only the exact values listed in allowedValues. Do not invent new values.
+
+COMPACT OUTPUT DISCIPLINE:
+- Return compact JSON. No extra whitespace inside string values.
+- Maximum 2 sentences per explanation, bridgeLogic, whyRisky, whatWouldBeNeeded, whyPossible, or risk field.
+- Maximum 10 words per evidence string.
+- Maximum 8 words per theme or arena-list string.
+- Maximum 2 items in packagingNeeds per credibilityBridge.
+- transferableAssets: maximum 3 items.
+- credibilityBridges: maximum 3 items.
+- nonTransferableOrRiskyAssumptions: maximum 3 items.
+- possibleDirectionArenas: maximum 3 items.
+- strongestTransferabilityThemes: maximum 3 items.
+- weakestTransferabilityAreas: maximum 3 items.
+- missingEvidence: maximum 4 items.
 
 REQUIRED TOP-LEVEL FIELDS:
 ${promptSpec.outputRequirements.requiredTopLevelFields
