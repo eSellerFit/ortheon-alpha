@@ -76,7 +76,7 @@ async function callAnthropicWithRetry(apiKey, model, prompt) {
         },
         body: JSON.stringify({
           model,
-          max_tokens: 8192,
+          max_tokens: 4000,
           messages: [{ role: "user", content: prompt }],
         }),
       });
@@ -275,6 +275,20 @@ function buildPrompt(portfolioComposerInput) {
   delete cleanAssessmentSnapshot.rawAssessment;
   delete cleanAssessmentSnapshot.legacyPriorityWeights;
 
+  // Strip raw CV competency signals — same as transferability and hypothesis stages.
+  // Already distilled into synthesizedProfile and transferabilityMap.transferableAssets.
+  if (cleanAssessmentSnapshot.cvProfile) {
+    const { competencySignals: _cv, ...restCvProfile } =
+      cleanAssessmentSnapshot.cvProfile;
+    cleanAssessmentSnapshot.cvProfile = restCvProfile;
+  }
+
+  // Strip synthesizedProfile.competencySignals for the prompt only.
+  // Already expressed as named, evidenced assets in transferabilityMap.transferableAssets
+  // and reflected in directionHypotheses. Removing saves ~1,348 input tokens.
+  const cleanSynthesizedProfile = { ...synthesizedProfile };
+  delete cleanSynthesizedProfile.competencySignals;
+
   return `You are executing Ortheon MVP Cut v3.1 AI Call 4: Portfolio Composer.
 
 SYSTEM ROLE:
@@ -322,6 +336,24 @@ OUTPUT FORMAT:
 - Do not use rank.
 - Do not use numeric fit scores or percentages.
 
+COMPACT OUTPUT DISCIPLINE:
+- Return compact JSON. No extra whitespace inside string values.
+- Maximum 2–3 final directions as already required.
+- Maximum 2 targetRoleExamples per direction.
+- Maximum 2 evidence items per direction.
+- Maximum 2 whyItFits items per direction.
+- Maximum 2 whyItIsCredible items per direction.
+- Maximum 2 whatMakesItRisky items per direction.
+- Maximum 2 notRecommendedIf items per direction.
+- Maximum 2 constraintsAndWarnings items per direction.
+- Maximum 2 portfolioLogic items in portfolioSummary.
+- Maximum 2 sentences per narrative field (overallInterpretation, mainTension, recommendedStrategy, firstValidationStep, bridgeStrategy, reason fields, caveats items).
+- Maximum 10 words per evidence string.
+- Maximum 2 rejectedDirections.
+- Maximum 1 qualityNotes item.
+- Maximum 2 missingInputsAffectingConfidence items.
+- Do not add long paragraphs.
+
 FINAL PORTFOLIO RULES:
 - The final portfolio must only use directions that trace back to existing DirectionHypothesisV31 objects.
 - Do not invent new direction arenas.
@@ -347,7 +379,7 @@ ASSESSMENT SNAPSHOT:
 ${JSON.stringify(cleanAssessmentSnapshot, null, 2)}
 
 SYNTHESIZED PROFILE:
-${JSON.stringify(synthesizedProfile, null, 2)}
+${JSON.stringify(cleanSynthesizedProfile, null, 2)}
 
 TRANSFERABILITY MAP:
 ${JSON.stringify(transferabilityMap, null, 2)}
