@@ -20,25 +20,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import profileSynthesizerHandler from "../../api/profile-synthesizer-v31.js";
-import transferabilityMapperHandler from "../../api/transferability-mapper-v31.js";
-import directionHypothesisGeneratorHandler from "../../api/direction-hypothesis-generator-v31.js";
-import portfolioComposerHandler from "../../api/portfolio-composer-v31.js";
-import { buildAssessmentSnapshotV31 } from "../../src/v31/adapters/assessmentSnapshotAdapterV31.js";
-import { buildProfileSynthesizerInputV31 } from "../../src/v31/adapters/profileSynthesizerInputAdapterV31.js";
-import { buildTransferabilityMapperInputV31 } from "../../src/v31/adapters/transferabilityMapperInputAdapterV31.js";
-import { buildDirectionHypothesisInputV31 } from "../../src/v31/adapters/directionHypothesisInputAdapterV31.js";
-import { buildPortfolioComposerInputV31 } from "../../src/v31/adapters/portfolioComposerInputAdapterV31.js";
-import { readAssessmentForV31ReplayV31 } from "../../src/v31/persistence/readAssessmentForV31Replay.js";
-import {
-  buildFinancialModelV31,
-  buildGuardrailValidationV31,
-  evaluateHardConstraintsV31,
-  validateHypothesisQualityOverDiversityV31,
-} from "../../src/v31/guardrails/index.js";
-import { buildV31PipelineResultPayloadV31 } from "../../src/v31/persistence/buildV31PipelineResultPayload.js";
-import { saveV31PipelineResultPayload } from "../../src/v31/persistence/v31FirestorePersistenceAdapter.js";
-import { applyFinalPortfolioPolicyV31 } from "../../src/v31/portfolio/applyFinalPortfolioPolicyV31.js";
+import { runV31PipelineForAssessmentV31 } from "../../src/v31/pipeline/runV31PipelineForAssessmentV31.js";
 
 function loadEnvLocal() {
   const envPath = path.resolve(process.cwd(), ".env.local");
@@ -116,61 +98,6 @@ function parseArgs(argv) {
   );
 }
 
-function createMockResponse() {
-  return {
-    statusCode: 200,
-    body: null,
-
-    status(code) {
-      this.statusCode = code;
-      return this;
-    },
-
-    json(payload) {
-      this.body = payload;
-      return this;
-    },
-  };
-}
-
-async function callHandler(handler, body) {
-  const req = {
-    method: "POST",
-    body,
-  };
-  const res = createMockResponse();
-
-  await handler(req, res);
-
-  return {
-    httpStatus: res.statusCode,
-    ok: res.statusCode >= 200 && res.statusCode < 300,
-    body: res.body || {},
-  };
-}
-
-function apiCost(responseBody) {
-  return Number(responseBody?.apiUsage?.estimatedCostUsd) || 0;
-}
-
-function validationPassed(responseBody) {
-  return responseBody?.validation?.passed === true;
-}
-
-function roundCost(value) {
-  return Number(value.toFixed(6));
-}
-
-function buildFailedStepSummary(result) {
-  return {
-    httpStatus: result.httpStatus,
-    ok: result.ok,
-    validationPassed: validationPassed(result.body),
-    error: result.body?.error || null,
-    details: result.body?.details || null,
-  };
-}
-
 function printUsageAndFail(envLocalLoaded) {
   console.log(
     JSON.stringify(
@@ -185,97 +112,6 @@ function printUsageAndFail(envLocalLoaded) {
     )
   );
   process.exitCode = 1;
-}
-
-function printFailure(summary, failedStep, failedStepSummary) {
-  console.log(
-    JSON.stringify(
-      {
-        ...summary,
-        failedStep,
-        steps: {
-          ...summary.steps,
-          [failedStep]: {
-            ...(summary.steps[failedStep] || {}),
-            ...failedStepSummary,
-          },
-        },
-        totalEstimatedCostUsd: roundCost(summary.totalEstimatedCostUsd || 0),
-        finalStatus: "failed",
-      },
-      null,
-      2
-    )
-  );
-  process.exitCode = 1;
-}
-
-function buildFinalPortfolioSummary(directions, policyApplied, policyNotes) {
-  if (!Array.isArray(directions) || directions.length === 0) {
-    return { directionCount: 0, policyApplied: Boolean(policyApplied), policyNotes: [] };
-  }
-
-  const seenFamilies = {};
-  const duplicatePathFamilies = [];
-  directions.forEach((d) => {
-    const pf = typeof d.pathFamily === "string" ? d.pathFamily.toLowerCase().trim() : "";
-    if (!pf || pf === "other") return;
-    if (seenFamilies[pf] !== undefined) {
-      if (!duplicatePathFamilies.includes(pf)) duplicatePathFamilies.push(pf);
-    } else {
-      seenFamilies[pf] = true;
-    }
-  });
-
-  return {
-    policyApplied: Boolean(policyApplied),
-    policyNotes: Array.isArray(policyNotes) ? policyNotes : [],
-    directionCount: directions.length,
-    finalDirectionLabels: directions.map((d) => d.label || ""),
-    pathFamilies: directions.map((d) => d.pathFamily || null),
-    duplicatePathFamilies,
-    recommendationTypes: directions.map((d) => d.recommendationType || ""),
-    routeTypes: directions.map((d) => d.routeType || ""),
-    confidenceValues: directions.map((d) => d.confidence || ""),
-    profileCredibilityLevels: directions.map((d) => d.profileCredibility?.level || null),
-    financialRiskLevels: directions.map((d) => d.financialRisk?.level || null),
-    executionRiskLevels: directions.map((d) => d.executionRisk?.level || null),
-    targetRoleExampleCounts: directions.map((d) => (Array.isArray(d.targetRoleExamples) ? d.targetRoleExamples.length : 0)),
-    primaryTargetRoleExamples: Array.isArray(directions[0]?.targetRoleExamples) ? directions[0].targetRoleExamples : [],
-    aiDurabilityRatings: directions.map((d) => d.aiDurability?.rating || null),
-    aiDurabilityLabels: directions.map((d) => d.aiDurability?.label || null),
-    firstValidationStepsShort: directions.map((d) => {
-      const step = String(d.firstValidationStep || "").trim();
-      return step.length > 60 ? step.slice(0, 58) + "…" : step;
-    }),
-  };
-}
-
-function buildPayloadSummary(payload) {
-  return {
-    version: payload.version,
-    stage: payload.stage,
-    assessmentId: payload.assessmentId,
-    pipelineStatus: payload.pipelineStatus,
-    source: payload.source,
-    hasFinalPortfolio: Boolean(payload.finalPortfolio),
-    finalDirectionCount: payload.finalPortfolio?.directions?.length || 0,
-    warningCount: payload.warnings.length,
-    errorCount: payload.errors.length,
-  };
-}
-
-function buildPersistenceSummary(result) {
-  return {
-    ok: result.ok,
-    dryRun: result.dryRun,
-    wrote: result.wrote,
-    collectionName: result.plan.collectionName,
-    documentId: result.plan.documentId,
-    nestedFieldPath: result.plan.nestedFieldPath,
-    forbiddenLegacyFieldsTouched: result.plan.forbiddenLegacyFieldsTouched,
-    documentExistsBeforeWrite: result.documentExistsBeforeWrite ?? null,
-  };
 }
 
 async function main() {
@@ -313,299 +149,39 @@ async function main() {
 
   const assessmentId = args.assessmentId || args.documentId;
 
-  const summary = {
+  const cliEnvelope = {
     envLocalLoaded: envLoadResult.loaded,
     documentId: args.documentId,
     assessmentId,
     writeRequested,
     firestoreWriteEnabled,
     dataSource: "firestore",
-    finalStatus: "failed",
-    steps: {},
-    totalEstimatedCostUsd: 0,
   };
 
-  // Read real assessment from Firestore
-  let readResult;
-  try {
-    readResult = await readAssessmentForV31ReplayV31({
-      documentId: args.documentId,
-    });
-  } catch (error) {
-    console.log(
-      JSON.stringify(
-        {
-          ...summary,
-          finalStatus: "failed",
-          firestoreRead: {
-            ok: false,
-            error: error.message,
-          },
-        },
-        null,
-        2
-      )
-    );
-    process.exitCode = 1;
-    return;
-  }
-
-  if (!readResult.ok) {
-    console.log(
-      JSON.stringify(
-        {
-          ...summary,
-          finalStatus: "failed",
-          firestoreRead: {
-            ok: false,
-            documentExists: readResult.documentExists,
-            error: readResult.error,
-          },
-        },
-        null,
-        2
-      )
-    );
-    process.exitCode = 1;
-    return;
-  }
-
-  summary.firestoreRead = {
-    ok: true,
-    documentExists: readResult.documentExists,
-    fieldCount: readResult.fieldCount,
-    strippedFieldsPresent: readResult.strippedFieldsPresent,
-  };
-
-  // Build snapshot from real Firestore assessment data
-  const baseSnapshot = buildAssessmentSnapshotV31(readResult.assessment);
-  const assessmentSnapshot = {
-    ...baseSnapshot,
+  const result = await runV31PipelineForAssessmentV31({
+    documentId: args.documentId,
     assessmentId,
-  };
-
-  const profileSynthesizerInput =
-    buildProfileSynthesizerInputV31(assessmentSnapshot);
-  const profileResult = await callHandler(profileSynthesizerHandler, {
-    profileSynthesizerInput,
-  });
-  const synthesizedProfile = profileResult.body.synthesizedProfile || null;
-  const profileCost = apiCost(profileResult.body);
-  summary.totalEstimatedCostUsd += profileCost;
-  summary.steps.profileSynthesizer = {
-    httpStatus: profileResult.httpStatus,
-    ok: profileResult.ok,
-    validationPassed: validationPassed(profileResult.body),
-    estimatedCostUsd: profileCost,
-  };
-
-  if (!profileResult.ok || !validationPassed(profileResult.body)) {
-    printFailure(
-      summary,
-      "profileSynthesizer",
-      buildFailedStepSummary(profileResult)
-    );
-    return;
-  }
-
-  const transferabilityMapperInput = buildTransferabilityMapperInputV31(
-    assessmentSnapshot,
-    synthesizedProfile
-  );
-  const transferabilityResult = await callHandler(transferabilityMapperHandler, {
-    transferabilityMapperInput,
-  });
-  const transferabilityMap =
-    transferabilityResult.body.transferabilityMap || null;
-  const transferabilityCost = apiCost(transferabilityResult.body);
-  summary.totalEstimatedCostUsd += transferabilityCost;
-  summary.steps.transferabilityMapper = {
-    httpStatus: transferabilityResult.httpStatus,
-    ok: transferabilityResult.ok,
-    validationPassed: validationPassed(transferabilityResult.body),
-    estimatedCostUsd: transferabilityCost,
-  };
-
-  if (
-    !transferabilityResult.ok ||
-    !validationPassed(transferabilityResult.body)
-  ) {
-    printFailure(
-      summary,
-      "transferabilityMapper",
-      buildFailedStepSummary(transferabilityResult)
-    );
-    return;
-  }
-
-  const directionHypothesisInput = buildDirectionHypothesisInputV31(
-    assessmentSnapshot,
-    synthesizedProfile,
-    transferabilityMap
-  );
-  const directionHypothesisResult = await callHandler(
-    directionHypothesisGeneratorHandler,
-    {
-      directionHypothesisInput,
-    }
-  );
-  const directionHypotheses =
-    directionHypothesisResult.body.directionHypotheses || [];
-  const directionHypothesisCost = apiCost(directionHypothesisResult.body);
-  summary.totalEstimatedCostUsd += directionHypothesisCost;
-  summary.steps.directionHypothesisGenerator = {
-    httpStatus: directionHypothesisResult.httpStatus,
-    ok: directionHypothesisResult.ok,
-    validationPassed: validationPassed(directionHypothesisResult.body),
-    hypothesisCount: directionHypotheses.length,
-    estimatedCostUsd: directionHypothesisCost,
-  };
-
-  if (
-    !directionHypothesisResult.ok ||
-    !validationPassed(directionHypothesisResult.body)
-  ) {
-    printFailure(
-      summary,
-      "directionHypothesisGenerator",
-      buildFailedStepSummary(directionHypothesisResult)
-    );
-    return;
-  }
-
-  const financialModel = buildFinancialModelV31(
-    assessmentSnapshot,
-    directionHypotheses
-  );
-  const hardConstraints = evaluateHardConstraintsV31(
-    assessmentSnapshot,
-    directionHypotheses
-  );
-  const guardrailValidation = buildGuardrailValidationV31(
-    assessmentSnapshot,
-    directionHypotheses,
-    financialModel,
-    hardConstraints
-  );
-  const qualityOverDiversityValidation =
-    validateHypothesisQualityOverDiversityV31(
-      directionHypotheses,
-      guardrailValidation
-    );
-
-  summary.steps.guardrails = {
-    passed: guardrailValidation.passed,
-    guardrailStatuses: guardrailValidation.directionGuardrails.map(
-      (guardrail) => guardrail.guardrailStatus
-    ),
-    canShowAsCredibleNowValues: guardrailValidation.directionGuardrails.map(
-      (guardrail) => guardrail.canShowAsCredibleNow
-    ),
-  };
-
-  const portfolioComposerInput = buildPortfolioComposerInputV31({
-    assessmentSnapshot,
-    synthesizedProfile,
-    transferabilityMap,
-    directionHypotheses,
-    financialModel,
-    hardConstraints,
-    guardrailValidation,
-    qualityOverDiversityValidation,
-  });
-  const portfolioResult = await callHandler(portfolioComposerHandler, {
-    portfolioComposerInput,
-  });
-  const rawFinalPortfolio = portfolioResult.body.finalPortfolio || null;
-  const finalPortfolio = rawFinalPortfolio
-    ? applyFinalPortfolioPolicyV31(rawFinalPortfolio)
-    : null;
-  const finalDirections = finalPortfolio?.directions || [];
-  const portfolioCost = apiCost(portfolioResult.body);
-  summary.totalEstimatedCostUsd += portfolioCost;
-  summary.steps.portfolioComposer = {
-    httpStatus: portfolioResult.httpStatus,
-    ok: portfolioResult.ok,
-    validationPassed: validationPassed(portfolioResult.body),
-    finalDirectionCount: finalDirections.length,
-    estimatedCostUsd: portfolioCost,
-  };
-
-  if (!portfolioResult.ok || !validationPassed(portfolioResult.body)) {
-    printFailure(
-      summary,
-      "portfolioComposer",
-      buildFailedStepSummary(portfolioResult)
-    );
-    return;
-  }
-
-  summary.totalEstimatedCostUsd = roundCost(summary.totalEstimatedCostUsd);
-  summary.finalStatus = "passed";
-  summary.finalPortfolioSummary = buildFinalPortfolioSummary(
-    finalDirections,
-    finalPortfolio?.policyApplied,
-    finalPortfolio?.policyNotes
-  );
-
-  const apiUsageSummary = {
-    totalEstimatedCostUsd: summary.totalEstimatedCostUsd,
-    callCount: 4,
-    perStageEstimatedCostUsd: {
-      profileSynthesizer: summary.steps.profileSynthesizer.estimatedCostUsd,
-      transferabilityMapper:
-        summary.steps.transferabilityMapper.estimatedCostUsd,
-      directionHypothesisGenerator:
-        summary.steps.directionHypothesisGenerator.estimatedCostUsd,
-      portfolioComposer: summary.steps.portfolioComposer.estimatedCostUsd,
-    },
-  };
-
-  const pipelineResultPayload = buildV31PipelineResultPayloadV31({
-    assessmentId,
-    finalPortfolio,
-    pipelineSummary: summary.steps,
-    guardrailSummary: summary.steps.guardrails,
-    apiUsageSummary,
-    auditTrail: [],
-    warnings: [],
-    errors: [],
+    write: args.write,
+    dryRun: args.dryRun,
+    force: false,
     source: "isolated_debug_runner",
-    pipelineStatus: "passed",
   });
 
-  summary.pipelineResultPayload = buildPayloadSummary(pipelineResultPayload);
-
-  try {
-    const persistenceResult = await saveV31PipelineResultPayload(
-      pipelineResultPayload,
-      writeRequested
-        ? {
-            dryRun: false,
-            confirmWrite: true,
-            debugOnly: true,
-            documentId: args.documentId,
-            requireExistingDocument: true,
-          }
-        : {
-            dryRun: true,
-            documentId: args.documentId,
-          }
-    );
-
-    summary.persistence = buildPersistenceSummary(persistenceResult);
-  } catch (error) {
+  if (!result.ok) {
     console.log(
       JSON.stringify(
         {
-          ...summary,
+          ...cliEnvelope,
           finalStatus: "failed",
-          persistence: {
-            ok: false,
-            dryRun: !writeRequested,
-            wrote: false,
-            error: error.message,
-          },
+          error: result.error,
+          ...(result.failedStep ? { failedStep: result.failedStep } : {}),
+          ...(result.firestoreRead ? { firestoreRead: result.firestoreRead } : {}),
+          ...(result.steps
+            ? {
+                steps: result.steps,
+                totalEstimatedCostUsd: result.totalEstimatedCostUsd,
+              }
+            : {}),
         },
         null,
         2
@@ -615,7 +191,42 @@ async function main() {
     return;
   }
 
-  console.log(JSON.stringify(summary, null, 2));
+  if (result.skipped) {
+    console.log(
+      JSON.stringify(
+        {
+          ...cliEnvelope,
+          finalStatus: "skipped",
+          skipped: true,
+          reason: result.reason,
+          hasV31Result: result.hasV31Result,
+          reportUrl: result.reportUrl,
+          firestoreRead: result.firestoreRead,
+        },
+        null,
+        2
+      )
+    );
+    return;
+  }
+
+  console.log(
+    JSON.stringify(
+      {
+        ...cliEnvelope,
+        finalStatus: "passed",
+        steps: result.steps,
+        totalEstimatedCostUsd: result.totalEstimatedCostUsd,
+        firestoreRead: result.firestoreRead,
+        finalPortfolioSummary: result.finalPortfolioSummary,
+        pipelineResultPayload: result.pipelineResultPayload,
+        persistence: result.persistence,
+        reportUrl: result.reportUrl,
+      },
+      null,
+      2
+    )
+  );
 }
 
 try {
