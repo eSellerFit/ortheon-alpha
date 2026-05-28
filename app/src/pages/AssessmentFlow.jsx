@@ -56,6 +56,14 @@ function AssessmentFlow() {
     setCurrentStep(8);
   }
 
+  const isFinalStep = currentStep === 8;
+  const pageTitle = isFinalStep
+    ? "Your assessment is complete"
+    : "Start your career direction assessment";
+  const pageIntro = isFinalStep
+    ? "Thank you for completing the Ortheon Alpha assessment. We're preparing your Career Direction Report based on your profile, constraints, priorities, and transition signals."
+    : "Ortheon captures your career context, anchors, financial reality, practical constraints, professional credentials, CV signals, priority weights, and then generates direction recommendations.";
+
   return (
     <main className="page-shell">
       <a href="/" className="assessment-site-back">← Back to Ortheon</a>
@@ -63,13 +71,9 @@ function AssessmentFlow() {
       <section className="card">
         <p className="eyebrow">Ortheon Alpha</p>
 
-        <h1>Start your career direction assessment</h1>
+        <h1>{pageTitle}</h1>
 
-        <p className="intro">
-          Ortheon captures your career context, anchors, financial reality,
-          practical constraints, professional credentials, CV signals, priority
-          weights, and then generates direction recommendations.
-        </p>
+        <p className="intro">{pageIntro}</p>
 
         <p>
           Step {currentStep} of {TOTAL_STEPS}
