@@ -76,7 +76,7 @@ async function callAnthropicWithRetry(apiKey, model, prompt) {
         },
         body: JSON.stringify({
           model,
-          max_tokens: 5000,
+          max_tokens: 3000,
           messages: [{ role: "user", content: prompt }],
         }),
       });
@@ -223,6 +223,21 @@ function buildPrompt(directionHypothesisInput) {
   delete cleanAssessmentSnapshot.rawAssessment;
   delete cleanAssessmentSnapshot.legacyPriorityWeights;
 
+  // Strip raw CV competency signals — same as transferability fix.
+  // Already distilled into synthesizedProfile and transferabilityMap.transferableAssets.
+  if (cleanAssessmentSnapshot.cvProfile) {
+    const { competencySignals: _cv, ...restCvProfile } =
+      cleanAssessmentSnapshot.cvProfile;
+    cleanAssessmentSnapshot.cvProfile = restCvProfile;
+  }
+
+  // Strip synthesizedProfile.competencySignals for the prompt only.
+  // This stage works transferability-first; competency signals are already
+  // expressed as named, evidenced assets in transferabilityMap.transferableAssets.
+  // Removing them saves ~1,350 input tokens without losing methodology-relevant data.
+  const cleanSynthesizedProfile = { ...synthesizedProfile };
+  delete cleanSynthesizedProfile.competencySignals;
+
   return `You are executing Ortheon MVP Cut v3.1 AI Call 3: Direction Hypothesis Generator.
 
 SYSTEM ROLE:
@@ -266,6 +281,20 @@ OUTPUT FORMAT:
 - Do not repeat the same evidence unnecessarily.
 - Every hypothesis must include sourceTransferableAssets, and every value in sourceTransferableAssets must exactly match an assetName from transferabilityMap.transferableAssets.
 
+COMPACT OUTPUT DISCIPLINE:
+- Return compact JSON. No extra whitespace inside string values.
+- Maximum 3 hypotheses. Prefer fewer credible hypotheses over more weak ones.
+- Maximum 2 sentences per directionStatement, requiredBridge, or financialSignal.notes.
+- Maximum 2 items in whyThisCouldWork per hypothesis.
+- Maximum 2 items in mainRisks per hypothesis.
+- Maximum 2 items in evidence per hypothesis.
+- Maximum 2 items in validationQuestions per hypothesis.
+- Maximum 2 items in firstProofSteps per hypothesis.
+- Maximum 10 words per evidence.evidenceText string.
+- Maximum 15 words per mainRisks, validationQuestions, or firstProofSteps item.
+- Maximum 1 item in constraintSignal.warnings.
+- Maximum 1 item in constraintSignal.requiredDisclaimers.
+
 EXPECTED OUTPUT SHAPE:
 ${JSON.stringify(promptSpec.outputShape, null, 2)}
 
@@ -276,7 +305,7 @@ ASSESSMENT SNAPSHOT:
 ${JSON.stringify(cleanAssessmentSnapshot, null, 2)}
 
 SYNTHESIZED PROFILE:
-${JSON.stringify(synthesizedProfile, null, 2)}
+${JSON.stringify(cleanSynthesizedProfile, null, 2)}
 
 TRANSFERABILITY MAP:
 ${JSON.stringify(transferabilityMap, null, 2)}
