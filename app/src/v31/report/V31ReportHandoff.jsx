@@ -1,10 +1,10 @@
 /**
  * Ortheon MVP Cut v3.1 — Report Handoff Screen
  *
- * Bundle 25A / 26A.
+ * Bundle 25A / 26A / 26B.
  * Final assessment step — replaces legacy ResultsStep.
- * Checks whether v31Result exists in Firestore; if missing, triggers
- * automatic generation via /api/v31-generate-report.
+ * Checks whether v31Result exists in Firestore; if missing, orchestrates
+ * the four staged generation API calls sequentially.
  *
  * Rules:
  * - Read only (Firestore check). No direct Firestore writes.
@@ -15,6 +15,22 @@
 
 import { useEffect, useState } from "react";
 import { readV31ResultViewModelFromFirestoreV31 } from "../viewer/readV31ResultViewModelFromFirestore.js";
+
+// ── Stage configuration ────────────────────────────────────────────────────────
+
+const STAGE_ENDPOINTS = [
+  "/api/v31-generation-profile",
+  "/api/v31-generation-transferability",
+  "/api/v31-generation-hypotheses",
+  "/api/v31-generation-portfolio",
+];
+
+const STAGE_LABELS = [
+  "Analyzing your profile",
+  "Mapping transferable directions",
+  "Building direction hypotheses",
+  "Composing your final report",
+];
 
 // ── Styles ─────────────────────────────────────────────────────────────────────
 
@@ -36,6 +52,12 @@ const S = {
     lineHeight: "1.65",
     margin: "0 0 20px",
   },
+  stepText: {
+    fontSize: "14px",
+    color: "#6b7280",
+    lineHeight: "1.55",
+    margin: "0 0 8px",
+  },
   ctaLink: {
     display: "inline-block",
     padding: "11px 26px",
@@ -56,16 +78,17 @@ const S = {
 };
 
 // ── States ─────────────────────────────────────────────────────────────────────
-// "loading"    — awaiting Firestore read
-// "generating" — v31Result missing; /api/v31-generate-report in progress
+// "loading"    — awaiting Firestore check
+// "generating" — orchestrating staged generation (generatingStep: 1-4)
 // "ready"      — v31Result exists; show link
-// "error"      — Firestore read failed, document missing, or generation failed
+// "error"      — generation failed or document not found
 // "no-id"      — assessmentId prop is blank
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export default function V31ReportHandoff({ assessmentId }) {
   const [status, setStatus] = useState(assessmentId ? "loading" : "no-id");
+  const [generatingStep, setGeneratingStep] = useState(0);
 
   useEffect(() => {
     if (!assessmentId) {
@@ -75,42 +98,72 @@ export default function V31ReportHandoff({ assessmentId }) {
 
     let cancelled = false;
     setStatus("loading");
+    setGeneratingStep(0);
 
-    readV31ResultViewModelFromFirestoreV31({ documentId: assessmentId })
-      .then((result) => {
+    async function run() {
+      let firestoreResult;
+      try {
+        firestoreResult = await readV31ResultViewModelFromFirestoreV31({
+          documentId: assessmentId,
+        });
+      } catch {
+        if (!cancelled) setStatus("error");
+        return;
+      }
+
+      if (cancelled) return;
+
+      if (firestoreResult.ok) {
+        setStatus("ready");
+        return;
+      }
+
+      if (!firestoreResult.documentExists || firestoreResult.hasV31Result !== false) {
+        setStatus("error");
+        return;
+      }
+
+      // Document exists, no v31Result — orchestrate staged generation
+      setStatus("generating");
+
+      for (let i = 0; i < STAGE_ENDPOINTS.length; i++) {
         if (cancelled) return;
 
-        if (result.ok) {
+        setGeneratingStep(i + 1);
+
+        let data;
+        try {
+          const resp = await fetch(STAGE_ENDPOINTS[i], {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ assessmentId }),
+          });
+          data = await resp.json();
+        } catch {
+          if (!cancelled) setStatus("error");
+          return;
+        }
+
+        if (cancelled) return;
+
+        if (!data.ok) {
+          setStatus("error");
+          return;
+        }
+
+        if (data.status === "ready") {
           setStatus("ready");
           return;
         }
 
-        if (result.documentExists && result.hasV31Result === false) {
-          setStatus("generating");
+        // data.status === "stage_complete" → continue to next stage
+      }
 
-          fetch("/api/v31-generate-report", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ assessmentId }),
-          })
-            .then((r) => r.json())
-            .then((data) => {
-              if (!cancelled) {
-                setStatus(data.ok ? "ready" : "error");
-              }
-            })
-            .catch(() => {
-              if (!cancelled) setStatus("error");
-            });
+      // Portfolio stage always returns "ready"; if loop exhausts without it, something is wrong
+      if (!cancelled) setStatus("error");
+    }
 
-          return;
-        }
-
-        setStatus("error");
-      })
-      .catch(() => {
-        if (!cancelled) setStatus("error");
-      });
+    run();
 
     return () => {
       cancelled = true;
@@ -130,11 +183,17 @@ export default function V31ReportHandoff({ assessmentId }) {
   // ── Generating ───────────────────────────────────────────────────────────────
 
   if (status === "generating") {
+    const label = generatingStep > 0 ? STAGE_LABELS[generatingStep - 1] : "";
     return (
       <div style={S.container}>
-        <h2 style={S.heading}>Your report is being generated.</h2>
+        <h2 style={S.heading}>Generating your report</h2>
+        {generatingStep > 0 && (
+          <p style={S.stepText}>
+            Step {generatingStep} of {STAGE_ENDPOINTS.length}: {label}
+          </p>
+        )}
         <p style={S.body}>
-          This usually takes a short moment. Please keep this page open.
+          Please keep this page open. This usually takes a minute or two.
         </p>
       </div>
     );
@@ -172,7 +231,7 @@ export default function V31ReportHandoff({ assessmentId }) {
     );
   }
 
-  // ── Error — Firestore read failed, document not found, or generation failed ──
+  // ── Error — generation failed or document not found ──────────────────────────
 
   return (
     <div style={S.container}>
