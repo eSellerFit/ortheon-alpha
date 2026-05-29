@@ -1,36 +1,42 @@
 /**
  * Ortheon MVP Cut v3.1 — Report Handoff Screen
  *
- * Bundle 25A / 26A / 26B.
+ * Bundle 25A / 26A / 26B / 26H.
  * Final assessment step — replaces legacy ResultsStep.
- * Checks whether v31Result exists in Firestore; if missing, orchestrates
- * the four staged generation API calls sequentially.
+ * Drives the v3.1 staged generation pipeline via status/advance endpoints.
+ * Resumable: reads current Firestore state on mount and continues from
+ * the last completed stage rather than restarting from scratch.
  *
  * Rules:
- * - Read only (Firestore check). No direct Firestore writes.
+ * - No direct Firestore reads/writes. All state via API.
  * - No AI calls. No API keys in frontend.
  * - Does not render the report — links to /report?documentId=<assessmentId>.
  * - Does not import or reference ResultsStep, PdfReport, or CareerDirectionMap.
  */
 
 import { useEffect, useState } from "react";
-import { readV31ResultViewModelFromFirestoreV31 } from "../viewer/readV31ResultViewModelFromFirestore.js";
 
 // ── Stage configuration ────────────────────────────────────────────────────────
 
-const STAGE_ENDPOINTS = [
-  "/api/v31-generation-profile",
-  "/api/v31-generation-transferability",
-  "/api/v31-generation-hypotheses",
-  "/api/v31-generation-portfolio",
-];
+const STAGE_KEYS = ["profile", "transferability", "hypotheses", "portfolio"];
 
-const STAGE_LABELS = [
-  "Analyzing your profile",
-  "Mapping transferable directions",
-  "Building direction hypotheses",
-  "Composing your final report",
-];
+const STAGE_LABELS = {
+  profile: "Analyzing your profile",
+  transferability: "Mapping transferable directions",
+  hypotheses: "Building direction hypotheses",
+  portfolio: "Composing your final report",
+};
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+async function postJSON(path, body) {
+  const resp = await fetch(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  return resp.json();
+}
 
 // ── Styles ─────────────────────────────────────────────────────────────────────
 
@@ -52,12 +58,6 @@ const S = {
     lineHeight: "1.65",
     margin: "0 0 20px",
   },
-  stepText: {
-    fontSize: "14px",
-    color: "#6b7280",
-    lineHeight: "1.55",
-    margin: "0 0 8px",
-  },
   ctaLink: {
     display: "inline-block",
     padding: "11px 26px",
@@ -70,97 +70,165 @@ const S = {
     marginTop: "4px",
     letterSpacing: "0.01em",
   },
+  retryBtn: {
+    display: "inline-block",
+    padding: "11px 26px",
+    background: "#245f73",
+    color: "#fff",
+    borderRadius: "8px",
+    fontWeight: "600",
+    fontSize: "15px",
+    border: "none",
+    cursor: "pointer",
+    marginTop: "4px",
+    letterSpacing: "0.01em",
+  },
   loadingText: {
     fontSize: "15px",
     color: "#aaa",
     paddingTop: "8px",
   },
+  stageList: {
+    listStyle: "none",
+    margin: "0 0 20px",
+    padding: 0,
+  },
+  stageRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    padding: "6px 0",
+    fontSize: "14px",
+  },
+  stageIcon: {
+    width: "20px",
+    textAlign: "center",
+    flexShrink: 0,
+  },
 };
 
+// ── Stage row ──────────────────────────────────────────────────────────────────
+
+function StageRow({ stageKey, isCompleted, isActive, isFailed }) {
+  let icon, iconColor;
+  if (isFailed) {
+    icon = "✕";
+    iconColor = "#dc2626";
+  } else if (isCompleted) {
+    icon = "✓";
+    iconColor = "#16a34a";
+  } else if (isActive) {
+    icon = "▸";
+    iconColor = "#245f73";
+  } else {
+    icon = "○";
+    iconColor = "#d1d5db";
+  }
+
+  const labelColor = isFailed
+    ? "#dc2626"
+    : isActive
+    ? "#111"
+    : isCompleted
+    ? "#444"
+    : "#9ca3af";
+
+  return (
+    <li style={S.stageRow}>
+      <span style={{ ...S.stageIcon, color: iconColor }}>{icon}</span>
+      <span style={{ color: labelColor, fontWeight: isActive ? "600" : "400" }}>
+        {STAGE_LABELS[stageKey]}
+      </span>
+    </li>
+  );
+}
+
 // ── States ─────────────────────────────────────────────────────────────────────
-// "loading"    — awaiting Firestore check
-// "generating" — orchestrating staged generation (generatingStep: 1-4)
-// "ready"      — v31Result exists; show link
-// "error"      — generation failed or document not found
+// "loading"    — awaiting status check
+// "generating" — advance loop running; stages updating from backend
+// "ready"      — v31Result exists; show report link
+// "failed"     — a stage failed; show retry button
 // "no-id"      — assessmentId prop is blank
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export default function V31ReportHandoff({ assessmentId }) {
-  const [status, setStatus] = useState(assessmentId ? "loading" : "no-id");
-  const [generatingStep, setGeneratingStep] = useState(0);
+  const [uiState, setUiState] = useState(assessmentId ? "loading" : "no-id");
+  const [completedStages, setCompletedStages] = useState([]);
+  const [nextStage, setNextStage] = useState(null);
+  const [failedStage, setFailedStage] = useState(null);
+  const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
     if (!assessmentId) {
-      setStatus("no-id");
+      setUiState("no-id");
       return;
     }
 
     let cancelled = false;
-    setStatus("loading");
-    setGeneratingStep(0);
+    setUiState("loading");
+    setCompletedStages([]);
+    setNextStage(null);
+    setFailedStage(null);
 
     async function run() {
-      let firestoreResult;
+      // 1. Read current generation state — no Claude call.
+      let statusData;
       try {
-        firestoreResult = await readV31ResultViewModelFromFirestoreV31({
-          documentId: assessmentId,
-        });
+        statusData = await postJSON("/api/v31-generation-status", { assessmentId });
       } catch {
-        if (!cancelled) setStatus("error");
+        if (!cancelled) setUiState("failed");
         return;
       }
-
       if (cancelled) return;
 
-      if (firestoreResult.ok) {
-        setStatus("ready");
+      if (!statusData.ok) {
+        setUiState("failed");
         return;
       }
 
-      if (!firestoreResult.documentExists || firestoreResult.hasV31Result !== false) {
-        setStatus("error");
+      if (statusData.status === "ready") {
+        setUiState("ready");
         return;
       }
 
-      // Document exists, no v31Result — orchestrate staged generation
-      setStatus("generating");
+      // Initialize progress display from server state so the UI reflects
+      // any stages already completed in a prior session.
+      setCompletedStages(statusData.completedStages || []);
+      setNextStage(statusData.nextStage || null);
+      setUiState("generating");
 
-      for (let i = 0; i < STAGE_ENDPOINTS.length; i++) {
+      // 2. Advance loop — one Claude call per iteration.
+      // Runs until ready, failed, or the component unmounts.
+      for (;;) {
         if (cancelled) return;
 
-        setGeneratingStep(i + 1);
-
-        let data;
+        let advData;
         try {
-          const resp = await fetch(STAGE_ENDPOINTS[i], {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ assessmentId }),
-          });
-          data = await resp.json();
+          advData = await postJSON("/api/v31-generation-advance", { assessmentId });
         } catch {
-          if (!cancelled) setStatus("error");
+          if (!cancelled) setUiState("failed");
           return;
         }
-
         if (cancelled) return;
 
-        if (!data.ok) {
-          setStatus("error");
+        if (!advData.ok) {
+          setFailedStage(advData.failedStage || null);
+          setUiState("failed");
           return;
         }
 
-        if (data.status === "ready") {
-          setStatus("ready");
+        setCompletedStages(advData.completedStages || []);
+        setNextStage(advData.nextStage || null);
+
+        if (advData.status === "ready") {
+          setUiState("ready");
           return;
         }
 
-        // data.status === "stage_complete" → continue to next stage
+        // stage_complete — brief pause before calling advance for the next stage.
+        await new Promise((resolve) => setTimeout(resolve, 300));
       }
-
-      // Portfolio stage always returns "ready"; if loop exhausts without it, something is wrong
-      if (!cancelled) setStatus("error");
     }
 
     run();
@@ -168,11 +236,19 @@ export default function V31ReportHandoff({ assessmentId }) {
     return () => {
       cancelled = true;
     };
-  }, [assessmentId]);
+  }, [assessmentId, retryKey]);
+
+  function handleRetry() {
+    setRetryKey((k) => k + 1);
+  }
+
+  const reportUrl = assessmentId
+    ? `/report?documentId=${encodeURIComponent(assessmentId)}`
+    : "/report";
 
   // ── Loading ──────────────────────────────────────────────────────────────────
 
-  if (status === "loading") {
+  if (uiState === "loading") {
     return (
       <div style={S.container}>
         <p style={S.loadingText}>Checking report status…</p>
@@ -182,26 +258,45 @@ export default function V31ReportHandoff({ assessmentId }) {
 
   // ── Generating ───────────────────────────────────────────────────────────────
 
-  if (status === "generating") {
-    const label = generatingStep > 0 ? STAGE_LABELS[generatingStep - 1] : "";
+  if (uiState === "generating") {
     return (
       <div style={S.container}>
-        <h2 style={S.heading}>Generating your report</h2>
-        {generatingStep > 0 && (
-          <p style={S.stepText}>
-            Step {generatingStep} of {STAGE_ENDPOINTS.length}: {label}
-          </p>
-        )}
+        <h2 style={S.heading}>Generating your Career Direction Report</h2>
+        <ul style={S.stageList}>
+          {STAGE_KEYS.map((key) => (
+            <StageRow
+              key={key}
+              stageKey={key}
+              isCompleted={completedStages.includes(key)}
+              isActive={nextStage === key}
+              isFailed={failedStage === key}
+            />
+          ))}
+        </ul>
         <p style={S.body}>
-          Please keep this page open. This usually takes a minute or two.
+          Please keep this page open. If you leave and come back, we'll continue
+          from the last completed step.
         </p>
       </div>
     );
   }
 
-  // ── Missing assessmentId ─────────────────────────────────────────────────────
+  // ── Ready ─────────────────────────────────────────────────────────────────────
 
-  if (status === "no-id") {
+  if (uiState === "ready") {
+    return (
+      <div style={S.container}>
+        <h2 style={S.heading}>Your Career Direction Report is ready.</h2>
+        <a href={reportUrl} style={S.ctaLink}>
+          View your report
+        </a>
+      </div>
+    );
+  }
+
+  // ── Missing assessmentId ──────────────────────────────────────────────────────
+
+  if (uiState === "no-id") {
     return (
       <div style={S.container}>
         <h2 style={S.heading}>Assessment submitted</h2>
@@ -214,32 +309,17 @@ export default function V31ReportHandoff({ assessmentId }) {
     );
   }
 
-  // ── Report ready — v31Result exists ─────────────────────────────────────────
-
-  if (status === "ready") {
-    const reportUrl = `/report?documentId=${encodeURIComponent(assessmentId)}`;
-    return (
-      <div style={S.container}>
-        <h2 style={S.heading}>Your Career Direction Report is ready.</h2>
-        <p style={S.body}>
-          Your assessment has been processed and your report is available.
-        </p>
-        <a href={reportUrl} style={S.ctaLink}>
-          View your report
-        </a>
-      </div>
-    );
-  }
-
-  // ── Error — generation failed or document not found ──────────────────────────
+  // ── Failed ────────────────────────────────────────────────────────────────────
 
   return (
     <div style={S.container}>
-      <h2 style={S.heading}>Assessment submitted</h2>
+      <h2 style={S.heading}>We paused while generating your report.</h2>
       <p style={S.body}>
-        Your assessment has been submitted. We could not generate the report
-        automatically right now. You'll receive the report link shortly.
+        Your assessment is saved. You can retry from the last completed step.
       </p>
+      <button type="button" style={S.retryBtn} onClick={handleRetry}>
+        Retry generation
+      </button>
     </div>
   );
 }
