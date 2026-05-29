@@ -166,6 +166,45 @@ export async function saveV31StageOutput({
 }
 
 /**
+ * Write a safe error record under v31Generation.lastError.
+ * Called by advance endpoint on stage failure.
+ * Non-fatal caller side — wrap in try/catch.
+ *
+ * @param {Object} options
+ * @param {string} options.documentId
+ * @param {string} options.stage       Public stage name ("profile" | …)
+ * @param {string} options.code        Short error code string
+ * @param {string} options.safeMessage User-safe message (no stack traces, no secrets)
+ */
+export async function saveV31GenerationError({
+  documentId,
+  stage,
+  code,
+  safeMessage,
+}) {
+  if (!writeEnabled()) {
+    throw new Error(
+      "V31_ENABLE_FIRESTORE_WRITE=true is required for staged generation."
+    );
+  }
+
+  const now = new Date().toISOString();
+  const ref = doc(db, "assessments", documentId.trim());
+
+  await updateDoc(ref, {
+    "v31Generation.status": "failed",
+    "v31Generation.updatedAt": now,
+    "v31Generation.lastError": {
+      stage,
+      code,
+      safeMessage,
+      failedAt: now,
+      retryable: true,
+    },
+  });
+}
+
+/**
  * Mark generation complete after v31Result has been written successfully.
  * Non-fatal if this fails — v31Result is the authoritative source.
  */
