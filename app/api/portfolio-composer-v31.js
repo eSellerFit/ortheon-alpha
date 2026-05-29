@@ -76,7 +76,7 @@ async function callAnthropicWithRetry(apiKey, model, prompt) {
         },
         body: JSON.stringify({
           model,
-          max_tokens: 4000,
+          max_tokens: 2500,
           messages: [{ role: "user", content: prompt }],
         }),
       });
@@ -289,6 +289,33 @@ function buildPrompt(portfolioComposerInput) {
   const cleanSynthesizedProfile = { ...synthesizedProfile };
   delete cleanSynthesizedProfile.competencySignals;
 
+  // Strip possibleDirectionArenas from transferabilityMap — already encoded in
+  // directionHypotheses.directionArena by stage 4. Cap all list fields at 3.
+  const cleanTransferabilityMap = Object.fromEntries(
+    Object.entries(transferabilityMap)
+      .filter(([k]) => k !== "possibleDirectionArenas")
+      .map(([k, v]) => [k, Array.isArray(v) ? v.slice(0, 3) : v])
+  );
+
+  // Compact directionHypotheses: cap at 3, keep only Alpha-relevant fields,
+  // cap list fields at 2 items. sourceTransferableAssets capped at 2.
+  const HYPOTHESIS_KEEP = new Set([
+    "directionArena", "directionStatement", "recommendationType", "routeType",
+    "confidence", "whyThisCouldWork", "mainRisks", "evidence",
+    "validationQuestions", "firstProofSteps", "financialSignal",
+    "constraintSignal", "sourceTransferableAssets",
+  ]);
+  const cleanDirectionHypotheses = (Array.isArray(directionHypotheses) ? directionHypotheses : [])
+    .slice(0, 3)
+    .map((h) => {
+      const out = {};
+      for (const [k, v] of Object.entries(h)) {
+        if (!HYPOTHESIS_KEEP.has(k)) continue;
+        out[k] = Array.isArray(v) ? v.slice(0, 2) : v;
+      }
+      return out;
+    });
+
   return `You are executing Ortheon MVP Cut v3.1 AI Call 4: Portfolio Composer.
 
 SYSTEM ROLE:
@@ -336,23 +363,29 @@ OUTPUT FORMAT:
 - Do not use rank.
 - Do not use numeric fit scores or percentages.
 
-COMPACT OUTPUT DISCIPLINE:
-- Return compact JSON. No extra whitespace inside string values.
-- Maximum 2–3 final directions as already required.
+COMPACT ALPHA OUTPUT DISCIPLINE:
+- Return compact JSON only.
+- Keep up to 3 final directions.
+- Do not force only 2 directions.
+- Use 3 directions when the third is clearly distinct, useful, and not repetitive.
+- If the third direction is weak or repetitive, return 2 directions.
+- Each direction should be useful but short.
 - Maximum 2 targetRoleExamples per direction.
 - Maximum 2 evidence items per direction.
 - Maximum 2 whyItFits items per direction.
 - Maximum 2 whyItIsCredible items per direction.
 - Maximum 2 whatMakesItRisky items per direction.
-- Maximum 2 notRecommendedIf items per direction.
-- Maximum 2 constraintsAndWarnings items per direction.
-- Maximum 2 portfolioLogic items in portfolioSummary.
-- Maximum 2 sentences per narrative field (overallInterpretation, mainTension, recommendedStrategy, firstValidationStep, bridgeStrategy, reason fields, caveats items).
+- Maximum 1 notRecommendedIf item per direction.
+- Maximum 1 constraintsAndWarnings item per direction.
+- Maximum 1 firstValidationStep per direction.
+- Maximum 2 sentences per narrative field.
 - Maximum 10 words per evidence string.
-- Maximum 2 rejectedDirections.
+- Maximum 1 rejectedDirection.
 - Maximum 1 qualityNotes item.
 - Maximum 2 missingInputsAffectingConfidence items.
-- Do not add long paragraphs.
+- Do not write long paragraphs.
+- Do not repeat the same evidence across directions.
+- If unsure, omit extra detail rather than expanding.
 
 FINAL PORTFOLIO RULES:
 - The final portfolio must only use directions that trace back to existing DirectionHypothesisV31 objects.
@@ -382,10 +415,10 @@ SYNTHESIZED PROFILE:
 ${JSON.stringify(cleanSynthesizedProfile, null, 2)}
 
 TRANSFERABILITY MAP:
-${JSON.stringify(transferabilityMap, null, 2)}
+${JSON.stringify(cleanTransferabilityMap, null, 2)}
 
 DIRECTION HYPOTHESES:
-${JSON.stringify(directionHypotheses, null, 2)}
+${JSON.stringify(cleanDirectionHypotheses, null, 2)}
 
 FINANCIAL MODEL:
 ${JSON.stringify(financialModel, null, 2)}
@@ -424,6 +457,15 @@ export default async function handler(req, res) {
 
   const model = process.env.CLAUDE_MODEL || "claude-sonnet-4-5-20250929";
   const prompt = buildPrompt(portfolioComposerInput);
+
+  const promptChars = prompt.length;
+  const approxPromptTokens = Math.round(promptChars / 4);
+  console.log("[portfolio-composer-v31]", JSON.stringify({
+    stage: "portfolio-composer-v31",
+    promptChars,
+    approxPromptTokens,
+    maxTokens: 2500,
+  }));
 
   try {
     const result = await callAnthropicWithRetry(
