@@ -522,11 +522,52 @@ export default async function handler(req, res) {
 
     console.log("[portfolio-composer-v31] usage:", apiUsage);
 
+    const stopReason = data?.stop_reason || null;
     const rawText = data?.content?.[0]?.text;
+    const rawTextLength = typeof rawText === "string" ? rawText.length : 0;
+
+    console.log("[portfolio-composer-v31] response meta:", JSON.stringify({
+      assessmentId,
+      stage: "portfolio",
+      stopReason,
+      rawTextLength,
+      inputTokens,
+      outputTokens,
+    }));
 
     if (!rawText || typeof rawText !== "string") {
+      console.error("[portfolio-composer-v31] empty raw text:", JSON.stringify({
+        assessmentId,
+        stage: "portfolio",
+        stopReason,
+        inputTokens,
+        outputTokens,
+      }));
+      if (stopReason === "max_tokens") {
+        return res.status(500).json({
+          error: "Portfolio output was cut short by the model token limit.",
+          code: "PORTFOLIO_TRUNCATED_OUTPUT",
+          detailHint: `stop_reason: max_tokens, outputTokens: ${outputTokens}`,
+        });
+      }
       return res.status(500).json({
         error: "Claude returned an empty response.",
+        code: "PORTFOLIO_BAD_JSON",
+        detailHint: `stop_reason: ${stopReason}, outputTokens: ${outputTokens}`,
+      });
+    }
+
+    if (stopReason === "max_tokens") {
+      console.error("[portfolio-composer-v31] output truncated (max_tokens):", JSON.stringify({
+        assessmentId,
+        stage: "portfolio",
+        rawTextLength,
+        outputTokens,
+      }));
+      return res.status(500).json({
+        error: "Portfolio output was cut short by the model token limit.",
+        code: "PORTFOLIO_TRUNCATED_OUTPUT",
+        detailHint: `stop_reason: max_tokens, rawTextLength: ${rawTextLength}, outputTokens: ${outputTokens}`,
       });
     }
 
@@ -537,26 +578,38 @@ export default async function handler(req, res) {
     });
 
     if (normalizedResult.errors.length > 0) {
-      console.error(
-        "[portfolio-composer-v31] output normalization error:",
-        normalizedResult.errors[0]?.message || normalizedResult.errors[0]?.type
-      );
+      const firstErr = normalizedResult.errors[0];
+      console.error("[portfolio-composer-v31] output normalization error:", JSON.stringify({
+        assessmentId,
+        stage: "portfolio",
+        errorType: firstErr?.type,
+        errorMessage: String(firstErr?.message || "").slice(0, 200),
+        rawTextLength,
+        stopReason,
+      }));
 
       return res.status(500).json({
         error: "Portfolio composition returned invalid JSON.",
+        code: "PORTFOLIO_BAD_JSON",
         details: normalizedResult.errors,
+        detailHint: `rawTextLength: ${rawTextLength}, stopReason: ${stopReason}, parseError: ${String(firstErr?.message || firstErr?.type || "").slice(0, 80)}`,
       });
     }
 
     if (!normalizedResult.validation.passed) {
-      console.error("[portfolio-composer-v31] validation failed:", {
+      const firstIssue = normalizedResult.validation.issues?.[0];
+      console.error("[portfolio-composer-v31] validation failed:", JSON.stringify({
+        assessmentId,
+        stage: "portfolio",
         issueCount: normalizedResult.validation.issueCount,
-        issues: normalizedResult.validation.issues,
-      });
+        firstIssue: String(firstIssue?.message || firstIssue || "").slice(0, 200),
+      }));
 
       return res.status(500).json({
         error: "Portfolio composition returned incomplete data.",
+        code: "PORTFOLIO_VALIDATION_FAILED",
         validation: normalizedResult.validation,
+        detailHint: `issueCount: ${normalizedResult.validation.issueCount}, firstIssue: ${String(firstIssue?.message || firstIssue || "").slice(0, 100)}`,
       });
     }
 
@@ -571,11 +624,17 @@ export default async function handler(req, res) {
       },
     });
   } catch (error) {
-    console.error("[portfolio-composer-v31] unexpected error:", error.message);
+    console.error("[portfolio-composer-v31] unexpected error:", JSON.stringify({
+      assessmentId,
+      stage: "portfolio",
+      errorName: error.name,
+      errorMessage: String(error.message || "").slice(0, 200),
+    }));
 
     return res.status(500).json({
       error: "Portfolio composition failed. Please try again.",
-      details: error.message,
+      code: "PORTFOLIO_UNKNOWN",
+      detailHint: `${error.name}: ${String(error.message || "").slice(0, 100)}`,
     });
   }
 }

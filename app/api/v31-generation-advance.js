@@ -51,9 +51,9 @@ function deriveCompletedAndNext(v31Generation) {
   return { completedStages, nextStage };
 }
 
-async function writeSafeError(documentId, stage, code, safeMessage) {
+async function writeSafeError(documentId, stage, code, safeMessage, detailHint) {
   try {
-    await saveV31GenerationError({ documentId, stage, code, safeMessage });
+    await saveV31GenerationError({ documentId, stage, code, safeMessage, detailHint });
   } catch {
     // Non-fatal — observability write only.
   }
@@ -123,12 +123,21 @@ export default async function handler(req, res) {
       stage: nextStage,
       force: false,
     });
-  } catch {
+  } catch (stageErr) {
+    const exceptionHint = `${stageErr?.name || "Error"}: ${String(stageErr?.message || "").slice(0, 100)}`;
+    console.error("[v31-generation-advance] stage exception:", JSON.stringify({
+      assessmentId: resolvedId,
+      stage: nextStage,
+      code: "STAGE_EXCEPTION",
+      errorName: stageErr?.name,
+      errorMessage: String(stageErr?.message || "").slice(0, 200),
+    }));
     await writeSafeError(
       resolvedId,
       nextStage,
       "STAGE_EXCEPTION",
-      `An unexpected error occurred in the ${nextStage} stage.`
+      `An unexpected error occurred in the ${nextStage} stage.`,
+      exceptionHint
     );
     return res.status(500).json({
       ok: false,
@@ -143,19 +152,24 @@ export default async function handler(req, res) {
   }
 
   if (!result.ok) {
-    await writeSafeError(
-      resolvedId,
-      nextStage,
-      "STAGE_FAILED",
-      result.error || `The ${nextStage} stage failed.`
-    );
+    const code = result.code || "STAGE_FAILED";
+    const safeMessage = result.error || `The ${nextStage} stage failed.`;
+    const detailHint = result.detailHint || null;
+    console.error("[v31-generation-advance] stage failed:", JSON.stringify({
+      assessmentId: resolvedId,
+      stage: nextStage,
+      code,
+      detailHint,
+      safeMessage: String(safeMessage).slice(0, 200),
+    }));
+    await writeSafeError(resolvedId, nextStage, code, safeMessage, detailHint);
     return res.status(500).json({
       ok: false,
       status: "failed",
       failedStage: nextStage,
       error: {
-        code: "STAGE_FAILED",
-        safeMessage: result.error || `The ${nextStage} stage failed.`,
+        code,
+        safeMessage,
         retryable: true,
       },
     });

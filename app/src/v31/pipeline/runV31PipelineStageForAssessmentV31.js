@@ -304,13 +304,44 @@ async function runPortfolioStage({
   });
 
   if (!result.ok || !validationPassed(result.body)) {
-    return { ok: false, error: "Portfolio composition failed.", stage: "portfolio" };
+    const code = result.body?.code || "PORTFOLIO_UNKNOWN";
+    const detailHint = result.body?.detailHint || null;
+    const safeMessage = result.body?.error || "Portfolio composition failed.";
+    console.error("[v31-stage-service] portfolio stage failed:", JSON.stringify({
+      assessmentId: resolvedAssessmentId,
+      stage: "portfolio",
+      httpStatus: result.httpStatus,
+      code,
+      detailHint,
+      safeMessage: String(safeMessage).slice(0, 200),
+      validationIssueCount: result.body?.validation?.issueCount ?? null,
+      firstValidationIssue: String(
+        result.body?.validation?.issues?.[0]?.message ||
+        result.body?.validation?.issues?.[0] || ""
+      ).slice(0, 100),
+    }));
+    return { ok: false, error: safeMessage, stage: "portfolio", code, detailHint };
   }
 
   const rawFinalPortfolio = result.body.finalPortfolio || null;
-  const finalPortfolio = rawFinalPortfolio
-    ? applyFinalPortfolioPolicyV31(rawFinalPortfolio)
-    : null;
+  let finalPortfolio;
+  try {
+    finalPortfolio = rawFinalPortfolio ? applyFinalPortfolioPolicyV31(rawFinalPortfolio) : null;
+  } catch (policyErr) {
+    console.error("[v31-stage-service] portfolio policy error:", JSON.stringify({
+      assessmentId: resolvedAssessmentId,
+      stage: "portfolio",
+      errorName: policyErr.name,
+      errorMessage: String(policyErr.message || "").slice(0, 200),
+    }));
+    return {
+      ok: false,
+      error: "Portfolio policy application failed.",
+      stage: "portfolio",
+      code: "PORTFOLIO_POLICY_FAILED",
+      detailHint: `${policyErr.name}: ${String(policyErr.message || "").slice(0, 100)}`,
+    };
+  }
 
   const portfolioApiUsage = safeApiUsage(result.body);
 
@@ -382,8 +413,19 @@ async function runPortfolioStage({
       requireExistingDocument: true,
     });
   } catch (err) {
-    console.error("[v31-stage-service] v31Result write error:", err.message);
-    return { ok: false, error: "Failed to save final report.", stage: "portfolio" };
+    console.error("[v31-stage-service] v31Result write error:", JSON.stringify({
+      assessmentId: resolvedAssessmentId,
+      stage: "portfolio",
+      errorName: err.name,
+      errorMessage: String(err.message || "").slice(0, 200),
+    }));
+    return {
+      ok: false,
+      error: "Failed to save final report.",
+      stage: "portfolio",
+      code: "PORTFOLIO_PERSISTENCE_FAILED",
+      detailHint: `${err.name}: ${String(err.message || "").slice(0, 100)}`,
+    };
   }
 
   // Mark generation complete — non-fatal if this fails (v31Result is the source of truth)

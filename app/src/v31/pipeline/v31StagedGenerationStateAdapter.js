@@ -175,12 +175,14 @@ export async function saveV31StageOutput({
  * @param {string} options.stage       Public stage name ("profile" | …)
  * @param {string} options.code        Short error code string
  * @param {string} options.safeMessage User-safe message (no stack traces, no secrets)
+ * @param {string} [options.detailHint] Optional non-sensitive diagnostic hint for ops (not exposed to frontend)
  */
 export async function saveV31GenerationError({
   documentId,
   stage,
   code,
   safeMessage,
+  detailHint,
 }) {
   if (!writeEnabled()) {
     throw new Error(
@@ -200,6 +202,7 @@ export async function saveV31GenerationError({
       safeMessage,
       failedAt: now,
       retryable: true,
+      ...(detailHint ? { detailHint } : {}),
     },
   });
 }
