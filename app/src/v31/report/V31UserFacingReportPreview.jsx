@@ -127,12 +127,33 @@ const S = {
   },
 
   // Executive Summary
-  headline: {
-    fontSize: "28px",
+  productTitle: {
+    fontSize: "22px",
     fontWeight: "700",
-    lineHeight: "1.25",
+    lineHeight: "1.3",
     color: "#111",
-    marginBottom: "18px",
+    margin: "0 0 16px",
+  },
+  overallReadCard: {
+    background: "#f8f9fa",
+    border: "1px solid #e2e8ed",
+    borderRadius: "8px",
+    padding: "14px 18px",
+    marginBottom: "14px",
+  },
+  overallReadLabel: {
+    fontSize: "11px",
+    fontWeight: "600",
+    color: "#6b7280",
+    textTransform: "uppercase",
+    letterSpacing: "0.06em",
+    marginBottom: "6px",
+  },
+  overallReadText: {
+    fontSize: "14px",
+    color: "#333",
+    lineHeight: "1.6",
+    margin: 0,
   },
 
   // Stronger strategy / tension cards
@@ -1097,7 +1118,13 @@ export default function V31UserFacingReportPreview() {
       </div>
 
       {/* ── 1. Executive Summary ── */}
-      {cover.headline && <div style={S.headline}>{cover.headline}</div>}
+      <h1 style={S.productTitle}>Your Career Direction Report</h1>
+      {cover.headline && (
+        <div style={S.overallReadCard}>
+          <div style={S.overallReadLabel}>Overall read</div>
+          <p style={S.overallReadText}>{cover.headline}</p>
+        </div>
+      )}
       {cover.recommendedStrategy && (
         <StrategyCard label="Recommended strategy" value={cover.recommendedStrategy} />
       )}
