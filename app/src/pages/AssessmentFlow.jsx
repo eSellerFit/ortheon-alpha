@@ -52,7 +52,19 @@ function AssessmentFlow() {
     setCurrentStep(7);
   }
 
-  function handlePriorityWeightsComplete() {
+  async function handlePriorityWeightsComplete() {
+    // Kick off server-side QStash generation chain. Fire-and-await the publish
+    // call (fast — just queues the first stage message), then navigate regardless.
+    // V31ReportHandoff handles the case where generation hasn't started yet.
+    try {
+      await fetch("/api/v31-generation-advance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assessmentId, action: "start-qstash" }),
+      });
+    } catch (err) {
+      console.warn("[AssessmentFlow] QStash start failed (non-fatal):", err?.message);
+    }
     setCurrentStep(8);
   }
 
