@@ -135,7 +135,7 @@ export async function publishNextV31Advance(assessmentId) {
   let resp;
   let data;
   try {
-    resp = await fetch(`${QSTASH_PUBLISH_BASE}${dest}`, {
+    resp = await fetch(`${QSTASH_PUBLISH_BASE}${encodeURIComponent(dest)}`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
