@@ -76,7 +76,7 @@ async function callAnthropicWithRetry(apiKey, model, prompt) {
         },
         body: JSON.stringify({
           model,
-          max_tokens: 2500,
+          max_tokens: 4000, // raised from 2500 — safe now that generation runs via QStash with maxDuration 300
           messages: [{ role: "user", content: prompt }],
         }),
       });
@@ -464,7 +464,7 @@ export default async function handler(req, res) {
     stage: "portfolio-composer-v31",
     promptChars,
     approxPromptTokens,
-    maxTokens: 2500,
+    maxTokens: 4000,
   }));
 
   try {
