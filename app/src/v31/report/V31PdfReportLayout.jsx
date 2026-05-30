@@ -29,6 +29,23 @@ const PAGE = {
 
 // ── Shared helpers ─────────────────────────────────────────────────────────────
 
+const WORK_MODEL_LABELS = {
+  consulting_fractional: "Consulting / Fractional",
+  interim_fractional: "Interim / Fractional",
+  enterprise_employment: "Employed (Full-Time)",
+  full_time_employment: "Employed (Full-Time)",
+  consulting_advisory: "Consulting / Advisory",
+  freelance: "Freelance",
+  portfolio_career: "Portfolio Career",
+  entrepreneurial_operator: "Entrepreneur / Founder",
+  founder: "Entrepreneur / Founder",
+  technical_specialist: "Technical Specialist",
+  operations_leadership: "Operations Leadership",
+  education_training: "Education / Training",
+  nonprofit_public: "Non-Profit / Public Sector",
+  regulated_profession: "Regulated Profession",
+};
+
 function safeArray(v) {
   return Array.isArray(v) ? v : [];
 }
@@ -418,7 +435,7 @@ function PdfPage2({ compactDirectionCards, primaryDirectionDeepDive }) {
               )}
               {card.workModel && (
                 <PdfBadge
-                  label={card.workModel}
+                  label={WORK_MODEL_LABELS[card.workModel] ?? card.workModel}
                   bgColor="#f5f3ff"
                   textColor="#6d28d9"
                 />

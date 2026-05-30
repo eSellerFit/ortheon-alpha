@@ -572,9 +572,27 @@ function routeBadge(route) {
   return badge(route, { background: "#eff6ff", color: "#1d4ed8" });
 }
 
+const WORK_MODEL_LABELS = {
+  consulting_fractional: "Consulting / Fractional",
+  interim_fractional: "Interim / Fractional",
+  enterprise_employment: "Employed (Full-Time)",
+  full_time_employment: "Employed (Full-Time)",
+  consulting_advisory: "Consulting / Advisory",
+  freelance: "Freelance",
+  portfolio_career: "Portfolio Career",
+  entrepreneurial_operator: "Entrepreneur / Founder",
+  founder: "Entrepreneur / Founder",
+  technical_specialist: "Technical Specialist",
+  operations_leadership: "Operations Leadership",
+  education_training: "Education / Training",
+  nonprofit_public: "Non-Profit / Public Sector",
+  regulated_profession: "Regulated Profession",
+};
+
 function workBadge(work) {
   if (!work) return null;
-  return badge(work, { background: "#f5f3ff", color: "#6d28d9" });
+  const label = WORK_MODEL_LABELS[work] ?? work;
+  return badge(label, { background: "#f5f3ff", color: "#6d28d9" });
 }
 
 // ── AI Durability Badge ────────────────────────────────────────────────────────

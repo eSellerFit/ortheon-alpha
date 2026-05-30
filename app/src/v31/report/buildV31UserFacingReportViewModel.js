@@ -1085,11 +1085,15 @@ function buildValidationPlan(summary, directions) {
     3
   );
 
-  // evidenceToBuild: from primary direction's risks only (caveats shown elsewhere)
-  const primaryOrFirst = prioritized[0] || null;
+  // evidenceToBuild: validation steps not already in next30Days
   const evidenceToBuild = clamp(
     dedupByNearMatch(
-      sanitizeTextArray(stringArray(primaryOrFirst?.whatMakesItRisky))
+      excludeAlreadySeen(
+        sorted
+          .map((d) => cleanFirstStep(stringOrEmpty(d.firstValidationStep)))
+          .filter(Boolean),
+        next30Days
+      )
     ),
     3
   );
@@ -1111,19 +1115,19 @@ function buildValidationPlan(summary, directions) {
     2
   );
 
-  // decisionsToMake: mainTension + bridge strategies, max 2
-  const mainTension = stringOrEmpty(summary.mainTension);
-  const bridgeStrategies = clamp(
-    dedupByNearMatch(
-      bridgeDirs
-        .map((d) => sanitizeConstraintText(stringOrEmpty(d.bridgeStrategy)))
-        .filter(Boolean)
-    ),
-    2
+  // decisionsToMake: conditions from primary/secondary paths that frame a decision
+  const primarySecondaryDirs = sorted.filter(
+    (d) => ["primary", "secondary"].includes(stringOrEmpty(d.recommendationType).toLowerCase())
   );
-
   const decisionsToMake = clamp(
-    dedupByNearMatch([mainTension, ...bridgeStrategies].filter(Boolean)),
+    dedupByNearMatch(
+      excludeAlreadySeen(
+        sanitizeTextArray(
+          primarySecondaryDirs.flatMap((d) => stringArray(d.notRecommendedIf))
+        ),
+        [...next30Days, ...conversationsToHave]
+      )
+    ),
     2
   );
 
@@ -1147,8 +1151,9 @@ const MISSING_KEYWORDS = [
  * @param {Array} directions
  * @param {string[]} allCaveats - full deduped caveats list
  * @param {string[]} shownCaveats - caveats already shown in keySignals; exclude from output
+ * @param {string[]} missingInputsFromPortfolio - portfolio-level missingInputsAffectingConfidence
  */
-function buildConfidenceNotes(directions, allCaveats, shownCaveats) {
+function buildConfidenceNotes(directions, allCaveats, shownCaveats, missingInputsFromPortfolio) {
   const remainingCaveats = clamp(
     dedupByNearMatch(excludeAlreadySeen(allCaveats, shownCaveats)),
     3
@@ -1172,17 +1177,11 @@ function buildConfidenceNotes(directions, allCaveats, shownCaveats) {
     3
   );
 
-  // missingEvidence: from low-confidence direction constraints (not caveats, already shown above)
+  // missingEvidence: from portfolio-level missingInputsAffectingConfidence
   const missingEvidence = clamp(
     dedupByNearMatch(
       excludeAlreadySeen(
-        sanitizeTextArray(
-          lowConfidenceDirs.flatMap((d) =>
-            stringArray(d.constraintsAndWarnings)
-          )
-        ).filter((item) =>
-          MISSING_KEYWORDS.some((kw) => item.toLowerCase().includes(kw))
-        ),
+        sanitizeTextArray(missingInputsFromPortfolio || []),
         [...shownCaveats, ...remainingCaveats]
       )
     ),
@@ -1329,7 +1328,7 @@ export function buildV31UserFacingReportViewModelV31(internalViewModel, { curren
   };
 
   // confidenceNotes — receives topCaveats as already-shown set to avoid repeats
-  const confidenceNotesBase = buildConfidenceNotes(directions, allCaveats, topCaveats);
+  const confidenceNotesBase = buildConfidenceNotes(directions, allCaveats, topCaveats, missingInputsAffectingConfidence);
 
   // assessmentImprovementInputs — from missingInputsAffectingConfidence[], max 4,
   // deduped against existing caveats/missingEvidence to avoid repetition
