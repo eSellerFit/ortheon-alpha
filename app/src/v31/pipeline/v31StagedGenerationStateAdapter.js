@@ -240,6 +240,57 @@ export async function saveV31GenerationTriggerMeta({
 }
 
 /**
+ * Write retry scheduling metadata when a stage-level retry is queued.
+ * Clears v31Generation.lastError so /status does not flip to "failed" during retry.
+ * Stores the triggering error under v31Generation.retry.lastRetryableError.
+ * Best-effort — callers must wrap in try/catch.
+ *
+ * @param {Object} options
+ * @param {string} options.documentId
+ * @param {string} options.stage             Public stage name
+ * @param {number} options.round             1-based retry round number
+ * @param {string} options.scheduledAt       ISO timestamp of when retry was scheduled
+ * @param {string} options.nextAttemptAt     ISO timestamp of expected delivery
+ * @param {string} options.reason            Error code that triggered the retry
+ * @param {string|null} [options.messageId]  QStash messageId of the scheduled message
+ * @param {Object} [options.lastRetryableError]  Safe snapshot of the triggering error
+ */
+export async function saveV31GenerationRetryState({
+  documentId,
+  stage,
+  round,
+  scheduledAt,
+  nextAttemptAt,
+  reason,
+  messageId,
+  lastRetryableError,
+}) {
+  if (!writeEnabled()) {
+    throw new Error(
+      "V31_ENABLE_FIRESTORE_WRITE=true is required for staged generation."
+    );
+  }
+
+  const now = new Date().toISOString();
+  const ref = doc(db, "assessments", documentId.trim());
+
+  await updateDoc(ref, {
+    "v31Generation.status": "retrying",
+    "v31Generation.updatedAt": now,
+    "v31Generation.lastError": null,
+    "v31Generation.retry": {
+      stage,
+      round,
+      scheduledAt,
+      nextAttemptAt,
+      reason,
+      messageId: messageId || null,
+      ...(lastRetryableError ? { lastRetryableError } : {}),
+    },
+  });
+}
+
+/**
  * Mark generation complete after v31Result has been written successfully.
  * Non-fatal if this fails — v31Result is the authoritative source.
  */

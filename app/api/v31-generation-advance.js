@@ -28,6 +28,7 @@ import {
   readV31GenerationDocumentState,
   saveV31GenerationError,
   saveV31GenerationTriggerMeta,
+  saveV31GenerationRetryState,
 } from "../src/v31/pipeline/v31StagedGenerationStateAdapter.js";
 import {
   verifyQstashSignature,
@@ -35,6 +36,33 @@ import {
 } from "../src/v31/pipeline/qstashV31Helper.js";
 
 const STAGE_ORDER = ["profile", "transferability", "hypotheses", "portfolio"];
+
+// ── Stage-level retry policy ───────────────────────────────────────────────────
+
+const MAX_STAGE_RETRY_ROUNDS = 3;
+const STAGE_RETRY_DELAYS_SECONDS = [30, 90, 180];
+
+// Codes that indicate a transient upstream/network failure worth retrying.
+// STAGE_EXCEPTION is retryable only for the portfolio stage (heavyweight Claude call).
+// PORTFOLIO_UNKNOWN is retryable only when the safe message confirms a Claude API failure.
+const BASE_RETRYABLE_CODES = new Set([
+  "CLAUDE_RATE_LIMIT",
+  "CLAUDE_UPSTREAM_ERROR",
+  "CLAUDE_NETWORK_ERROR",
+  "CLAUDE_TIMEOUT",
+  "CLAUDE_EMPTY_RESPONSE",
+]);
+
+function isRetryableCode(code, stage, safeMessage) {
+  if (BASE_RETRYABLE_CODES.has(code)) return true;
+  if (code === "STAGE_EXCEPTION" && stage === "portfolio") return true;
+  if (
+    code === "PORTFOLIO_UNKNOWN" &&
+    typeof safeMessage === "string" &&
+    safeMessage.includes("Claude API call failed")
+  ) return true;
+  return false;
+}
 
 const INTERNAL_STAGE_NAME = {
   profile: "profileSynthesizer",
@@ -77,6 +105,68 @@ async function writeTriggerMeta(documentId, trigger, lastQstashMessageId) {
   } catch {
     // Non-fatal — observability write only.
   }
+}
+
+/**
+ * Attempt to schedule a stage-level retry via a delayed QStash message.
+ *
+ * Returns { scheduled: true, retryRound, delaySeconds } on success,
+ * or { scheduled: false } if not eligible or if QStash publish fails.
+ *
+ * Only fires for QStash-driven requests (isQstash=true) — manual/curl
+ * calls fall through directly to the failure path.
+ */
+async function tryScheduleRetry({ isQstash, resolvedId, nextStage, code, safeMessage, detailHint, state }) {
+  if (!isQstash) return { scheduled: false };
+  if (!isRetryableCode(code, nextStage, safeMessage)) return { scheduled: false };
+
+  const currentRound = state.v31Generation?.retry?.round || 0;
+  const retryRound = currentRound + 1;
+  if (retryRound > MAX_STAGE_RETRY_ROUNDS) return { scheduled: false };
+
+  const delaySeconds = STAGE_RETRY_DELAYS_SECONDS[retryRound - 1];
+  const publishResult = await publishNextV31Advance(resolvedId, { delaySeconds });
+
+  if (!publishResult.ok) {
+    console.error("[v31-generation-advance] retry publish failed:", JSON.stringify({
+      assessmentId: resolvedId,
+      stage: nextStage,
+      retryRound,
+      error: publishResult.error,
+    }));
+    return { scheduled: false };
+  }
+
+  const now = new Date().toISOString();
+  const nextAttemptAt = new Date(Date.now() + delaySeconds * 1000).toISOString();
+  try {
+    await saveV31GenerationRetryState({
+      documentId: resolvedId,
+      stage: nextStage,
+      round: retryRound,
+      scheduledAt: now,
+      nextAttemptAt,
+      reason: code,
+      messageId: publishResult.messageId || null,
+      lastRetryableError: {
+        code,
+        failedAt: now,
+        ...(detailHint ? { detailHint } : {}),
+      },
+    });
+  } catch {
+    // Non-fatal — observability write only. Retry is still scheduled.
+  }
+
+  console.log("[v31-generation-advance] retry_scheduled:", JSON.stringify({
+    assessmentId: resolvedId,
+    stage: nextStage,
+    retryRound,
+    delaySeconds,
+    messageId: publishResult.messageId,
+  }));
+
+  return { scheduled: true, retryRound, delaySeconds };
 }
 
 export default async function handler(req, res) {
@@ -212,31 +302,34 @@ export default async function handler(req, res) {
       force: false,
     });
   } catch (stageErr) {
+    const code = "STAGE_EXCEPTION";
+    const safeMessage = `An unexpected error occurred in the ${nextStage} stage.`;
     const exceptionHint = `${stageErr?.name || "Error"}: ${String(stageErr?.message || "").slice(0, 100)}`;
     console.error("[v31-generation-advance] stage exception:", JSON.stringify({
       assessmentId: resolvedId,
       stage: nextStage,
       trigger: resolvedTrigger,
-      code: "STAGE_EXCEPTION",
+      code,
       errorName: stageErr?.name,
       errorMessage: String(stageErr?.message || "").slice(0, 200),
     }));
-    await writeSafeError(
-      resolvedId,
-      nextStage,
-      "STAGE_EXCEPTION",
-      `An unexpected error occurred in the ${nextStage} stage.`,
-      exceptionHint
-    );
+    const retryResult = await tryScheduleRetry({
+      isQstash, resolvedId, nextStage, code, safeMessage, detailHint: exceptionHint, state,
+    });
+    if (retryResult.scheduled) {
+      return res.status(200).json({
+        ok: true,
+        status: "retry_scheduled",
+        retryRound: retryResult.retryRound,
+        delaySeconds: retryResult.delaySeconds,
+      });
+    }
+    await writeSafeError(resolvedId, nextStage, code, safeMessage, exceptionHint);
     return res.status(500).json({
       ok: false,
       status: "failed",
       failedStage: nextStage,
-      error: {
-        code: "STAGE_EXCEPTION",
-        safeMessage: `An unexpected error occurred in the ${nextStage} stage.`,
-        retryable: true,
-      },
+      error: { code, safeMessage, retryable: true },
     });
   }
 
@@ -252,16 +345,23 @@ export default async function handler(req, res) {
       detailHint,
       safeMessage: String(safeMessage).slice(0, 200),
     }));
+    const retryResult = await tryScheduleRetry({
+      isQstash, resolvedId, nextStage, code, safeMessage, detailHint, state,
+    });
+    if (retryResult.scheduled) {
+      return res.status(200).json({
+        ok: true,
+        status: "retry_scheduled",
+        retryRound: retryResult.retryRound,
+        delaySeconds: retryResult.delaySeconds,
+      });
+    }
     await writeSafeError(resolvedId, nextStage, code, safeMessage, detailHint);
     return res.status(500).json({
       ok: false,
       status: "failed",
       failedStage: nextStage,
-      error: {
-        code,
-        safeMessage,
-        retryable: true,
-      },
+      error: { code, safeMessage, retryable: true },
     });
   }
 

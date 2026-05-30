@@ -44,6 +44,9 @@ function deriveStagesSummary(v31Generation) {
 
 function deriveStatus(v31Generation, completedStages) {
   if (!v31Generation) return "idle";
+  // "retrying" checked before lastError — a retry clears lastError but sets status="retrying".
+  // A stale lastError from a previous attempt must not flip the UI to failed during retry.
+  if (v31Generation.status === "retrying") return "generating";
   if (v31Generation.lastError || v31Generation.status === "failed") return "failed";
   if (completedStages.length > 0) return "partial";
   if (v31Generation.status === "running") return "running";

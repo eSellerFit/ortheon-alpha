@@ -77,9 +77,10 @@ export async function verifyQstashSignature(signatureJwt, rawBodyStr) {
  *   APP_BASE_URL   — e.g. https://www.ortheon.app
  *
  * @param {string} assessmentId
+ * @param {{ delaySeconds?: number }} [opts]
  * @returns {Promise<{ ok: boolean, messageId?: string | null, error?: string }>}
  */
-export async function publishNextV31Advance(assessmentId) {
+export async function publishNextV31Advance(assessmentId, { delaySeconds } = {}) {
   const token = process.env.QSTASH_TOKEN;
   const appBaseUrl = process.env.APP_BASE_URL;
 
@@ -97,14 +98,19 @@ export async function publishNextV31Advance(assessmentId) {
 
   try {
     const client = new Client({ token, baseUrl: qstashBaseUrl });
-    const result = await client.publishJSON({
+    const publishOpts = {
       url: dest,
       body: { assessmentId, trigger: "qstash" },
-    });
+    };
+    if (delaySeconds && delaySeconds > 0) {
+      publishOpts.delay = Math.ceil(delaySeconds);
+    }
+    const result = await client.publishJSON(publishOpts);
     const messageId = result?.messageId ?? result?.messageID ?? null;
     console.log("[qstashV31Helper] published:", JSON.stringify({
       qstashHost: new URL(qstashBaseUrl).host,
       destPath: "/api/v31-generation-advance",
+      delaySeconds: delaySeconds || 0,
       messageId,
     }));
     return { ok: true, messageId };
