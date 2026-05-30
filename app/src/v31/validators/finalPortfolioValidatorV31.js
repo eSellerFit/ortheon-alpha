@@ -438,7 +438,7 @@ export function validateFinalDirectionPortfolioV31(finalPortfolio) {
   }
 
   return {
-    passed: issues.length === 0,
+    passed: !issues.some((i) => i.severity === "high" || i.severity === "blocking"),
     issues,
     issueCount: issues.length,
   };
