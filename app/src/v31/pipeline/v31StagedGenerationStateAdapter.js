@@ -208,6 +208,38 @@ export async function saveV31GenerationError({
 }
 
 /**
+ * Write trigger observability metadata to v31Generation.
+ * Best-effort — callers must wrap in try/catch.
+ * Silently skips if writes are disabled.
+ *
+ * @param {Object} options
+ * @param {string} options.documentId
+ * @param {"qstash"|"manual"} options.trigger
+ * @param {string|null} [options.lastQstashMessageId]  messageId of the next enqueued QStash message.
+ */
+export async function saveV31GenerationTriggerMeta({
+  documentId,
+  trigger,
+  lastQstashMessageId,
+}) {
+  if (!writeEnabled()) return;
+
+  const now = new Date().toISOString();
+  const ref = doc(db, "assessments", documentId.trim());
+
+  const update = {
+    "v31Generation.trigger": trigger,
+    "v31Generation.updatedAt": now,
+  };
+
+  if (lastQstashMessageId) {
+    update["v31Generation.lastQstashMessageId"] = lastQstashMessageId;
+  }
+
+  await updateDoc(ref, update);
+}
+
+/**
  * Mark generation complete after v31Result has been written successfully.
  * Non-fatal if this fails — v31Result is the authoritative source.
  */

@@ -1,12 +1,19 @@
 /**
  * Ortheon MVP Cut v3.1 — Generation Advance
  *
- * Bundle 26G.
+ * Bundle 26G / 27A.
  * POST /api/v31-generation-advance
- * Body: { assessmentId }
+ * Body: { assessmentId } | { assessmentId, trigger: "qstash" }
  *
  * Reads current generation state, determines the next incomplete stage,
  * and runs exactly that one stage. Returns safe result metadata.
+ *
+ * QStash (Bundle 27A):
+ * - When trigger="qstash" or upstash-signature header is present, verifies
+ *   the QStash JWT signature before proceeding.
+ * - After a successful stage_complete, enqueues the next QStash message so
+ *   the pipeline continues server-side without the browser staying open.
+ * - Manual/curl calls (no trigger, no signature header) are unchanged.
  *
  * Rules:
  * - Runs at most one Claude call per request.
@@ -20,7 +27,12 @@ import { runV31PipelineStageForAssessmentV31 } from "../src/v31/pipeline/runV31P
 import {
   readV31GenerationDocumentState,
   saveV31GenerationError,
+  saveV31GenerationTriggerMeta,
 } from "../src/v31/pipeline/v31StagedGenerationStateAdapter.js";
+import {
+  verifyQstashSignature,
+  publishNextV31Advance,
+} from "../src/v31/pipeline/qstashV31Helper.js";
 
 const STAGE_ORDER = ["profile", "transferability", "hypotheses", "portfolio"];
 
@@ -59,21 +71,63 @@ async function writeSafeError(documentId, stage, code, safeMessage, detailHint) 
   }
 }
 
+async function writeTriggerMeta(documentId, trigger, lastQstashMessageId) {
+  try {
+    await saveV31GenerationTriggerMeta({ documentId, trigger, lastQstashMessageId });
+  } catch {
+    // Non-fatal — observability write only.
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ ok: false, error: "Method not allowed." });
   }
 
-  const { assessmentId } = req.body || {};
+  const { assessmentId, trigger } = req.body || {};
 
   if (!assessmentId || typeof assessmentId !== "string" || !assessmentId.trim()) {
     return res.status(400).json({ ok: false, error: "assessmentId is required." });
   }
 
   const resolvedId = assessmentId.trim();
+  const resolvedTrigger = trigger === "qstash" ? "qstash" : "manual";
   const reportUrl = `/report?documentId=${encodeURIComponent(resolvedId)}`;
 
-  // Read current state — one Firestore round-trip for routing.
+  // ── QStash signature verification ──────────────────────────────────────────
+  // Required when trigger="qstash" or upstash-signature header is present.
+  // Manual/curl calls (no trigger, no header) skip verification.
+
+  const signatureHeader = req.headers?.["upstash-signature"] || "";
+  const isQstash = resolvedTrigger === "qstash" || !!signatureHeader;
+  let incomingJti = null;
+
+  if (isQstash) {
+    if (!signatureHeader) {
+      // Claimed to be a QStash request but no signature supplied.
+      return res.status(401).json({ ok: false, error: "QStash signature header required." });
+    }
+
+    // Reconstruct raw body string for body-hash verification.
+    // Both publisher and receiver use the same compact JSON format, so this is stable.
+    const rawBodyStr = JSON.stringify(req.body);
+
+    const verification = verifyQstashSignature(signatureHeader, rawBodyStr);
+
+    if (!verification.ok) {
+      console.error("[v31-generation-advance] QStash verification failed:", JSON.stringify({
+        assessmentId: resolvedId,
+        reason: verification.reason,
+      }));
+      // Return 401 so QStash does not retry (4xx = no retry in QStash).
+      return res.status(401).json({ ok: false, error: "QStash signature verification failed." });
+    }
+
+    incomingJti = verification.jti;
+  }
+
+  // ── Read current state ─────────────────────────────────────────────────────
+
   let state;
   try {
     state = await readV31GenerationDocumentState({ documentId: resolvedId });
@@ -85,8 +139,14 @@ export default async function handler(req, res) {
     return res.status(404).json({ ok: false, error: state.error || "Assessment not found." });
   }
 
-  // If v31Result already exists, the pipeline is done.
+  // If v31Result already exists, the pipeline is done — do not enqueue another message.
   if (state.v31ResultExists) {
+    console.log("[v31-generation-advance]", JSON.stringify({
+      assessmentId: resolvedId,
+      trigger: resolvedTrigger,
+      status: "ready",
+      qstashEnqueued: false,
+    }));
     return res.status(200).json({
       ok: true,
       status: "ready",
@@ -99,7 +159,7 @@ export default async function handler(req, res) {
 
   const { completedStages, nextStage } = deriveCompletedAndNext(state.v31Generation);
 
-  // All stages appear complete but v31Result is missing — pipeline is in a broken state.
+  // All stages appear complete but v31Result is missing — broken pipeline state.
   if (!nextStage) {
     return res.status(200).json({
       ok: false,
@@ -114,7 +174,8 @@ export default async function handler(req, res) {
     });
   }
 
-  // Run exactly one stage — the next incomplete one.
+  // ── Run exactly one stage ──────────────────────────────────────────────────
+
   let result;
   try {
     result = await runV31PipelineStageForAssessmentV31({
@@ -128,6 +189,7 @@ export default async function handler(req, res) {
     console.error("[v31-generation-advance] stage exception:", JSON.stringify({
       assessmentId: resolvedId,
       stage: nextStage,
+      trigger: resolvedTrigger,
       code: "STAGE_EXCEPTION",
       errorName: stageErr?.name,
       errorMessage: String(stageErr?.message || "").slice(0, 200),
@@ -158,6 +220,7 @@ export default async function handler(req, res) {
     console.error("[v31-generation-advance] stage failed:", JSON.stringify({
       assessmentId: resolvedId,
       stage: nextStage,
+      trigger: resolvedTrigger,
       code,
       detailHint,
       safeMessage: String(safeMessage).slice(0, 200),
@@ -175,14 +238,23 @@ export default async function handler(req, res) {
     });
   }
 
-  // Stage succeeded. Compute updated completed list without a second Firestore read.
+  // ── Stage succeeded ────────────────────────────────────────────────────────
+
   const nowCompleted = completedStages.includes(nextStage)
     ? completedStages
     : [...completedStages, nextStage];
   const newNextStage = STAGE_ORDER.find((s) => !nowCompleted.includes(s)) || null;
 
-  // Portfolio complete → v31Result has been written.
+  // Portfolio complete → v31Result written → pipeline done.
   if (result.status === "ready") {
+    console.log("[v31-generation-advance]", JSON.stringify({
+      assessmentId: resolvedId,
+      trigger: resolvedTrigger,
+      completedStage: nextStage,
+      status: "ready",
+      qstashEnqueued: false,
+    }));
+    await writeTriggerMeta(resolvedId, resolvedTrigger, null);
     return res.status(200).json({
       ok: true,
       status: "ready",
@@ -192,6 +264,40 @@ export default async function handler(req, res) {
       reportUrl: result.reportUrl || reportUrl,
     });
   }
+
+  // ── Enqueue next QStash message ────────────────────────────────────────────
+  // Only when QStash is driving and there is a next stage to run.
+
+  let qstashEnqueued = false;
+  let qstashMessageId = null;
+
+  if (isQstash && newNextStage) {
+    const publishResult = await publishNextV31Advance(resolvedId);
+    if (publishResult.ok) {
+      qstashEnqueued = true;
+      qstashMessageId = publishResult.messageId || null;
+    } else {
+      console.error("[v31-generation-advance] QStash publish failed:", JSON.stringify({
+        assessmentId: resolvedId,
+        nextStage: newNextStage,
+        error: publishResult.error,
+      }));
+      // Non-fatal for the response — the browser/handoff UI can still drive
+      // the next stage manually if QStash publish fails.
+    }
+  }
+
+  console.log("[v31-generation-advance]", JSON.stringify({
+    assessmentId: resolvedId,
+    trigger: resolvedTrigger,
+    completedStage: nextStage,
+    nextStage: newNextStage,
+    status: "stage_complete",
+    qstashEnqueued,
+    qstashMessageId,
+  }));
+
+  await writeTriggerMeta(resolvedId, resolvedTrigger, qstashMessageId);
 
   return res.status(200).json({
     ok: true,
