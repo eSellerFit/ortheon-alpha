@@ -78,22 +78,7 @@ export default async function handler(req, res) {
     return res.status(404).json({ ok: false, error: state.error || "Assessment not found." });
   }
 
-  if (state.v31ResultExists) {
-    return res.status(200).json({
-      ok: true,
-      status: "ready",
-      hasV31Result: true,
-      completedStages: [...STAGE_ORDER],
-      nextStage: null,
-      reportUrl,
-    });
-  }
-
   const v31Gen = state.v31Generation;
-  const { completedStages, nextStage } = deriveStagesSummary(v31Gen);
-  const lastError = v31Gen?.lastError || null;
-  const status = deriveStatus(v31Gen, completedStages);
-
   const m = v31Gen?.metrics;
   const safeMetrics = m
     ? {
@@ -120,6 +105,22 @@ export default async function handler(req, res) {
         },
       }
     : null;
+
+  if (state.v31ResultExists) {
+    return res.status(200).json({
+      ok: true,
+      status: "ready",
+      hasV31Result: true,
+      completedStages: [...STAGE_ORDER],
+      nextStage: null,
+      metrics: safeMetrics,
+      reportUrl,
+    });
+  }
+
+  const { completedStages, nextStage } = deriveStagesSummary(v31Gen);
+  const lastError = v31Gen?.lastError || null;
+  const status = deriveStatus(v31Gen, completedStages);
 
   return res.status(200).json({
     ok: true,
