@@ -502,23 +502,48 @@ function buildDashboardCards(
   ];
 }
 
+// ── Work model label map (shared with renderer files) ─────────────────────────
+
+const WORK_MODEL_LABELS = {
+  consulting_fractional: "Consulting / Fractional",
+  interim_fractional: "Interim / Fractional",
+  enterprise_employment: "Employment",
+  full_time_employment: "Employment",
+  consulting_advisory: "Consulting / Advisory",
+  freelance: "Freelance",
+  portfolio_career: "Portfolio Career",
+  entrepreneurial_operator: "Entrepreneur / Founder",
+  founder: "Entrepreneur / Founder",
+  technical_specialist: "Technical Specialist",
+  operations_leadership: "Operations Leadership",
+  education_training: "Education / Training",
+  nonprofit_public: "Non-Profit / Public Sector",
+  regulated_profession: "Regulated Profession",
+};
+
+function workModelLabel(raw) {
+  return WORK_MODEL_LABELS[raw] ?? raw;
+}
+
 // ── buildInputSignalCards ─────────────────────────────────────────────────────
 
-function buildInputSignalCards(keySignals, directions) {
+function buildInputSignalCards(keySignals, directions, missingInputsFromPortfolio) {
   const credibilitySignals = arrayOrEmpty(keySignals.strongestCredibilitySignals);
   const financialSignals = arrayOrEmpty(keySignals.financialRealitySignals);
   const guardrailSignals = arrayOrEmpty(keySignals.guardrailSignals);
   const constraintSignals = arrayOrEmpty(keySignals.constraintSignals);
   const missingSignals = arrayOrEmpty(keySignals.missingEvidenceSignals);
+  const missingPortfolioInputs = arrayOrEmpty(missingInputsFromPortfolio);
 
   const hasStrongCredibility = credibilitySignals.length > 0;
   const hasFinancialRisk = guardrailSignals.length > 0;
   const hasFinancialCaution = financialSignals.length > 0;
   const hasConstraints = constraintSignals.length > 0;
-  const hasMissing = missingSignals.length > 0;
+  const hasMissing = missingSignals.length > 0 || missingPortfolioInputs.length > 0;
 
   const workModels = directions.map((d) => stringOrEmpty(d.workModel)).filter(Boolean);
   const uniqueWorkModels = [...new Set(workModels)];
+  const uniqueWorkModelLabels = [...new Set(uniqueWorkModels.map(workModelLabel))];
 
   return [
     {
@@ -557,14 +582,14 @@ function buildInputSignalCards(keySignals, directions) {
       id: "workModelPreference",
       title: "Work model preference",
       signal:
-        uniqueWorkModels.length > 0
-          ? uniqueWorkModels.slice(0, 2).join(" and ") + " roles appear most realistic."
+        uniqueWorkModelLabels.length > 0
+          ? uniqueWorkModelLabels.slice(0, 2).join(" and ") + " roles appear most realistic."
           : "Work model preference not clearly indicated.",
       interpretation:
-        uniqueWorkModels.length > 1
+        uniqueWorkModelLabels.length > 1
           ? "Multiple work models appear across your directions, suggesting flexibility."
-          : uniqueWorkModels.length === 1
-            ? `Directions are aligned toward ${uniqueWorkModels[0]} work.`
+          : uniqueWorkModelLabels.length === 1
+            ? `Directions are aligned toward ${uniqueWorkModelLabels[0]} work.`
             : "Work model preference could not be derived from available data.",
       impact:
         "Directions that conflict with your preferred work model are deprioritised or flagged as exploratory.",
@@ -594,12 +619,16 @@ function buildInputSignalCards(keySignals, directions) {
     {
       id: "missingEvidence",
       title: "Missing evidence",
-      signal: sanitizeConstraintText(
-        missingSignals[0] || "No significant missing evidence identified."
-      ),
-      interpretation: hasMissing
-        ? "This gap affects confidence in one or more directions."
-        : "The available evidence was sufficient to assess all directions.",
+      signal: missingPortfolioInputs.length > 0
+        ? "Some evidence gaps were identified."
+        : sanitizeConstraintText(
+            missingSignals[0] || "No significant missing evidence identified."
+          ),
+      interpretation: missingPortfolioInputs.length > 0
+        ? sanitizeConstraintText(missingPortfolioInputs.slice(0, 2).join(" "))
+        : hasMissing
+          ? "This gap affects confidence in one or more directions."
+          : "The available evidence was sufficient to assess all directions.",
       impact: hasMissing
         ? "Adding this evidence would improve direction confidence and narrow recommendations."
         : "No additional evidence is required to refine these recommendations.",
@@ -1369,7 +1398,7 @@ export function buildV31UserFacingReportViewModelV31(internalViewModel, { curren
     ),
   };
 
-  const inputSignalCards = buildInputSignalCards(keySignals, directions);
+  const inputSignalCards = buildInputSignalCards(keySignals, directions, missingInputsAffectingConfidence);
 
   const compactDirectionCards = directions.map((dir, i) =>
     buildCompactDirectionCard(dir, getGuardrailStatus(i), getCanShow(i))
