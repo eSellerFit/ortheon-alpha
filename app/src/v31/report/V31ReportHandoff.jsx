@@ -1,17 +1,24 @@
 /**
  * Ortheon MVP Cut v3.1 — Report Handoff Screen
  *
- * Bundle 25A / 26A / 26B / 26H.
+ * Bundle 25A / 26A / 26B / 26H / 27C.
  * Final assessment step — replaces legacy ResultsStep.
- * Drives the v3.1 staged generation pipeline via status/advance endpoints.
- * Resumable: reads current Firestore state on mount and continues from
- * the last completed stage rather than restarting from scratch.
+ *
+ * Bundle 27C: poll-only mode.
+ * Generation is now driven server-side by QStash (started in AssessmentFlow
+ * after priority weights are saved). This component only observes status —
+ * it never calls /advance automatically.
+ *
+ * Polling: calls /api/v31-generation-status every 4 seconds.
+ * Retry: calls /api/v31-generation-advance with action:"start-qstash",
+ *        then returns to polling on success.
  *
  * Rules:
  * - No direct Firestore reads/writes. All state via API.
  * - No AI calls. No API keys in frontend.
  * - Does not render the report — links to /report?documentId=<assessmentId>.
  * - Does not import or reference ResultsStep, PdfReport, or CareerDirectionMap.
+ * - Does NOT call /api/v31-generation-advance automatically.
  */
 
 import { useEffect, useState } from "react";
@@ -26,6 +33,8 @@ const STAGE_LABELS = {
   hypotheses: "Building direction hypotheses",
   portfolio: "Composing your final report",
 };
+
+const POLL_INTERVAL_MS = 4000;
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -80,6 +89,19 @@ const S = {
     fontSize: "15px",
     border: "none",
     cursor: "pointer",
+    marginTop: "4px",
+    letterSpacing: "0.01em",
+  },
+  retryBtnDisabled: {
+    display: "inline-block",
+    padding: "11px 26px",
+    background: "#9ca3af",
+    color: "#fff",
+    borderRadius: "8px",
+    fontWeight: "600",
+    fontSize: "15px",
+    border: "none",
+    cursor: "default",
     marginTop: "4px",
     letterSpacing: "0.01em",
   },
@@ -144,10 +166,11 @@ function StageRow({ stageKey, isCompleted, isActive, isFailed }) {
 }
 
 // ── States ─────────────────────────────────────────────────────────────────────
-// "loading"    — awaiting status check
-// "generating" — advance loop running; stages updating from backend
+// "loading"    — awaiting initial status check
+// "generating" — polling /status; stages updating as QStash completes them
 // "ready"      — v31Result exists; show report link
-// "failed"     — a stage failed; show retry button
+// "failed"     — pipeline failed; show retry button
+// "retrying"   — retry start-qstash in flight
 // "no-id"      — assessmentId prop is blank
 
 // ── Main component ─────────────────────────────────────────────────────────────
@@ -157,7 +180,7 @@ export default function V31ReportHandoff({ assessmentId }) {
   const [completedStages, setCompletedStages] = useState([]);
   const [nextStage, setNextStage] = useState(null);
   const [failedStage, setFailedStage] = useState(null);
-  const [retryKey, setRetryKey] = useState(0);
+  const [pollKey, setPollKey] = useState(0);
 
   useEffect(() => {
     if (!assessmentId) {
@@ -172,7 +195,7 @@ export default function V31ReportHandoff({ assessmentId }) {
     setFailedStage(null);
 
     async function run() {
-      // 1. Read current generation state — no Claude call.
+      // 1. Initial status check.
       let statusData;
       try {
         statusData = await postJSON("/api/v31-generation-status", { assessmentId });
@@ -192,42 +215,53 @@ export default function V31ReportHandoff({ assessmentId }) {
         return;
       }
 
-      // Initialize progress display from server state so the UI reflects
-      // any stages already completed in a prior session.
+      if (statusData.status === "failed") {
+        setCompletedStages(statusData.completedStages || []);
+        setFailedStage(statusData.failedStage || null);
+        setUiState("failed");
+        return;
+      }
+
+      // Generation is running/partial/idle — show progress and start polling.
       setCompletedStages(statusData.completedStages || []);
       setNextStage(statusData.nextStage || null);
       setUiState("generating");
 
-      // 2. Advance loop — one Claude call per iteration.
-      // Runs until ready, failed, or the component unmounts.
+      // 2. Poll /status until ready, failed, or component unmounts.
+      //    Never calls /advance — QStash drives generation server-side.
       for (;;) {
+        await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
         if (cancelled) return;
 
-        let advData;
+        let pollData;
         try {
-          advData = await postJSON("/api/v31-generation-advance", { assessmentId });
+          pollData = await postJSON("/api/v31-generation-status", { assessmentId });
         } catch {
-          if (!cancelled) setUiState("failed");
-          return;
+          // Network hiccup — keep polling rather than failing immediately.
+          continue;
         }
         if (cancelled) return;
 
-        if (!advData.ok) {
-          setFailedStage(advData.failedStage || null);
+        if (!pollData.ok) {
           setUiState("failed");
           return;
         }
 
-        setCompletedStages(advData.completedStages || []);
-        setNextStage(advData.nextStage || null);
-
-        if (advData.status === "ready") {
+        if (pollData.status === "ready") {
           setUiState("ready");
           return;
         }
 
-        // stage_complete — brief pause before calling advance for the next stage.
-        await new Promise((resolve) => setTimeout(resolve, 300));
+        if (pollData.status === "failed") {
+          setCompletedStages(pollData.completedStages || []);
+          setFailedStage(pollData.failedStage || null);
+          setUiState("failed");
+          return;
+        }
+
+        // Still generating — update progress display.
+        setCompletedStages(pollData.completedStages || []);
+        setNextStage(pollData.nextStage || null);
       }
     }
 
@@ -236,10 +270,28 @@ export default function V31ReportHandoff({ assessmentId }) {
     return () => {
       cancelled = true;
     };
-  }, [assessmentId, retryKey]);
+  }, [assessmentId, pollKey]);
 
-  function handleRetry() {
-    setRetryKey((k) => k + 1);
+  async function handleRetry() {
+    setUiState("retrying");
+    setFailedStage(null);
+
+    try {
+      const result = await postJSON("/api/v31-generation-advance", {
+        assessmentId,
+        action: "start-qstash",
+      });
+      if (!result.ok) {
+        setUiState("failed");
+        return;
+      }
+    } catch {
+      setUiState("failed");
+      return;
+    }
+
+    // QStash message queued — re-enter polling loop.
+    setPollKey((k) => k + 1);
   }
 
   const reportUrl = assessmentId
@@ -305,6 +357,16 @@ export default function V31ReportHandoff({ assessmentId }) {
           status automatically on this screen, but your assessment was received.
           You'll receive the report link shortly.
         </p>
+      </div>
+    );
+  }
+
+  // ── Retrying ──────────────────────────────────────────────────────────────────
+
+  if (uiState === "retrying") {
+    return (
+      <div style={S.container}>
+        <p style={S.loadingText}>Restarting generation…</p>
       </div>
     );
   }
