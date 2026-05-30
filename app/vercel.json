@@ -6,7 +6,6 @@
     "api/v31-generation-hypotheses.js": { "maxDuration": 300 },
     "api/v31-generation-portfolio.js": { "maxDuration": 300 },
     "api/v31-generation-advance.js": { "maxDuration": 300 },
-    "api/v31-generation-status.js": { "maxDuration": 10 },
-    "api/v31-generation-qstash-start.js": { "maxDuration": 10 }
+    "api/v31-generation-status.js": { "maxDuration": 10 }
   }
 }

@@ -84,7 +84,36 @@ export default async function handler(req, res) {
     return res.status(405).json({ ok: false, error: "Method not allowed." });
   }
 
-  const { assessmentId, trigger } = req.body || {};
+  const { assessmentId, trigger, action } = req.body || {};
+
+  // ── QStash start action ────────────────────────────────────────────────────
+  // Publishes the first QStash advance message without running any stage.
+  // Used to kick off server-side generation from curl or a future submit hook.
+
+  if (action === "start-qstash") {
+    if (!assessmentId || typeof assessmentId !== "string" || !assessmentId.trim()) {
+      return res.status(400).json({ ok: false, error: "assessmentId is required." });
+    }
+    const startId = assessmentId.trim();
+    const result = await publishNextV31Advance(startId);
+    if (!result.ok) {
+      console.error("[v31-generation-advance] start-qstash publish failed:", JSON.stringify({
+        assessmentId: startId,
+        error: result.error,
+      }));
+      return res.status(500).json({ ok: false, error: result.error || "Failed to enqueue generation job." });
+    }
+    console.log("[v31-generation-advance] start-qstash queued:", JSON.stringify({
+      assessmentId: startId,
+      messageId: result.messageId,
+    }));
+    return res.status(200).json({
+      ok: true,
+      status: "queued",
+      assessmentId: startId,
+      messageId: result.messageId,
+    });
+  }
 
   if (!assessmentId || typeof assessmentId !== "string" || !assessmentId.trim()) {
     return res.status(400).json({ ok: false, error: "assessmentId is required." });
