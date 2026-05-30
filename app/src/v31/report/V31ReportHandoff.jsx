@@ -1,17 +1,14 @@
 /**
  * Ortheon MVP Cut v3.1 — Report Handoff Screen
  *
- * Bundle 25A / 26A / 26B / 26H / 27C.
+ * Bundle 25A / 26A / 26B / 26H / 27C / 27D.
  * Final assessment step — replaces legacy ResultsStep.
  *
- * Bundle 27C: poll-only mode.
- * Generation is now driven server-side by QStash (started in AssessmentFlow
- * after priority weights are saved). This component only observes status —
- * it never calls /advance automatically.
+ * Poll-only (Bundle 27C): never calls /advance automatically.
+ * Polls /api/v31-generation-status every 4 seconds.
+ * Retry calls /api/v31-generation-advance with action:"start-qstash" only.
  *
- * Polling: calls /api/v31-generation-status every 4 seconds.
- * Retry: calls /api/v31-generation-advance with action:"start-qstash",
- *        then returns to polling on success.
+ * Bundle 27D: improved generation UX — spinner, updated copy, calmer tone.
  *
  * Rules:
  * - No direct Firestore reads/writes. All state via API.
@@ -28,10 +25,10 @@ import { useEffect, useState } from "react";
 const STAGE_KEYS = ["profile", "transferability", "hypotheses", "portfolio"];
 
 const STAGE_LABELS = {
-  profile: "Analyzing your profile",
-  transferability: "Mapping transferable directions",
-  hypotheses: "Building direction hypotheses",
-  portfolio: "Composing your final report",
+  profile: "Reading your profile",
+  transferability: "Mapping transferable strengths",
+  hypotheses: "Testing realistic directions",
+  portfolio: "Composing your report",
 };
 
 const POLL_INTERVAL_MS = 4000;
@@ -54,18 +51,39 @@ const S = {
     paddingTop: "4px",
     paddingBottom: "16px",
   },
+  spinnerWrap: {
+    display: "flex",
+    justifyContent: "center",
+    marginBottom: "28px",
+    marginTop: "8px",
+  },
+  spinner: {
+    width: "42px",
+    height: "42px",
+    borderRadius: "50%",
+    border: "3px solid #e5e7eb",
+    borderTopColor: "#245f73",
+    animation: "v31-spin 1.1s linear infinite",
+    flexShrink: 0,
+  },
   heading: {
     fontSize: "22px",
     fontWeight: "700",
     color: "#111",
     lineHeight: "1.3",
-    margin: "0 0 12px",
+    margin: "0 0 10px",
   },
-  body: {
+  subtext: {
     fontSize: "15px",
-    color: "#444",
+    color: "#555",
     lineHeight: "1.65",
     margin: "0 0 20px",
+  },
+  reassurance: {
+    fontSize: "13px",
+    color: "#888",
+    lineHeight: "1.6",
+    margin: "0 0 8px",
   },
   ctaLink: {
     display: "inline-block",
@@ -92,19 +110,6 @@ const S = {
     marginTop: "4px",
     letterSpacing: "0.01em",
   },
-  retryBtnDisabled: {
-    display: "inline-block",
-    padding: "11px 26px",
-    background: "#9ca3af",
-    color: "#fff",
-    borderRadius: "8px",
-    fontWeight: "600",
-    fontSize: "15px",
-    border: "none",
-    cursor: "default",
-    marginTop: "4px",
-    letterSpacing: "0.01em",
-  },
   loadingText: {
     fontSize: "15px",
     color: "#aaa",
@@ -112,7 +117,7 @@ const S = {
   },
   stageList: {
     listStyle: "none",
-    margin: "0 0 20px",
+    margin: "0 0 16px",
     padding: 0,
   },
   stageRow: {
@@ -313,7 +318,19 @@ export default function V31ReportHandoff({ assessmentId }) {
   if (uiState === "generating") {
     return (
       <div style={S.container}>
-        <h2 style={S.heading}>Generating your Career Direction Report</h2>
+        {/* Keyframe injected inline — no external CSS dependency */}
+        <style>{`@keyframes v31-spin { to { transform: rotate(360deg); } }`}</style>
+
+        <div style={S.spinnerWrap}>
+          <div style={S.spinner} />
+        </div>
+
+        <h2 style={S.heading}>Preparing your Career Direction Report</h2>
+        <p style={S.subtext}>
+          We're turning your assessment into a structured direction report. This
+          can take a few minutes.
+        </p>
+
         <ul style={S.stageList}>
           {STAGE_KEYS.map((key) => (
             <StageRow
@@ -325,9 +342,10 @@ export default function V31ReportHandoff({ assessmentId }) {
             />
           ))}
         </ul>
-        <p style={S.body}>
-          Please keep this page open. If you leave and come back, we'll continue
-          from the last completed step.
+
+        <p style={S.reassurance}>
+          You can leave this page and come back later — your report will keep
+          processing in the background.
         </p>
       </div>
     );
@@ -352,7 +370,7 @@ export default function V31ReportHandoff({ assessmentId }) {
     return (
       <div style={S.container}>
         <h2 style={S.heading}>Assessment submitted</h2>
-        <p style={S.body}>
+        <p style={S.subtext}>
           Your assessment has been submitted. We could not open the report
           status automatically on this screen, but your assessment was received.
           You'll receive the report link shortly.
@@ -375,8 +393,8 @@ export default function V31ReportHandoff({ assessmentId }) {
 
   return (
     <div style={S.container}>
-      <h2 style={S.heading}>We paused while generating your report.</h2>
-      <p style={S.body}>
+      <h2 style={S.heading}>We paused while preparing your report.</h2>
+      <p style={S.subtext}>
         Your assessment is saved. You can retry from the last completed step.
       </p>
       <button type="button" style={S.retryBtn} onClick={handleRetry}>
