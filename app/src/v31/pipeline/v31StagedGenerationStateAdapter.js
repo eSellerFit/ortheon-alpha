@@ -372,6 +372,8 @@ export async function markV31GenerationComplete({ documentId, startedAt, portfol
     "v31Generation.currentStage": "complete",
     "v31Generation.completedAt": now,
     "v31Generation.updatedAt": now,
+    "v31Generation.retry": null,
+    "v31Generation.lastError": null,
     "v31Generation.metrics.completedAt": now,
     "v31Generation.metrics.lastUpdatedAt": now,
     "v31Generation.metrics.outcome": "ready",

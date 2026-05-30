@@ -118,6 +118,11 @@ async function writeTriggerMeta(documentId, trigger, lastQstashMessageId) {
  */
 async function tryScheduleRetry({ isQstash, resolvedId, nextStage, code, safeMessage, detailHint, state }) {
   if (!isQstash) return { scheduled: false };
+  if (state.v31ResultExists) return { scheduled: false };
+  if (
+    state.v31Generation?.status === "complete" ||
+    state.v31Generation?.currentStage === "complete"
+  ) return { scheduled: false };
   if (!isRetryableCode(code, nextStage, safeMessage)) return { scheduled: false };
 
   const currentRound = state.v31Generation?.retry?.round || 0;
@@ -261,10 +266,11 @@ export default async function handler(req, res) {
   // If v31Result already exists, the pipeline is done — do not enqueue another message.
   if (state.v31ResultExists) {
     console.log("[v31-generation-advance]", JSON.stringify({
+      event: "ready_guard",
       assessmentId: resolvedId,
       trigger: resolvedTrigger,
       status: "ready",
-      qstashEnqueued: false,
+      skipped: true,
     }));
     return res.status(200).json({
       ok: true,
@@ -273,6 +279,7 @@ export default async function handler(req, res) {
       completedStages: [...STAGE_ORDER],
       nextStage: null,
       reportUrl,
+      skipped: true,
     });
   }
 
@@ -350,7 +357,7 @@ export default async function handler(req, res) {
       trigger: resolvedTrigger,
     }));
     await writeSafeError(resolvedId, nextStage, code, safeMessage, exceptionHint);
-    return res.status(500).json({
+    return res.status(200).json({
       ok: false,
       status: "failed",
       failedStage: nextStage,
@@ -395,7 +402,7 @@ export default async function handler(req, res) {
       trigger: resolvedTrigger,
     }));
     await writeSafeError(resolvedId, nextStage, code, safeMessage, detailHint);
-    return res.status(500).json({
+    return res.status(200).json({
       ok: false,
       status: "failed",
       failedStage: nextStage,

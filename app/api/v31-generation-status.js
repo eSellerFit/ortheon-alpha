@@ -100,7 +100,7 @@ export default async function handler(req, res) {
           portfolio: {
             lastDurationMs: m.stages?.portfolio?.lastDurationMs ?? null,
             attempts: m.stages?.portfolio?.attempts ?? null,
-            retryRounds: m.stages?.portfolio?.retryRounds ?? null,
+            retryRounds: m.stages?.portfolio?.retryRounds ?? 0,
           },
         },
       }
@@ -113,7 +113,7 @@ export default async function handler(req, res) {
       hasV31Result: true,
       completedStages: [...STAGE_ORDER],
       nextStage: null,
-      metrics: safeMetrics,
+      metrics: safeMetrics ? { ...safeMetrics, outcome: "ready" } : null,
       reportUrl,
     });
   }
