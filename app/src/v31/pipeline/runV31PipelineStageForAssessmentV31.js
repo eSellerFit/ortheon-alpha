@@ -41,6 +41,7 @@ import {
   initV31GenerationState,
   saveV31StageOutput,
   markV31GenerationComplete,
+  recordV31StageStart,
 } from "./v31StagedGenerationStateAdapter.js";
 
 // ── Internal helpers ───────────────────────────────────────────────────────────
@@ -113,6 +114,10 @@ async function runProfileStage({
     }
   }
 
+  // Record stage start metrics, then begin timer for the Claude call duration.
+  await recordV31StageStart({ documentId: resolvedDocumentId, stage: "profile" });
+  const stageStartedAt = Date.now();
+
   const assessmentSnapshot = {
     ...buildAssessmentSnapshotV31(state.assessment),
     assessmentId: resolvedAssessmentId,
@@ -132,6 +137,7 @@ async function runProfileStage({
       stage: "profile",
       output: { synthesizedProfile: result.body.synthesizedProfile },
       apiUsage: safeApiUsage(result.body),
+      stageStartedAt,
     });
   } catch (err) {
     console.error("[v31-stage-service] profile write error:", err.message);
@@ -163,6 +169,9 @@ async function runTransferabilityStage({
     };
   }
 
+  await recordV31StageStart({ documentId: resolvedDocumentId, stage: "transferability" });
+  const stageStartedAt = Date.now();
+
   const assessmentSnapshot = {
     ...buildAssessmentSnapshotV31(state.assessment),
     assessmentId: resolvedAssessmentId,
@@ -185,6 +194,7 @@ async function runTransferabilityStage({
       stage: "transferability",
       output: { transferabilityMap: result.body.transferabilityMap },
       apiUsage: safeApiUsage(result.body),
+      stageStartedAt,
     });
   } catch (err) {
     console.error("[v31-stage-service] transferability write error:", err.message);
@@ -217,6 +227,9 @@ async function runHypothesesStage({
     return { ok: false, error: "Transferability stage output missing.", stage: "hypotheses" };
   }
 
+  await recordV31StageStart({ documentId: resolvedDocumentId, stage: "hypotheses" });
+  const stageStartedAt = Date.now();
+
   const assessmentSnapshot = {
     ...buildAssessmentSnapshotV31(state.assessment),
     assessmentId: resolvedAssessmentId,
@@ -240,6 +253,7 @@ async function runHypothesesStage({
       stage: "hypotheses",
       output: { directionHypotheses: result.body.directionHypotheses || [] },
       apiUsage: safeApiUsage(result.body),
+      stageStartedAt,
     });
   } catch (err) {
     console.error("[v31-stage-service] hypotheses write error:", err.message);
@@ -289,6 +303,9 @@ async function runPortfolioStage({
     directionHypotheses,
     guardrailValidation
   );
+
+  await recordV31StageStart({ documentId: resolvedDocumentId, stage: "portfolio" });
+  const portfolioStartedAt = Date.now();
 
   const result = await callHandler(portfolioComposerHandler, {
     portfolioComposerInput: buildPortfolioComposerInputV31({
@@ -430,7 +447,11 @@ async function runPortfolioStage({
 
   // Mark generation complete — non-fatal if this fails (v31Result is the source of truth)
   try {
-    await markV31GenerationComplete({ documentId: resolvedDocumentId });
+    await markV31GenerationComplete({
+      documentId: resolvedDocumentId,
+      startedAt: gen?.startedAt || null,
+      portfolioStartedAt,
+    });
   } catch (err) {
     console.error("[v31-stage-service] mark complete error (non-fatal):", err.message);
   }

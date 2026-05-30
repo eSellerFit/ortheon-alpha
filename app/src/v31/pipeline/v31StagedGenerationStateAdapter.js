@@ -12,7 +12,7 @@
  * - Never touches v31Result or legacy result fields.
  */
 
-import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, increment } from "firebase/firestore";
 import { db } from "../../firebase.js";
 
 // Fields excluded when building the sanitized assessment for pipeline use.
@@ -115,6 +115,15 @@ export async function initV31GenerationState({ documentId }) {
           directionHypothesisGenerator: { status: "pending" },
           portfolioComposer: { status: "pending" },
         },
+        metrics: {
+          startedAt: now,
+          completedAt: null,
+          totalMs: null,
+          currentStageStartedAt: null,
+          lastUpdatedAt: now,
+          outcome: "running",
+          stages: {},
+        },
       },
     },
     { merge: true }
@@ -130,12 +139,14 @@ export async function initV31GenerationState({ documentId }) {
  * @param {"profile"|"transferability"|"hypotheses"|"portfolio"} options.stage
  * @param {Object} options.output  Normalized stage output only (no raw Claude body).
  * @param {Object} options.apiUsage  Safe usage metadata.
+ * @param {number} [options.stageStartedAt]  Date.now() recorded before the Claude call — used to compute duration metrics.
  */
 export async function saveV31StageOutput({
   documentId,
   stage,
   output,
   apiUsage,
+  stageStartedAt,
 }) {
   if (!writeEnabled()) {
     throw new Error(
@@ -151,8 +162,9 @@ export async function saveV31StageOutput({
   const now = new Date().toISOString();
   const nextStage = NEXT_STAGE[stage] || "complete";
   const ref = doc(db, "assessments", documentId.trim());
+  const durationMs = stageStartedAt ? Date.now() - stageStartedAt : null;
 
-  await updateDoc(ref, {
+  const update = {
     [`v31Generation.stages.${internalName}`]: {
       status: "complete",
       output,
@@ -162,7 +174,16 @@ export async function saveV31StageOutput({
     "v31Generation.currentStage": nextStage,
     "v31Generation.updatedAt": now,
     "v31Generation.status": "running",
-  });
+    [`v31Generation.metrics.stages.${stage}.lastCompletedAt`]: now,
+    "v31Generation.metrics.lastUpdatedAt": now,
+  };
+
+  if (durationMs !== null) {
+    update[`v31Generation.metrics.stages.${stage}.lastDurationMs`] = durationMs;
+    update[`v31Generation.metrics.stages.${stage}.totalDurationMs`] = increment(durationMs);
+  }
+
+  await updateDoc(ref, update);
 }
 
 /**
@@ -204,6 +225,9 @@ export async function saveV31GenerationError({
       retryable: true,
       ...(detailHint ? { detailHint } : {}),
     },
+    "v31Generation.metrics.outcome": "failed",
+    "v31Generation.metrics.lastUpdatedAt": now,
+    [`v31Generation.metrics.stages.${stage}.lastErrorCode`]: code,
   });
 }
 
@@ -274,7 +298,7 @@ export async function saveV31GenerationRetryState({
   const now = new Date().toISOString();
   const ref = doc(db, "assessments", documentId.trim());
 
-  await updateDoc(ref, {
+  const retryUpdate = {
     "v31Generation.status": "retrying",
     "v31Generation.updatedAt": now,
     "v31Generation.lastError": null,
@@ -287,14 +311,53 @@ export async function saveV31GenerationRetryState({
       messageId: messageId || null,
       ...(lastRetryableError ? { lastRetryableError } : {}),
     },
-  });
+    "v31Generation.metrics.outcome": "retrying",
+    "v31Generation.metrics.lastUpdatedAt": now,
+    [`v31Generation.metrics.stages.${stage}.lastErrorCode`]: reason,
+  };
+
+  if (stage === "portfolio") {
+    retryUpdate["v31Generation.metrics.stages.portfolio.retryRounds"] = increment(1);
+  }
+
+  await updateDoc(ref, retryUpdate);
+}
+
+/**
+ * Record that a stage has started — increments attempt count and captures start time.
+ * Best-effort: catches internally so a metrics failure never blocks generation.
+ *
+ * @param {Object} options
+ * @param {string} options.documentId
+ * @param {"profile"|"transferability"|"hypotheses"|"portfolio"} options.stage
+ */
+export async function recordV31StageStart({ documentId, stage }) {
+  if (!writeEnabled()) return;
+  const now = new Date().toISOString();
+  const ref = doc(db, "assessments", documentId.trim());
+  try {
+    await updateDoc(ref, {
+      [`v31Generation.metrics.stages.${stage}.lastStartedAt`]: now,
+      [`v31Generation.metrics.stages.${stage}.attempts`]: increment(1),
+      "v31Generation.metrics.currentStageStartedAt": now,
+      "v31Generation.metrics.lastUpdatedAt": now,
+      "v31Generation.metrics.outcome": "running",
+    });
+  } catch (err) {
+    console.warn("[v31-state-adapter] recordV31StageStart failed (non-fatal):", String(err?.message || "").slice(0, 100));
+  }
 }
 
 /**
  * Mark generation complete after v31Result has been written successfully.
  * Non-fatal if this fails — v31Result is the authoritative source.
+ *
+ * @param {Object} options
+ * @param {string} options.documentId
+ * @param {string} [options.startedAt]          ISO timestamp from v31Generation.startedAt — used to compute totalMs.
+ * @param {number} [options.portfolioStartedAt]  Date.now() recorded before the portfolio Claude call — used to compute portfolio stage duration.
  */
-export async function markV31GenerationComplete({ documentId }) {
+export async function markV31GenerationComplete({ documentId, startedAt, portfolioStartedAt }) {
   if (!writeEnabled()) {
     throw new Error(
       "V31_ENABLE_FIRESTORE_WRITE=true is required for staged generation."
@@ -304,10 +367,29 @@ export async function markV31GenerationComplete({ documentId }) {
   const now = new Date().toISOString();
   const ref = doc(db, "assessments", documentId.trim());
 
-  await updateDoc(ref, {
+  const update = {
     "v31Generation.status": "complete",
     "v31Generation.currentStage": "complete",
     "v31Generation.completedAt": now,
     "v31Generation.updatedAt": now,
-  });
+    "v31Generation.metrics.completedAt": now,
+    "v31Generation.metrics.lastUpdatedAt": now,
+    "v31Generation.metrics.outcome": "ready",
+    "v31Generation.metrics.stages.portfolio.lastCompletedAt": now,
+  };
+
+  if (startedAt) {
+    const startMs = Date.parse(startedAt);
+    if (!isNaN(startMs)) {
+      update["v31Generation.metrics.totalMs"] = Date.now() - startMs;
+    }
+  }
+
+  if (portfolioStartedAt) {
+    const portfolioDurationMs = Date.now() - portfolioStartedAt;
+    update["v31Generation.metrics.stages.portfolio.lastDurationMs"] = portfolioDurationMs;
+    update["v31Generation.metrics.stages.portfolio.totalDurationMs"] = increment(portfolioDurationMs);
+  }
+
+  await updateDoc(ref, update);
 }

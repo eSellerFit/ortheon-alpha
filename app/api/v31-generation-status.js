@@ -94,6 +94,33 @@ export default async function handler(req, res) {
   const lastError = v31Gen?.lastError || null;
   const status = deriveStatus(v31Gen, completedStages);
 
+  const m = v31Gen?.metrics;
+  const safeMetrics = m
+    ? {
+        totalMs: m.totalMs ?? null,
+        outcome: m.outcome ?? null,
+        stages: {
+          profile: {
+            lastDurationMs: m.stages?.profile?.lastDurationMs ?? null,
+            attempts: m.stages?.profile?.attempts ?? null,
+          },
+          transferability: {
+            lastDurationMs: m.stages?.transferability?.lastDurationMs ?? null,
+            attempts: m.stages?.transferability?.attempts ?? null,
+          },
+          hypotheses: {
+            lastDurationMs: m.stages?.hypotheses?.lastDurationMs ?? null,
+            attempts: m.stages?.hypotheses?.attempts ?? null,
+          },
+          portfolio: {
+            lastDurationMs: m.stages?.portfolio?.lastDurationMs ?? null,
+            attempts: m.stages?.portfolio?.attempts ?? null,
+            retryRounds: m.stages?.portfolio?.retryRounds ?? null,
+          },
+        },
+      }
+    : null;
+
   return res.status(200).json({
     ok: true,
     status,
@@ -103,6 +130,7 @@ export default async function handler(req, res) {
     nextStage,
     failedStage: lastError?.stage || null,
     lastError,
+    metrics: safeMetrics,
     reportUrl: null,
   });
 }

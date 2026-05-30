@@ -158,11 +158,13 @@ async function tryScheduleRetry({ isQstash, resolvedId, nextStage, code, safeMes
     // Non-fatal — observability write only. Retry is still scheduled.
   }
 
-  console.log("[v31-generation-advance] retry_scheduled:", JSON.stringify({
+  console.log("[v31-generation-advance]", JSON.stringify({
+    event: "retry_scheduled",
     assessmentId: resolvedId,
     stage: nextStage,
     retryRound,
     delaySeconds,
+    errorCode: code,
     messageId: publishResult.messageId,
   }));
 
@@ -293,6 +295,17 @@ export default async function handler(req, res) {
 
   // ── Run exactly one stage ──────────────────────────────────────────────────
 
+  const currentAttempt = (state.v31Generation?.metrics?.stages?.[nextStage]?.attempts || 0) + 1;
+  const stageCallStartMs = Date.now();
+
+  console.log("[v31-generation-advance]", JSON.stringify({
+    event: "stage_started",
+    assessmentId: resolvedId,
+    stage: nextStage,
+    attempt: currentAttempt,
+    trigger: resolvedTrigger,
+  }));
+
   let result;
   try {
     result = await runV31PipelineStageForAssessmentV31({
@@ -302,14 +315,18 @@ export default async function handler(req, res) {
       force: false,
     });
   } catch (stageErr) {
+    const stageCallDurationMs = Date.now() - stageCallStartMs;
     const code = "STAGE_EXCEPTION";
     const safeMessage = `An unexpected error occurred in the ${nextStage} stage.`;
     const exceptionHint = `${stageErr?.name || "Error"}: ${String(stageErr?.message || "").slice(0, 100)}`;
-    console.error("[v31-generation-advance] stage exception:", JSON.stringify({
+    console.error("[v31-generation-advance]", JSON.stringify({
+      event: "stage_exception",
       assessmentId: resolvedId,
       stage: nextStage,
       trigger: resolvedTrigger,
       code,
+      durationMs: stageCallDurationMs,
+      attempt: currentAttempt,
       errorName: stageErr?.name,
       errorMessage: String(stageErr?.message || "").slice(0, 200),
     }));
@@ -324,6 +341,14 @@ export default async function handler(req, res) {
         delaySeconds: retryResult.delaySeconds,
       });
     }
+    console.error("[v31-generation-advance]", JSON.stringify({
+      event: "generation_failed",
+      assessmentId: resolvedId,
+      stage: nextStage,
+      errorCode: code,
+      attempt: currentAttempt,
+      trigger: resolvedTrigger,
+    }));
     await writeSafeError(resolvedId, nextStage, code, safeMessage, exceptionHint);
     return res.status(500).json({
       ok: false,
@@ -333,15 +358,20 @@ export default async function handler(req, res) {
     });
   }
 
+  const stageCallDurationMs = Date.now() - stageCallStartMs;
+
   if (!result.ok) {
     const code = result.code || "STAGE_FAILED";
     const safeMessage = result.error || `The ${nextStage} stage failed.`;
     const detailHint = result.detailHint || null;
-    console.error("[v31-generation-advance] stage failed:", JSON.stringify({
+    console.error("[v31-generation-advance]", JSON.stringify({
+      event: "stage_failed",
       assessmentId: resolvedId,
       stage: nextStage,
       trigger: resolvedTrigger,
       code,
+      durationMs: stageCallDurationMs,
+      attempt: currentAttempt,
       detailHint,
       safeMessage: String(safeMessage).slice(0, 200),
     }));
@@ -356,6 +386,14 @@ export default async function handler(req, res) {
         delaySeconds: retryResult.delaySeconds,
       });
     }
+    console.error("[v31-generation-advance]", JSON.stringify({
+      event: "generation_failed",
+      assessmentId: resolvedId,
+      stage: nextStage,
+      errorCode: code,
+      attempt: currentAttempt,
+      trigger: resolvedTrigger,
+    }));
     await writeSafeError(resolvedId, nextStage, code, safeMessage, detailHint);
     return res.status(500).json({
       ok: false,
@@ -375,9 +413,12 @@ export default async function handler(req, res) {
   // Portfolio complete → v31Result written → pipeline done.
   if (result.status === "ready") {
     console.log("[v31-generation-advance]", JSON.stringify({
+      event: "generation_ready",
       assessmentId: resolvedId,
       trigger: resolvedTrigger,
       completedStage: nextStage,
+      durationMs: stageCallDurationMs,
+      attempt: currentAttempt,
       status: "ready",
       qstashEnqueued: false,
     }));
@@ -415,10 +456,13 @@ export default async function handler(req, res) {
   }
 
   console.log("[v31-generation-advance]", JSON.stringify({
+    event: "stage_completed",
     assessmentId: resolvedId,
     trigger: resolvedTrigger,
     completedStage: nextStage,
     nextStage: newNextStage,
+    durationMs: stageCallDurationMs,
+    attempt: currentAttempt,
     status: "stage_complete",
     qstashEnqueued,
     qstashMessageId,
