@@ -1,82 +1,37 @@
 /**
  * Ortheon MVP Cut v3.1 — QStash Helper
  *
- * Bundle 27A.
- * QStash signature verification and message publishing for the v3.1 generation pipeline.
+ * Bundle 27A.4.
+ * QStash signature verification and message publishing using the official
+ * @upstash/qstash SDK.
  *
  * Rules:
  * - Never log or expose QSTASH_TOKEN, signing keys, or secrets.
- * - Signature verification tries CURRENT key then NEXT key (rotation support).
  * - All exports return { ok, ... } result objects — never throw.
- * - No external npm dependencies — uses Node.js built-in crypto and global fetch.
+ *
+ * Raw body note:
+ * Vercel pre-parses JSON request bodies before the handler runs, consuming the
+ * stream. Raw body access is not available in standard Vercel Node.js functions
+ * (export const config is a Next.js-only feature). Callers must pass
+ * JSON.stringify(req.body) as the rawBodyStr — this is stable because we control
+ * the exact JSON format we publish.
  */
 
-import { createHmac, createHash, timingSafeEqual } from "crypto";
-
-const QSTASH_PUBLISH_BASE = "https://qstash.upstash.io/v2/publish/";
-
-// ── JWT helpers ────────────────────────────────────────────────────────────────
-
-function base64UrlDecode(str) {
-  const padded = str + "=".repeat((4 - (str.length % 4)) % 4);
-  return Buffer.from(padded.replace(/-/g, "+").replace(/_/g, "/"), "base64");
-}
-
-/**
- * Verify a HS256 JWT against a single signing key.
- * Returns { ok: true, payload } or { ok: false, reason }.
- */
-function verifyJwtWithKey(token, signingKey) {
-  const parts = token.split(".");
-  if (parts.length !== 3) return { ok: false, reason: "malformed_jwt" };
-
-  const [headerB64, payloadB64, signatureB64] = parts;
-  const data = `${headerB64}.${payloadB64}`;
-
-  const expected = createHmac("sha256", signingKey).update(data).digest();
-
-  let actual;
-  try {
-    actual = base64UrlDecode(signatureB64);
-  } catch {
-    return { ok: false, reason: "bad_signature_encoding" };
-  }
-
-  if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) {
-    return { ok: false, reason: "signature_invalid" };
-  }
-
-  let payload;
-  try {
-    payload = JSON.parse(base64UrlDecode(payloadB64).toString("utf8"));
-  } catch {
-    return { ok: false, reason: "bad_payload" };
-  }
-
-  const nowSec = Math.floor(Date.now() / 1000);
-  if (payload.exp && nowSec > payload.exp) return { ok: false, reason: "jwt_expired" };
-  if (payload.nbf && nowSec < payload.nbf) return { ok: false, reason: "jwt_not_yet_valid" };
-  if (payload.iss !== "Upstash") return { ok: false, reason: "wrong_issuer" };
-
-  return { ok: true, payload };
-}
+import { Client, Receiver } from "@upstash/qstash";
 
 // ── Exports ────────────────────────────────────────────────────────────────────
 
 /**
  * Verify the upstash-signature JWT from a QStash delivery.
  *
- * Tries QSTASH_CURRENT_SIGNING_KEY then QSTASH_NEXT_SIGNING_KEY for key rotation.
- * Also verifies the body hash claim (SHA-256 of rawBodyStr, base64-encoded).
- *
- * rawBodyStr must be the exact JSON string the endpoint received — reconstruct
- * from req.body via JSON.stringify(req.body) since Vercel pre-parses JSON bodies.
+ * Uses the official Receiver which handles CURRENT/NEXT key rotation,
+ * JWT expiry checks, issuer checks, and body hash verification internally.
  *
  * @param {string} signatureJwt  Value of the upstash-signature request header.
- * @param {string} rawBodyStr    Raw request body as a string.
- * @returns {{ ok: boolean, reason?: string, jti?: string | null }}
+ * @param {string} rawBodyStr    Raw request body — pass JSON.stringify(req.body).
+ * @returns {Promise<{ ok: boolean, reason?: string }>}
  */
-export function verifyQstashSignature(signatureJwt, rawBodyStr) {
+export async function verifyQstashSignature(signatureJwt, rawBodyStr) {
   if (!signatureJwt || typeof signatureJwt !== "string") {
     return { ok: false, reason: "missing_signature_header" };
   }
@@ -88,32 +43,37 @@ export function verifyQstashSignature(signatureJwt, rawBodyStr) {
     return { ok: false, reason: "signing_keys_not_configured" };
   }
 
-  // Try current key, then next key
-  let result = null;
-  if (currentKey) result = verifyJwtWithKey(signatureJwt, currentKey);
-  if ((!result || !result.ok) && nextKey) result = verifyJwtWithKey(signatureJwt, nextKey);
+  const receiver = new Receiver({
+    currentSigningKey: currentKey || "",
+    nextSigningKey: nextKey || "",
+  });
 
-  if (!result || !result.ok) return result || { ok: false, reason: "signature_invalid" };
+  const baseUrl = process.env.APP_BASE_URL;
+  const url = baseUrl
+    ? `${baseUrl.replace(/\/+$/, "")}/api/v31-generation-advance`
+    : undefined;
 
-  // Verify body hash if the claim is present.
-  // QStash encodes it as standard base64(SHA-256(rawBodyBytes)).
-  const bodyHashClaim = result.payload?.body;
-  if (bodyHashClaim && rawBodyStr != null) {
-    const actualHash = createHash("sha256").update(rawBodyStr, "utf8").digest("base64");
-    if (bodyHashClaim !== actualHash) {
-      return { ok: false, reason: "body_hash_mismatch" };
-    }
+  try {
+    await receiver.verify({
+      signature: signatureJwt,
+      body: rawBodyStr,
+      url,
+    });
+    return { ok: true };
+  } catch (err) {
+    return {
+      ok: false,
+      reason: String(err?.message || "verification_failed").slice(0, 100),
+    };
   }
-
-  return { ok: true, jti: result.payload?.jti || null };
 }
 
 /**
  * Publish one POST /api/v31-generation-advance message via QStash.
  *
  * Requires env vars:
- *   QSTASH_TOKEN     — Upstash QStash API token
- *   APP_BASE_URL     — e.g. https://www.ortheon.app
+ *   QSTASH_TOKEN   — Upstash QStash API token
+ *   APP_BASE_URL   — e.g. https://www.ortheon.app
  *
  * @param {string} assessmentId
  * @returns {Promise<{ ok: boolean, messageId?: string | null, error?: string }>}
@@ -129,34 +89,19 @@ export async function publishNextV31Advance(assessmentId) {
     };
   }
 
-  const dest = `${baseUrl.replace(/\/$/, "")}/api/v31-generation-advance`;
-  const body = JSON.stringify({ assessmentId, trigger: "qstash" });
+  const url = `${baseUrl.replace(/\/+$/, "")}/api/v31-generation-advance`;
 
-  let resp;
-  let data;
   try {
-    resp = await fetch(`${QSTASH_PUBLISH_BASE}${dest}`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body,
+    const client = new Client({ token });
+    const result = await client.publishJSON({
+      url,
+      body: { assessmentId, trigger: "qstash" },
     });
-    data = await resp.json().catch(() => ({}));
+    return { ok: true, messageId: result?.messageId ?? result?.messageID ?? null };
   } catch (err) {
     return {
       ok: false,
-      error: `QStash publish network error: ${String(err?.message || "").slice(0, 100)}`,
+      error: `QStash publish error: ${String(err?.message || "").slice(0, 100)}`,
     };
   }
-
-  if (!resp.ok) {
-    return {
-      ok: false,
-      error: `QStash publish failed (HTTP ${resp.status}).`,
-    };
-  }
-
-  return { ok: true, messageId: data?.messageId || null };
 }

@@ -129,7 +129,6 @@ export default async function handler(req, res) {
 
   const signatureHeader = req.headers?.["upstash-signature"] || "";
   const isQstash = resolvedTrigger === "qstash" || !!signatureHeader;
-  let incomingJti = null;
 
   if (isQstash) {
     if (!signatureHeader) {
@@ -138,10 +137,11 @@ export default async function handler(req, res) {
     }
 
     // Reconstruct raw body string for body-hash verification.
-    // Both publisher and receiver use the same compact JSON format, so this is stable.
+    // Vercel pre-parses JSON bodies so the stream is consumed; JSON.stringify(req.body)
+    // reproduces the exact bytes because we control the published message format.
     const rawBodyStr = JSON.stringify(req.body);
 
-    const verification = verifyQstashSignature(signatureHeader, rawBodyStr);
+    const verification = await verifyQstashSignature(signatureHeader, rawBodyStr);
 
     if (!verification.ok) {
       console.error("[v31-generation-advance] QStash verification failed:", JSON.stringify({
@@ -151,8 +151,6 @@ export default async function handler(req, res) {
       // Return 401 so QStash does not retry (4xx = no retry in QStash).
       return res.status(401).json({ ok: false, error: "QStash signature verification failed." });
     }
-
-    incomingJti = verification.jti;
   }
 
   // ── Read current state ─────────────────────────────────────────────────────
