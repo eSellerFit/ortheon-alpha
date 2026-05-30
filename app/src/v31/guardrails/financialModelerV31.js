@@ -85,7 +85,9 @@ function inferFinancialPressure(financialReality, stableIncomeNeeded) {
     currentMonthlyIncome !== null &&
     minimumMonthlyIncome >= currentMonthlyIncome * 0.8
   ) {
-    return "high";
+    if (runwayMonths === null) return "moderate";
+    if (runwayMonths <= 6) return "high";
+    return "moderate";
   }
 
   if (stableIncomeNeeded) return "moderate";
@@ -107,7 +109,11 @@ function inferStableIncomeNeeded(financialReality) {
   );
 
   if (runwayMonths !== null && runwayMonths <= 6) return true;
+
+  if (bridgeRoleWillingness && runwayMonths !== null && runwayMonths > 6) return false;
+
   if (minimumMonthlyIncome !== null && minimumMonthlyIncome > 0) return true;
+
   if (bridgeRoleWillingness) return false;
 
   return null;
