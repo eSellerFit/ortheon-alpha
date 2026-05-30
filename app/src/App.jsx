@@ -1,13 +1,15 @@
+import { lazy, Suspense } from "react";
 import AssessmentFlow from "./pages/AssessmentFlow";
-import CareerMapPreview from "./components/assessment/CareerMapPreview";
-import DebugResultReplay from "./pages/DebugResultReplay";
-import DirectionV14Debug from "./components/assessment/DirectionV14Debug";
 import OrtheonLandingPage from "./OrtheonLandingPage";
 import PrivacyPolicy from "./PrivacyPolicy";
 import TermsOfUse from "./TermsOfUse";
-import V31ResultDebugViewer from "./v31/viewer/V31ResultDebugViewer";
 import V31UserFacingReportPreview from "./v31/report/V31UserFacingReportPreview";
 import "./App.css";
+
+const CareerMapPreview = lazy(() => import("./components/assessment/CareerMapPreview"));
+const DebugResultReplay = lazy(() => import("./pages/DebugResultReplay"));
+const DirectionV14Debug = lazy(() => import("./components/assessment/DirectionV14Debug"));
+const V31ResultDebugViewer = lazy(() => import("./v31/viewer/V31ResultDebugViewer"));
 
 function App() {
   const path = window.location.pathname;
@@ -18,25 +20,25 @@ function App() {
   }
 
   if (path.includes("/internal/v31-result")) {
-    return <V31ResultDebugViewer />;
+    return <Suspense fallback={null}><V31ResultDebugViewer /></Suspense>;
   }
 
   if (
     path.includes("/debug/direction-v14") ||
     hash.includes("debug/direction-v14")
   ) {
-    return <DirectionV14Debug />;
+    return <Suspense fallback={null}><DirectionV14Debug /></Suspense>;
   }
 
   const debugResultMatch =
     path.match(/\/debug\/result\/([^/]+)/) ||
     hash.match(/debug\/result\/([^/]+)/);
   if (debugResultMatch) {
-    return <DebugResultReplay assessmentId={debugResultMatch[1]} />;
+    return <Suspense fallback={null}><DebugResultReplay assessmentId={debugResultMatch[1]} /></Suspense>;
   }
 
   if (path.includes("/map-preview") || hash.includes("map-preview")) {
-    return <CareerMapPreview />;
+    return <Suspense fallback={null}><CareerMapPreview /></Suspense>;
   }
 
   if (path.includes("/assessment")) {
