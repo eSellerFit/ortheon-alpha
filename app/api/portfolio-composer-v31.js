@@ -15,7 +15,8 @@ import { PORTFOLIO_COMPOSER_PROMPT_SPEC_V31 } from "../src/v31/prompts/portfolio
 import { normalizeFinalPortfolioOutputV31 } from "../src/v31/normalizers/finalPortfolioOutputNormalizerV31.js";
 
 const MAX_ATTEMPTS = 3;
-const RETRY_DELAYS_MS = [0, 1500, 3000];
+// Delay before attempt 2 and 3. Attempt 1 is immediate.
+const RETRY_DELAYS_MS = [0, 2000, 5000];
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -23,6 +24,10 @@ function sleep(ms) {
 
 function isTransientStatus(status) {
   return [500, 502, 503, 504, 529].includes(status);
+}
+
+function isRateLimitStatus(status) {
+  return status === 429;
 }
 
 function isNonRetryableStatus(status) {
@@ -50,9 +55,18 @@ function cleanClaudeJsonText(rawText) {
     .trim();
 }
 
+/**
+ * Call Anthropic API with retry for transient failures.
+ *
+ * Retryable: network errors, AbortError, 429, 500/502/503/504/529, overloaded body.
+ * Non-retryable: 400, 401, 403, 404, other unexpected statuses.
+ * Returns a rich result object so the handler can classify the error precisely.
+ */
 async function callAnthropicWithRetry(apiKey, model, prompt) {
   let lastStatus = null;
   let lastBody = null;
+  let lastNetworkError = false;
+  let lastAbortError = false;
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
     if (attempt > 1) {
@@ -63,6 +77,7 @@ async function callAnthropicWithRetry(apiKey, model, prompt) {
       await sleep(delay);
     }
 
+    const attemptStart = Date.now();
     let response;
     let body;
 
@@ -83,38 +98,43 @@ async function callAnthropicWithRetry(apiKey, model, prompt) {
 
       body = await response.json().catch(() => ({}));
     } catch (networkError) {
+      const isAbort = networkError?.name === "AbortError";
+      const elapsedMs = Date.now() - attemptStart;
       console.log(
-        `[portfolio-composer-v31] attempt ${attempt}/${MAX_ATTEMPTS} - network error: ${networkError.message}`
+        `[portfolio-composer-v31] attempt ${attempt}/${MAX_ATTEMPTS} - network error (${isAbort ? "AbortError" : networkError?.name || "unknown"}) - elapsedMs: ${elapsedMs}`
       );
-
       lastBody = {};
       lastStatus = 0;
+      lastNetworkError = true;
+      lastAbortError = isAbort;
       continue;
     }
 
+    const elapsedMs = Date.now() - attemptStart;
     lastStatus = response.status;
     lastBody = body;
+    lastNetworkError = false;
+    lastAbortError = false;
 
     if (response.ok) {
       console.log(
-        `[portfolio-composer-v31] attempt ${attempt}/${MAX_ATTEMPTS} - status ${lastStatus} - success`
+        `[portfolio-composer-v31] attempt ${attempt}/${MAX_ATTEMPTS} - status ${lastStatus} - success - elapsedMs: ${elapsedMs}`
       );
-
       return { ok: true, data: body };
     }
 
     const safeError = sanitizeErrorText(body);
-
     console.log(
-      `[portfolio-composer-v31] attempt ${attempt}/${MAX_ATTEMPTS} - status ${lastStatus} - ${safeError}`
+      `[portfolio-composer-v31] attempt ${attempt}/${MAX_ATTEMPTS} - status ${lastStatus} - ${safeError} - elapsedMs: ${elapsedMs}`
     );
 
     if (isNonRetryableStatus(lastStatus)) {
-      return { ok: false, status: lastStatus, body, retryable: false };
+      return { ok: false, status: lastStatus, body, retryable: false, exhausted: false };
     }
 
-    if (!isTransientStatus(lastStatus) && !isOverloadedBody(body)) {
-      return { ok: false, status: lastStatus, body, retryable: false };
+    // 429, transient 5xx, or overloaded body are retryable — fall through to next attempt.
+    if (!isRateLimitStatus(lastStatus) && !isTransientStatus(lastStatus) && !isOverloadedBody(body)) {
+      return { ok: false, status: lastStatus, body, retryable: false, exhausted: false };
     }
   }
 
@@ -122,7 +142,10 @@ async function callAnthropicWithRetry(apiKey, model, prompt) {
     ok: false,
     status: lastStatus,
     body: lastBody,
-    overloaded: true,
+    overloaded: isOverloadedBody(lastBody),
+    networkError: lastNetworkError,
+    abortError: lastAbortError,
+    exhausted: true,
   };
 }
 
@@ -475,22 +498,42 @@ export default async function handler(req, res) {
     );
 
     if (!result.ok) {
-      if (result.overloaded) {
-        return res.status(503).json({
-          error:
-            "AI portfolio composition service is temporarily busy. Please try again in a minute.",
-          details: "Overloaded",
-        });
+      // Classify failure into a typed error code.
+      let code, safeMessage;
+
+      if (result.networkError) {
+        code = result.abortError ? "CLAUDE_TIMEOUT" : "CLAUDE_NETWORK_ERROR";
+        safeMessage = result.abortError
+          ? "Portfolio composition timed out."
+          : "Portfolio composition failed due to a network error.";
+      } else if (isRateLimitStatus(result.status)) {
+        code = "CLAUDE_RATE_LIMIT";
+        safeMessage = "Portfolio composition was rate-limited. Please try again shortly.";
+      } else if (result.overloaded || isTransientStatus(result.status)) {
+        code = "CLAUDE_UPSTREAM_ERROR";
+        safeMessage = "Portfolio composition failed due to a temporary upstream error.";
+      } else {
+        code = "PORTFOLIO_UNKNOWN";
+        safeMessage = "Claude API call failed.";
       }
 
-      console.error(
-        "[portfolio-composer-v31] Claude API error:",
-        sanitizeErrorText(result.body)
-      );
+      const detailHint = result.exhausted
+        ? `portfolio exhausted ${MAX_ATTEMPTS} attempts; last code: ${code}, status: ${result.status}`
+        : `code: ${code}, status: ${result.status}`;
+
+      console.error("[portfolio-composer-v31] API failure:", JSON.stringify({
+        assessmentId,
+        stage: "portfolio",
+        code,
+        httpStatus: result.status,
+        exhausted: Boolean(result.exhausted),
+        networkError: Boolean(result.networkError),
+      }));
 
       return res.status(500).json({
-        error: "Claude API call failed.",
-        details: result.body?.error?.message || "Unknown Claude API error.",
+        error: safeMessage,
+        code,
+        detailHint,
       });
     }
 
@@ -552,7 +595,7 @@ export default async function handler(req, res) {
       }
       return res.status(500).json({
         error: "Claude returned an empty response.",
-        code: "PORTFOLIO_BAD_JSON",
+        code: "CLAUDE_EMPTY_RESPONSE",
         detailHint: `stop_reason: ${stopReason}, outputTokens: ${outputTokens}`,
       });
     }
