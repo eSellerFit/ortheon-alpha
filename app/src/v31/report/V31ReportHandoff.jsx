@@ -186,6 +186,7 @@ export default function V31ReportHandoff({ assessmentId }) {
   const [nextStage, setNextStage] = useState(null);
   const [failedStage, setFailedStage] = useState(null);
   const [pollKey, setPollKey] = useState(0);
+  const [elapsedSecs, setElapsedSecs] = useState(0);
 
   useEffect(() => {
     if (!assessmentId) {
@@ -230,6 +231,7 @@ export default function V31ReportHandoff({ assessmentId }) {
       // Generation is running/partial/idle — show progress and start polling.
       setCompletedStages(statusData.completedStages || []);
       setNextStage(statusData.nextStage || null);
+      setElapsedSecs(0);
       setUiState("generating");
 
       // 2. Poll /status until ready, failed, or component unmounts.
@@ -276,6 +278,12 @@ export default function V31ReportHandoff({ assessmentId }) {
       cancelled = true;
     };
   }, [assessmentId, pollKey]);
+
+  useEffect(() => {
+    if (uiState !== "generating") return;
+    const interval = setInterval(() => setElapsedSecs((s) => s + 1), 1000);
+    return () => clearInterval(interval);
+  }, [uiState]);
 
   async function handleRetry() {
     setUiState("retrying");
@@ -343,10 +351,17 @@ export default function V31ReportHandoff({ assessmentId }) {
           ))}
         </ul>
 
-        <p style={S.reassurance}>
-          You can leave this page and come back later — your report will keep
-          processing in the background.
-        </p>
+        {elapsedSecs >= 180 ? (
+          <p style={S.reassurance}>
+            You can leave this page and come back later — your report will keep
+            processing in the background.
+          </p>
+        ) : elapsedSecs >= 90 ? (
+          <p style={S.reassurance}>
+            This is taking a little longer than usual, but your report is still
+            being prepared.
+          </p>
+        ) : null}
       </div>
     );
   }
