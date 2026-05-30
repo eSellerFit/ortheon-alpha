@@ -73,6 +73,7 @@ export async function verifyQstashSignature(signatureJwt, rawBodyStr) {
  *
  * Requires env vars:
  *   QSTASH_TOKEN   — Upstash QStash API token
+ *   QSTASH_URL     — Upstash regional API endpoint (e.g. https://qstash-us-east-1.upstash.io)
  *   APP_BASE_URL   — e.g. https://www.ortheon.app
  *
  * @param {string} assessmentId
@@ -80,24 +81,33 @@ export async function verifyQstashSignature(signatureJwt, rawBodyStr) {
  */
 export async function publishNextV31Advance(assessmentId) {
   const token = process.env.QSTASH_TOKEN;
-  const baseUrl = process.env.APP_BASE_URL;
+  const appBaseUrl = process.env.APP_BASE_URL;
 
-  if (!token || !baseUrl) {
+  if (!token || !appBaseUrl) {
     return {
       ok: false,
       error: "QStash not configured (QSTASH_TOKEN or APP_BASE_URL missing).",
     };
   }
 
-  const url = `${baseUrl.replace(/\/+$/, "")}/api/v31-generation-advance`;
+  // Use QSTASH_URL env var for the regional Upstash API endpoint.
+  // Defaults to US East — override with QSTASH_URL for other regions.
+  const qstashBaseUrl = (process.env.QSTASH_URL || "https://qstash-us-east-1.upstash.io").replace(/\/+$/, "");
+  const dest = `${appBaseUrl.replace(/\/+$/, "")}/api/v31-generation-advance`;
 
   try {
-    const client = new Client({ token });
+    const client = new Client({ token, baseUrl: qstashBaseUrl });
     const result = await client.publishJSON({
-      url,
+      url: dest,
       body: { assessmentId, trigger: "qstash" },
     });
-    return { ok: true, messageId: result?.messageId ?? result?.messageID ?? null };
+    const messageId = result?.messageId ?? result?.messageID ?? null;
+    console.log("[qstashV31Helper] published:", JSON.stringify({
+      qstashHost: new URL(qstashBaseUrl).host,
+      destPath: "/api/v31-generation-advance",
+      messageId,
+    }));
+    return { ok: true, messageId };
   } catch (err) {
     return {
       ok: false,
