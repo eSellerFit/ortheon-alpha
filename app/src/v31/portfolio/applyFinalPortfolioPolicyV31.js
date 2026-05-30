@@ -123,6 +123,22 @@ function shouldConsolidatePair(dirA, dirB) {
   // (e.g. AI assigned same pathFamily but one is employed, other is fractional)
   if (wmA === "employed" && (wmB === "fractional" || wmB === "consulting")) return false;
   if (wmB === "employed" && (wmA === "fractional" || wmA === "consulting")) return false;
+
+  // Keep separate when route types differ meaningfully — a direct path (available now)
+  // and a bridge/portfolio path (requires proof, credentials, or positioning first)
+  // are distinct career moves regardless of shared pathFamily.
+  const rtA = str(dirA.routeType);
+  const rtB = str(dirB.routeType);
+  if (
+    rtA !== rtB &&
+    (rtA === "bridge" ||
+      rtB === "bridge" ||
+      rtA === "portfolio" ||
+      rtB === "portfolio")
+  ) {
+    return false;
+  }
+
   return true;
 }
 
