@@ -102,8 +102,6 @@ function MapBadge({ label, bg, color, title }) {
 
 function DirectionNode({ node }) {
   const theme = getNodeTheme(node.status);
-  const rawText = node.shortReason || node.mainRisk || "";
-  const displayText = rawText.length > 72 ? rawText.slice(0, 70) + "…" : rawText;
 
   return (
     <div
@@ -128,7 +126,7 @@ function DirectionNode({ node }) {
           fontWeight: "700",
           lineHeight: "1.3",
           color: "#111",
-          marginBottom: "6px",
+          marginBottom: "5px",
           display: "-webkit-box",
           WebkitLineClamp: 2,
           WebkitBoxOrient: "vertical",
@@ -140,36 +138,16 @@ function DirectionNode({ node }) {
       <div
         style={{
           display: "flex",
-          flexWrap: "wrap",
+          flexWrap: "nowrap",
           gap: "3px",
-          marginBottom: displayText ? "5px" : 0,
+          overflow: "hidden",
         }}
       >
         <MapBadge label={node.status} bg={theme.badgeBg} color={theme.badgeColor} />
         {node.confidence && (
           <MapBadge label={node.confidence} bg="#f1f5f9" color="#475569" />
         )}
-        {(node.routeType || node.workModel) && (
-          <MapBadge
-            label={node.routeType || node.workModel}
-            bg="#eff6ff"
-            color="#1d4ed8"
-          />
-        )}
-        {node.aiDurabilityRating && (
-          <MapBadge
-            label={`AI ${node.aiDurabilityRating}`}
-            bg="#f0fdf4"
-            color="#166534"
-            title="AI durability: how this direction may hold up as AI changes work"
-          />
-        )}
       </div>
-      {displayText && (
-        <div style={{ fontSize: "11px", color: "#6b7280", lineHeight: "1.4" }}>
-          {displayText}
-        </div>
-      )}
     </div>
   );
 }
@@ -440,7 +418,7 @@ export default function V31DirectionMapPreview({ directionMap }) {
       <div
         style={{
           position: "relative",
-          minHeight: "480px",
+          minHeight: "620px",
           border: "1px solid #dbd8d0",
           borderRadius: "16px",
           background:
