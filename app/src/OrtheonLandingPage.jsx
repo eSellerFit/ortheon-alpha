@@ -1,4 +1,10 @@
+import { useEffect } from "react";
+import { logEvent } from "./utils/analyticsService";
+
 export default function OrtheonLandingPage() {
+  useEffect(() => {
+    logEvent("assessment_landed");
+  }, []);
   const situations = [
     {
       icon: "01",
@@ -1375,7 +1381,7 @@ export default function OrtheonLandingPage() {
             <img src="/ortheon-logo.png" alt="Ortheon" />
             <span>Ortheon</span>
           </div>
-          <a className="lp-nav-cta" href="/assessment">
+          <a className="lp-nav-cta" href="/assessment" onClick={() => logEvent("assessment_started")}>
             Start free assessment
           </a>
         </nav>
@@ -1401,7 +1407,7 @@ export default function OrtheonLandingPage() {
             </p>
 
             <div className="lp-actions">
-              <a className="lp-button primary" href="/assessment">
+              <a className="lp-button primary" href="/assessment" onClick={() => logEvent("assessment_started")}>
                 Start Career Direction Assessment
               </a>
               <a className="lp-button secondary" href="#sample-report">
@@ -1774,7 +1780,7 @@ export default function OrtheonLandingPage() {
               Receive your Career Direction Map, credibility status, financial
               signal, AI durability ratings, and the evidence behind the result.
             </p>
-            <a className="lp-final-cta" href="/assessment">
+            <a className="lp-final-cta" href="/assessment" onClick={() => logEvent("assessment_started")}>
               Start Career Direction Assessment
             </a>
             <div className="lp-terms">

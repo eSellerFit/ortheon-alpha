@@ -21,6 +21,7 @@ import {
   V31_DOWNLOAD_REPORT_ENABLED,
 } from "./reportActionConfigV31.js";
 import V31PdfReportLayout from "./V31PdfReportLayout.jsx";
+import { logEvent, updateAssessmentAnalytics } from "../../utils/analyticsService";
 
 // ── Styles ─────────────────────────────────────────────────────────────────────
 
@@ -944,6 +945,8 @@ export default function V31UserFacingReportPreview() {
       .then((result) => {
         if (result.ok) {
           setState({ status: "ok", reportViewModel: result.reportViewModel, error: null });
+          logEvent("report_opened", { assessmentId: documentId });
+          updateAssessmentAnalytics(documentId, { reportOpenedAt: new Date().toISOString() });
         } else {
           setState({
             status: "error",
@@ -1007,6 +1010,7 @@ export default function V31UserFacingReportPreview() {
         }
       }
       pdf.save("ortheon-v31-career-report.pdf");
+      logEvent("report_downloaded", { assessmentId: documentId });
       setPdfStatus("idle");
     } catch (err) {
       console.error("[V31 PDF] generation failed:", err.message);
@@ -1157,6 +1161,10 @@ export default function V31UserFacingReportPreview() {
           target="_blank"
           rel="noreferrer"
           style={S.actionLinkBtn}
+          onClick={() => {
+            logEvent("feedback_call_clicked", { assessmentId: documentId });
+            updateAssessmentAnalytics(documentId, { feedbackCallClickedAt: new Date().toISOString() });
+          }}
         >
           Book 30-minute report review
         </a>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import BasicContextStep from "../components/assessment/BasicContextStep";
 import CareerAnchorsStep from "../components/assessment/CareerAnchorsStep";
 import FinancialRealityStep from "../components/assessment/FinancialRealityStep";
@@ -7,8 +7,20 @@ import ProfessionalCredentialsStep from "../components/assessment/ProfessionalCr
 import CVUploadStep from "../components/assessment/CVUploadStep";
 import PriorityWeightsStep from "../components/assessment/PriorityWeightsStep";
 import V31ReportHandoff from "../v31/report/V31ReportHandoff";
+import { logEvent, updateAssessmentAnalytics } from "../utils/analyticsService";
 
 const TOTAL_STEPS = 8;
+
+const STEP_NAMES = {
+  1: "basic_context",
+  2: "career_anchors",
+  3: "financial_reality",
+  4: "transition_constraints",
+  5: "professional_credentials",
+  6: "cv_upload",
+  7: "priority_weights",
+  8: "report_handoff",
+};
 
 function AssessmentFlow() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -23,36 +35,81 @@ function AssessmentFlow() {
   const [weightsDraft, setWeightsDraft] = useState(null);
   // CVUploadStep (step 6) draft not lifted — main Back only shows in idle state
 
+  // assessment_started on mount (first render = step 1 viewed)
+  useEffect(() => {
+    logEvent("assessment_started", { stepId: 1, stepName: STEP_NAMES[1] });
+  }, []);
+
+  // assessment_step_viewed on every step change
+  useEffect(() => {
+    if (currentStep === 1) return; // already fired as assessment_started
+    logEvent("assessment_step_viewed", {
+      assessmentId: assessmentId || undefined,
+      stepId: currentStep,
+      stepName: STEP_NAMES[currentStep],
+    });
+  }, [currentStep]); // eslint-disable-line react-hooks/exhaustive-deps
+
   function goBack() {
     setCurrentStep((prev) => Math.max(1, prev - 1));
   }
 
   function handleBasicContextComplete({ assessmentId: newAssessmentId }) {
+    logEvent("assessment_step_completed", {
+      assessmentId: newAssessmentId,
+      stepId: 1,
+      stepName: STEP_NAMES[1],
+    });
+    updateAssessmentAnalytics(newAssessmentId, {
+      sessionId: (function () {
+        try { return localStorage.getItem("ortheon_session_id") || ""; } catch { return ""; }
+      })(),
+      startedAt: new Date().toISOString(),
+      lastStep: STEP_NAMES[1],
+    });
     setAssessmentId(newAssessmentId);
     setCurrentStep(2);
   }
 
   function handleCareerAnchorsComplete() {
+    logEvent("assessment_step_completed", { assessmentId, stepId: 2, stepName: STEP_NAMES[2] });
+    updateAssessmentAnalytics(assessmentId, { lastStep: STEP_NAMES[2] });
     setCurrentStep(3);
   }
 
   function handleFinancialRealityComplete() {
+    logEvent("assessment_step_completed", { assessmentId, stepId: 3, stepName: STEP_NAMES[3] });
+    updateAssessmentAnalytics(assessmentId, { lastStep: STEP_NAMES[3] });
     setCurrentStep(4);
   }
 
   function handleTransitionConstraintsComplete() {
+    logEvent("assessment_step_completed", { assessmentId, stepId: 4, stepName: STEP_NAMES[4] });
+    updateAssessmentAnalytics(assessmentId, { lastStep: STEP_NAMES[4] });
     setCurrentStep(5);
   }
 
   function handleProfessionalCredentialsComplete() {
+    logEvent("assessment_step_completed", { assessmentId, stepId: 5, stepName: STEP_NAMES[5] });
+    updateAssessmentAnalytics(assessmentId, { lastStep: STEP_NAMES[5] });
     setCurrentStep(6);
   }
 
   function handleCVUploadComplete() {
+    logEvent("assessment_step_completed", { assessmentId, stepId: 6, stepName: STEP_NAMES[6] });
+    updateAssessmentAnalytics(assessmentId, { lastStep: STEP_NAMES[6] });
     setCurrentStep(7);
   }
 
   async function handlePriorityWeightsComplete() {
+    logEvent("assessment_step_completed", { assessmentId, stepId: 7, stepName: STEP_NAMES[7] });
+    logEvent("assessment_submitted", { assessmentId });
+    logEvent("report_generation_started", { assessmentId });
+    updateAssessmentAnalytics(assessmentId, {
+      lastStep: STEP_NAMES[7],
+      completedAt: new Date().toISOString(),
+    });
+
     // Kick off server-side QStash generation chain. Fire-and-await the publish
     // call (fast — just queues the first stage message), then navigate regardless.
     // V31ReportHandoff handles the case where generation hasn't started yet.

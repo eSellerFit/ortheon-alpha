@@ -165,6 +165,7 @@ export default function FounderInbox() {
       <div style={S.header}>
         <h1 style={S.h1}>Founder Inbox</h1>
         <span style={S.count}>{loading ? "…" : `${docs.length} assessments`}</span>
+        <a href="/founder/analytics" style={S.analyticsLink}>Analytics →</a>
       </div>
 
       {error && <p style={S.errorMsg}>{error}</p>}
@@ -292,6 +293,13 @@ const S = {
   count: {
     fontSize: 13,
     color: "var(--color-text-muted, #6b7280)",
+  },
+  analyticsLink: {
+    marginLeft: "auto",
+    fontSize: 13,
+    color: "var(--color-accent, #245f73)",
+    textDecoration: "none",
+    fontWeight: 600,
   },
   tableWrap: {
     overflowX: "auto",

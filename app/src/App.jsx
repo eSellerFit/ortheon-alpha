@@ -12,10 +12,15 @@ const DirectionV14Debug = lazy(() => import("./components/assessment/DirectionV1
 const V31ResultDebugViewer = lazy(() => import("./v31/viewer/V31ResultDebugViewer"));
 const FounderDocumentView = lazy(() => import("./pages/FounderDocumentView"));
 const FounderInbox = lazy(() => import("./pages/FounderInbox"));
+const FounderAnalytics = lazy(() => import("./pages/FounderAnalytics"));
 
 function App() {
   const path = window.location.pathname;
   const hash = window.location.hash;
+
+  if (path === "/founder/analytics") {
+    return <Suspense fallback={null}><FounderAnalytics /></Suspense>;
+  }
 
   const founderDocMatch = path.match(/^\/founder\/([^/]+)$/);
   if (founderDocMatch) {

@@ -18,7 +18,8 @@
  * - Does NOT call /api/v31-generation-advance automatically.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { logEvent, updateAssessmentAnalytics } from "../../utils/analyticsService";
 
 // ── Stage configuration ────────────────────────────────────────────────────────
 
@@ -187,6 +188,7 @@ export default function V31ReportHandoff({ assessmentId }) {
   const [failedStage, setFailedStage] = useState(null);
   const [pollKey, setPollKey] = useState(0);
   const [elapsedSecs, setElapsedSecs] = useState(0);
+  const reportEventFired = useRef(false);
 
   useEffect(() => {
     if (!assessmentId) {
@@ -285,6 +287,19 @@ export default function V31ReportHandoff({ assessmentId }) {
     return () => clearInterval(interval);
   }, [uiState]);
 
+  // Fire report_generated / report_generation_failed exactly once per session
+  useEffect(() => {
+    if (reportEventFired.current) return;
+    if (uiState === "ready") {
+      reportEventFired.current = true;
+      logEvent("report_generated", { assessmentId });
+      updateAssessmentAnalytics(assessmentId, { reportGeneratedAt: new Date().toISOString() });
+    } else if (uiState === "failed") {
+      reportEventFired.current = true;
+      logEvent("report_generation_failed", { assessmentId });
+    }
+  }, [uiState, assessmentId]);
+
   async function handleRetry() {
     setUiState("retrying");
     setFailedStage(null);
@@ -372,7 +387,14 @@ export default function V31ReportHandoff({ assessmentId }) {
     return (
       <div style={S.container}>
         <h2 style={S.heading}>Your Career Direction Report is ready.</h2>
-        <a href={reportUrl} style={S.ctaLink}>
+        <a
+          href={reportUrl}
+          style={S.ctaLink}
+          onClick={() => {
+            logEvent("report_opened", { assessmentId });
+            updateAssessmentAnalytics(assessmentId, { reportOpenedAt: new Date().toISOString() });
+          }}
+        >
           View your report
         </a>
       </div>

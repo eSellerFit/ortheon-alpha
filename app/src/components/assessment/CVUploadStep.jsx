@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PdfUploadBox from "../cv/PdfUploadBox";
 import ExtractedTextReview from "../cv/ExtractedTextReview";
 import CVParseSummary from "../cv/CVParseSummary";
@@ -10,6 +10,7 @@ import {
   skipAssessmentCV,
   updateAssessmentCVProfile,
 } from "../../services/assessmentService";
+import { logEvent } from "../../utils/analyticsService";
 
 function CVUploadStep({ assessmentId, onComplete, onBack }) {
   const [stepState, setStepState] = useState("idle");
@@ -19,6 +20,10 @@ function CVUploadStep({ assessmentId, onComplete, onBack }) {
   const [parsedData, setParsedData] = useState(null);
   const [userCorrections, setUserCorrections] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    logEvent("cv_step_started", { assessmentId });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleFileSelected(file) {
     try {
@@ -35,6 +40,10 @@ function CVUploadStep({ assessmentId, onComplete, onBack }) {
         fileName: file.name,
         pageCount: result.pageCount,
         extractedCharacterCount: result.characterCount,
+      });
+      logEvent("cv_uploaded", {
+        assessmentId,
+        metadata: { pageCount: result.pageCount, extractedCharacterCount: result.characterCount },
       });
       setStepState("reviewing_text");
     } catch (error) {
@@ -82,16 +91,19 @@ function CVUploadStep({ assessmentId, onComplete, onBack }) {
       setParsedData(null);
       setUserCorrections([]);
       setStepState("parsing_cv");
+      logEvent("cv_parse_started", { assessmentId });
 
       const parsed = await parseCvText(cvText);
 
       setParsedData(parsed);
+      logEvent("cv_parse_succeeded", { assessmentId });
       setStepState("reviewing_parsed_profile");
     } catch (error) {
       console.error("CV parsing failed:", error);
       setErrorMessage(
         error.message || "We couldn't analyze your CV right now."
       );
+      logEvent("cv_parse_failed", { assessmentId });
       setStepState("parse_error");
     }
   }
@@ -139,6 +151,7 @@ function CVUploadStep({ assessmentId, onComplete, onBack }) {
     try {
       setErrorMessage("");
       setStepState("saving");
+      logEvent("cv_skipped", { assessmentId });
 
       await skipAssessmentCV(assessmentId, "user_skipped");
 
