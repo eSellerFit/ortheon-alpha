@@ -149,6 +149,19 @@ function buildDirectionGuardrail(
 
   if (hypothesis?.credibilityLevel !== "credible_now") {
     canShowAsCredibleNow = false;
+    if (!requiredDowngrade) {
+      // canShowAsCredibleNow is false solely because credibilityLevel is not "credible_now"
+      // (e.g. "credible_with_packaging"). No financial block, constraint, or capability
+      // gap was detected. This is a display restriction only — it does not indicate that
+      // a bridge route is required. The hypothesis routeType should be preserved as-is.
+      reasons.push(
+        "Display restriction only: credibilityLevel is '" +
+          (nullableString(hypothesis?.credibilityLevel) ?? "unknown") +
+          "', not 'credible_now'. No financial block, route constraint, or capability gap " +
+          "is present. Do not treat this flag as a bridge requirement or change the " +
+          "hypothesis routeType based on it."
+      );
+    }
   }
 
   if (reasons.length === 0) {

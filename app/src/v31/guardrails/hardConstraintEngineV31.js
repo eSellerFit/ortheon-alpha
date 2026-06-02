@@ -162,6 +162,16 @@ function evaluateLocationRisk(transitionConstraints, reasons) {
 function evaluateTimeRisk(hypothesis, transitionConstraints, reasons) {
   if (!isObject(transitionConstraints)) return "unknown";
 
+  // A direct route does not require a training or credential bridge by definition.
+  // requiredBridge wording on a direct-route hypothesis reflects positioning or
+  // packaging guidance — not a retraining commitment. Without this guard, training-
+  // adjacent words in requiredBridge ("certification", "training") would incorrectly
+  // escalate constraintLevel to bridge_required for a route the person can pursue now.
+  const rt = String(hypothesis?.routeType || "").toLowerCase();
+  if (rt === "direct" || (rt.includes("direct") && !rt.includes("bridge"))) {
+    return "none_detected";
+  }
+
   const weeklyTimeAvailable = nullableNumber(
     transitionConstraints.weeklyTimeAvailable
   );
