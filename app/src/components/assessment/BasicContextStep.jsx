@@ -16,8 +16,9 @@ const chips = [
 ];
 
 const previewDirections = [
-  { n: "1", label: "Product Operations Leader", meta: "Bridge · Medium confidence · AI D3", tag: "Primary", primary: true },
-  { n: "2", label: "Operational Transformation Consultant", meta: "Bridge · Medium confidence · AI D2", tag: "Secondary", primary: false },
+  { n: "1", label: "Business Operations / Delivery Leadership", meta: "Direct path · AI durability D3", tag: "Direct", primary: true },
+  { n: "2", label: "Digital Operations / Automation Enablement", meta: "Adjacent path · AI durability D3", tag: "Adjacent", primary: false },
+  { n: "3", label: "Independent Operations Advisory", meta: "Bridge-based path · AI durability D2/D3", tag: "Bridge", primary: false },
 ];
 
 function BasicContextStep({ onComplete, values, onValuesChange }) {
