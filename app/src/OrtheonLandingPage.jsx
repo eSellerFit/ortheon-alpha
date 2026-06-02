@@ -5,59 +5,22 @@ export default function OrtheonLandingPage() {
   useEffect(() => {
     logEvent("assessment_landed");
   }, []);
-  const situations = [
+
+  const riskCards = [
     {
       icon: "01",
-      headline: "You’re applying, but the market is not responding",
-      text: "Automated hiring systems and narrow role filters make it harder to understand where your experience reads as a credible signal.",
-      checks: "market credibility, evidence strength, direction fit.",
+      headline: "Credibility risk",
+      text: "A role that matches your resume is not necessarily a role the market will believe you in. Hiring managers and clients have pattern recognition. Getting this wrong means the move won't work even if you're qualified.",
     },
     {
       icon: "02",
-      headline: "Your experience is broad, but hard to position",
-      text: "You have done a lot, but the market needs a clearer signal about what direction you fit now.",
-      checks: "career spine, transferable evidence, positioning clarity.",
+      headline: "Financial reality risk",
+      text: "The right direction also needs to work financially. Income ramp, bridge income needs, runway, and risk tolerance are rarely factored in together. Most career tools ignore this entirely.",
     },
     {
       icon: "03",
-      headline: "You may need to look wider than the obvious next role",
-      text: "The right direction may be adjacent, independent, credentialed, technical, or non-corporate — not just another version of your last role.",
-      checks: "direct paths, adjacent paths, bridge paths, constraints.",
-    },
-    {
-      icon: "04",
-      headline: "You want a direction that can hold up as AI changes work",
-      text: "The next move should not only be possible now. It should still make sense over the next few years.",
-      checks: "AI durability, transition risk, future relevance.",
-    },
-  ];
-
-  const problemQuestions = [
-    "What do I want?",
-    "Where will the market believe me?",
-    "What can I financially afford?",
-    "What paths are realistic under my constraints?",
-    "Which directions are durable enough as AI changes work?",
-  ];
-
-  const howSteps = [
-    {
-      number: "1",
-      title: "Upload your CV",
-      text: "Ortheon extracts career evidence, domain signals, seniority, and transferable patterns.",
-      signal: "Evidence intake",
-    },
-    {
-      number: "2",
-      title: "Answer a few reality-check questions",
-      text: "You provide career anchors, financial floor, constraints, risk tolerance, and transition preferences.",
-      signal: "Reality inputs",
-    },
-    {
-      number: "3",
-      title: "Get your Career Direction Report",
-      text: "Ortheon shows market-credible directions, bridge paths, financial reality checks, AI durability, and practical next validation steps.",
-      signal: "Direction report",
+      headline: "AI durability risk",
+      text: "A direction that looks credible today may become more exposed as AI compresses the work. Ortheon explicitly flags how durable a direction is likely to be and what that means for your positioning.",
     },
   ];
 
@@ -68,7 +31,6 @@ export default function OrtheonLandingPage() {
       path: "Direct",
       credibility: "Credible now",
       durability: "D3",
-      financial: "Viable",
     },
     {
       rank: "2",
@@ -76,7 +38,6 @@ export default function OrtheonLandingPage() {
       path: "Adjacent",
       credibility: "Evidence-backed",
       durability: "D3",
-      financial: "Bridge-aware",
     },
     {
       rank: "3",
@@ -84,7 +45,6 @@ export default function OrtheonLandingPage() {
       path: "Bridge-based",
       credibility: "Needs positioning",
       durability: "D4",
-      financial: "Runway-sensitive",
     },
   ];
 
@@ -108,14 +68,47 @@ export default function OrtheonLandingPage() {
   ];
 
   const lenses = [
-    "Market credibility",
-    "Experience evidence",
-    "Career anchors",
-    "Financial reality",
-    "Practical constraints",
-    "Credentials / gates",
-    "AI durability",
-    "Direction calibration",
+    {
+      name: "Market credibility",
+      description: "Would an employer, client, or hiring manager believe this move based on your actual experience?",
+    },
+    {
+      name: "Transferable competencies",
+      description: "What can you really carry from your past roles into a new direction?",
+    },
+    {
+      name: "Career fit",
+      description: "Does this path fit how you work, what motivates you, and what usually drains you?",
+    },
+    {
+      name: "Financial reality",
+      description: "Can this transition work with your income needs, runway, and risk tolerance?",
+    },
+    {
+      name: "AI durability",
+      description: "Is this direction likely to stay valuable as AI changes what companies need?",
+    },
+  ];
+
+  const durabilityCards = [
+    {
+      tag: "exposed",
+      tagLabel: "More exposed",
+      headline: "Work being automated or compressed",
+      text: "High-volume transactional or process work that AI is actively compressing. Can still be a viable direction, but positioning needs to account for the shift.",
+    },
+    {
+      tag: "repositioning",
+      tagLabel: "Durable with repositioning",
+      headline: "Stays valuable if the angle shifts",
+      text: "The core domain is stable but specific activities within it are being automated. The move works if the positioning lands on the durable parts.",
+    },
+    {
+      tag: "durable",
+      tagLabel: "More durable",
+      headline: "Depends on what AI cannot easily replicate",
+      text: "Judgment-intensive, relationship-dependent, or complexity-oriented work where AI augments but does not yet replace the primary value.",
+    },
   ];
 
   return (
@@ -317,8 +310,7 @@ export default function OrtheonLandingPage() {
           padding: 24px;
         }
 
-        .lp-artifact-top,
-        .lp-footer {
+        .lp-artifact-top {
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -493,11 +485,6 @@ export default function OrtheonLandingPage() {
           color: #fff8ea;
         }
 
-        .lp-section.navy {
-          background: #172330;
-          color: #fff8ea;
-        }
-
         .lp-section-head {
           max-width: 720px;
           margin-bottom: 44px;
@@ -515,8 +502,7 @@ export default function OrtheonLandingPage() {
           font-size: 13px;
         }
 
-        .lp-section.ink .lp-eyebrow,
-        .lp-section.navy .lp-eyebrow {
+        .lp-section.ink .lp-eyebrow {
           color: #7fd2dc;
         }
 
@@ -530,8 +516,7 @@ export default function OrtheonLandingPage() {
           line-height: 1.13;
         }
 
-        .lp-section.ink h2,
-        .lp-section.navy h2 {
+        .lp-section.ink h2 {
           color: #fff8ea;
         }
 
@@ -542,14 +527,13 @@ export default function OrtheonLandingPage() {
           line-height: 1.7;
         }
 
-        .lp-section.ink .lp-copy,
-        .lp-section.navy .lp-copy {
+        .lp-section.ink .lp-copy {
           color: rgba(248, 241, 227, 0.72);
         }
 
-        .lp-icp-grid {
+        .lp-how-grid {
           display: grid;
-          grid-template-columns: repeat(4, minmax(0, 1fr));
+          grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: 16px;
         }
 
@@ -607,19 +591,9 @@ export default function OrtheonLandingPage() {
           background: #2f9aa8;
         }
 
-        .lp-mini-line i:nth-child(1) {
-          left: 0;
-        }
-
-        .lp-mini-line i:nth-child(2) {
-          left: 30px;
-          background: #b7791f;
-        }
-
-        .lp-mini-line i:nth-child(3) {
-          right: 0;
-          background: #172330;
-        }
+        .lp-mini-line i:nth-child(1) { left: 0; }
+        .lp-mini-line i:nth-child(2) { left: 30px; background: #b7791f; }
+        .lp-mini-line i:nth-child(3) { right: 0; background: #172330; }
 
         .lp-icp-card h3 {
           margin: 0 0 10px;
@@ -635,54 +609,6 @@ export default function OrtheonLandingPage() {
           line-height: 1.62;
         }
 
-        .lp-checks {
-          margin-top: 16px;
-          border-left: 3px solid #2f9aa8;
-          padding-left: 12px;
-          color: #223241;
-          font-size: 13px;
-          line-height: 1.5;
-        }
-
-        .lp-checks strong {
-          color: #245f68;
-        }
-
-        .lp-question-grid {
-          display: grid;
-          grid-template-columns: repeat(5, minmax(0, 1fr));
-          gap: 12px;
-        }
-
-        .lp-question-card {
-          border: 1px solid rgba(248, 241, 227, 0.16);
-          border-radius: 18px;
-          background: rgba(248, 241, 227, 0.06);
-          padding: 22px;
-        }
-
-        .lp-question-card span {
-          display: inline-flex;
-          width: 32px;
-          height: 32px;
-          align-items: center;
-          justify-content: center;
-          margin-bottom: 16px;
-          border-radius: 10px;
-          background: rgba(47, 154, 168, 0.18);
-          color: #7fd2dc;
-          font-size: 12px;
-          font-weight: 900;
-        }
-
-        .lp-question-card h3 {
-          margin: 0;
-          color: #fff8ea;
-          font-size: 16px;
-          line-height: 1.3;
-        }
-
-        .lp-product-grid,
         .lp-sample-grid,
         .lp-founder-grid {
           display: grid;
@@ -691,7 +617,10 @@ export default function OrtheonLandingPage() {
           align-items: center;
         }
 
-        .lp-product-panel,
+        .lp-founder-grid {
+          gap: 72px;
+        }
+
         .lp-sample-panel {
           border: 1px solid rgba(248, 241, 227, 0.16);
           border-radius: 28px;
@@ -699,7 +628,6 @@ export default function OrtheonLandingPage() {
           padding: 10px;
         }
 
-        .lp-product-map,
         .lp-sample-report {
           border-radius: 21px;
           background: #fff8ea;
@@ -707,70 +635,29 @@ export default function OrtheonLandingPage() {
           padding: 24px;
         }
 
-        .lp-map-grid {
-          display: grid;
-          grid-template-columns: 0.82fr 1.18fr;
-          gap: 18px;
-          align-items: center;
-        }
-
-        .lp-map-origin {
-          border: 1px solid #245f68;
-          border-radius: 18px;
-          background: #eef7f7;
-          padding: 18px;
-        }
-
-        .lp-map-origin span {
-          display: block;
-          margin-bottom: 5px;
-          color: #245f68;
-          font-size: 10px;
-          font-weight: 900;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-        }
-
-        .lp-map-origin strong {
-          color: #172330;
-          font-size: 17px;
-          line-height: 1.25;
-        }
-
-        .lp-map-paths {
-          display: grid;
+        .lp-report-bullets {
+          margin: 16px 0 28px;
+          padding: 0;
+          list-style: none;
+          display: flex;
+          flex-direction: column;
           gap: 10px;
         }
 
-        .lp-map-path {
-          border: 1px solid #dfd4c4;
-          border-left: 5px solid #2f9aa8;
-          border-radius: 14px;
-          background: #ffffff;
-          padding: 13px;
+        .lp-report-bullets li {
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
+          color: #526071;
+          font-size: 15px;
+          line-height: 1.55;
         }
 
-        .lp-map-path.bridge {
-          border-left-color: #b7791f;
-        }
-
-        .lp-map-path.conditional {
-          border-left-color: #6f7f96;
-        }
-
-        .lp-map-path strong {
-          display: block;
-          color: #172330;
-          font-size: 14px;
-          line-height: 1.3;
-        }
-
-        .lp-map-path span {
-          display: block;
-          margin-top: 5px;
-          color: #5b6674;
-          font-size: 12px;
-          line-height: 1.4;
+        .lp-report-bullets li::before {
+          content: "—";
+          color: #2f9aa8;
+          flex: 0 0 auto;
+          font-weight: 700;
         }
 
         .lp-report-sections {
@@ -858,127 +745,9 @@ export default function OrtheonLandingPage() {
           padding: 12px;
         }
 
-        .lp-sample-download {
-          display: inline-flex;
-          width: fit-content;
-          align-items: center;
-          justify-content: center;
-          min-height: 50px;
-          margin-top: 22px;
-          border: 1px solid rgba(47, 154, 168, 0.45);
-          border-radius: 999px;
-          background: #2f9aa8;
-          color: #061c22;
-          padding: 14px 20px;
-          font-size: 14px;
-          font-weight: 900;
-          text-decoration: none;
-          box-shadow: 0 14px 32px rgba(47, 154, 168, 0.2);
-        }
-
-        .lp-how-grid {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 16px;
-        }
-
-        .lp-how-card {
-          position: relative;
-          border: 1px solid #cbd8dc;
-          border-radius: 20px;
-          background: #ffffff;
-          padding: 24px;
-          box-shadow: 0 16px 34px rgba(23, 35, 48, 0.06);
-        }
-
-        .lp-how-card::after {
-          content: "";
-          position: absolute;
-          top: 42px;
-          right: -17px;
-          width: 17px;
-          height: 2px;
-          background: #9fc7ca;
-        }
-
-        .lp-how-card:last-child::after {
-          display: none;
-        }
-
-        .lp-how-top {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 12px;
-          margin-bottom: 18px;
-        }
-
-        .lp-how-number {
-          display: inline-flex;
-          width: 42px;
-          height: 42px;
-          align-items: center;
-          justify-content: center;
-          border-radius: 14px;
-          background: #172330;
-          color: #fff8ea;
-          font-size: 13px;
-          font-weight: 900;
-        }
-
-        .lp-how-signal {
-          border-radius: 999px;
-          background: #e9f4f5;
-          color: #245f68;
-          padding: 6px 9px;
-          font-size: 10px;
-          font-weight: 900;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-        }
-
-        .lp-how-card h3 {
-          margin: 0 0 10px;
-          color: #172330;
-          font-size: 18px;
-          line-height: 1.3;
-        }
-
-        .lp-how-card p {
-          margin: 0;
-          color: #526071;
-          font-size: 14px;
-          line-height: 1.65;
-        }
-
-        .lp-how-visual {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 6px;
-          margin-top: 18px;
-        }
-
-        .lp-how-visual span {
-          height: 6px;
-          border-radius: 999px;
-          background: #dce9eb;
-        }
-
-        .lp-how-visual span:nth-child(1) {
-          background: #2f9aa8;
-        }
-
-        .lp-how-visual span:nth-child(2) {
-          background: #b7791f;
-        }
-
-        .lp-how-visual span:nth-child(3) {
-          background: #172330;
-        }
-
         .lp-lens-grid {
           display: grid;
-          grid-template-columns: repeat(4, minmax(0, 1fr));
+          grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: 12px;
         }
 
@@ -1005,14 +774,102 @@ export default function OrtheonLandingPage() {
         }
 
         .lp-lens-card h3 {
-          margin: 0;
+          margin: 0 0 10px;
           color: #172330;
           font-size: 16px;
           line-height: 1.3;
         }
 
-        .lp-founder-grid {
-          gap: 72px;
+        .lp-lens-card p {
+          margin: 0;
+          color: #526071;
+          font-size: 14px;
+          line-height: 1.62;
+        }
+
+        .lp-durability-grid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 16px;
+        }
+
+        .lp-durability-card {
+          border: 1px solid rgba(248, 241, 227, 0.14);
+          border-radius: 20px;
+          background: rgba(248, 241, 227, 0.06);
+          padding: 24px;
+        }
+
+        .lp-durability-tag {
+          display: inline-block;
+          border-radius: 999px;
+          padding: 5px 12px;
+          margin-bottom: 16px;
+          font-size: 11px;
+          font-weight: 900;
+          letter-spacing: 0.04em;
+          text-transform: uppercase;
+        }
+
+        .lp-durability-tag.exposed {
+          background: rgba(190, 90, 50, 0.2);
+          color: #f2a07a;
+        }
+
+        .lp-durability-tag.repositioning {
+          background: rgba(180, 130, 20, 0.22);
+          color: #f0c96a;
+        }
+
+        .lp-durability-tag.durable {
+          background: rgba(47, 154, 168, 0.22);
+          color: #7fd2dc;
+        }
+
+        .lp-durability-card h3 {
+          margin: 0 0 10px;
+          color: #fff8ea;
+          font-size: 18px;
+          line-height: 1.28;
+        }
+
+        .lp-durability-card p {
+          margin: 0;
+          color: rgba(248, 241, 227, 0.7);
+          font-size: 14px;
+          line-height: 1.62;
+        }
+
+        .lp-mvp-center {
+          max-width: 640px;
+          margin: 0 auto;
+          text-align: center;
+        }
+
+        .lp-mvp-list {
+          margin: 20px 0 32px;
+          padding: 0;
+          list-style: none;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 10px;
+        }
+
+        .lp-mvp-list li {
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
+          color: #526071;
+          font-size: 15px;
+          line-height: 1.55;
+        }
+
+        .lp-mvp-list li::before {
+          content: "✓";
+          color: #2f9aa8;
+          flex: 0 0 auto;
+          font-weight: 700;
         }
 
         .lp-founder-id {
@@ -1152,6 +1009,10 @@ export default function OrtheonLandingPage() {
         }
 
         .lp-footer {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
           border-top: 1px solid #ded6c4;
           padding-top: 30px;
           padding-bottom: 30px;
@@ -1195,7 +1056,6 @@ export default function OrtheonLandingPage() {
 
         @media (max-width: 1080px) {
           .lp-hero-grid,
-          .lp-product-grid,
           .lp-sample-grid,
           .lp-founder-grid {
             grid-template-columns: 1fr;
@@ -1206,25 +1066,17 @@ export default function OrtheonLandingPage() {
           }
 
           .lp-artifact-shell,
-          .lp-product-panel,
           .lp-sample-panel {
             max-width: 720px;
-          }
-
-          .lp-icp-grid,
-          .lp-question-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
           }
         }
 
         @media (max-width: 860px) {
           .lp-signal-grid,
-          .lp-lens-grid {
+          .lp-how-grid,
+          .lp-lens-grid,
+          .lp-durability-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
-          }
-
-          .lp-map-grid {
-            grid-template-columns: 1fr;
           }
         }
 
@@ -1295,7 +1147,6 @@ export default function OrtheonLandingPage() {
           }
 
           .lp-artifact,
-          .lp-product-map,
           .lp-sample-report {
             padding: 16px;
           }
@@ -1319,22 +1170,12 @@ export default function OrtheonLandingPage() {
           }
 
           .lp-signal-grid,
-          .lp-icp-grid,
           .lp-how-grid,
-          .lp-question-grid,
+          .lp-durability-grid,
           .lp-sample-fields,
           .lp-lens-grid,
           .lp-form-grid {
             grid-template-columns: 1fr;
-          }
-
-          .lp-how-card::after {
-            display: none;
-          }
-
-          .lp-sample-download {
-            width: 100%;
-            text-align: center;
           }
 
           .lp-section {
@@ -1375,6 +1216,7 @@ export default function OrtheonLandingPage() {
         }
       `}</style>
 
+      {/* ── 1. Hero ── */}
       <section className="lp-hero">
         <nav className="lp-container lp-nav">
           <div className="lp-brand">
@@ -1390,25 +1232,22 @@ export default function OrtheonLandingPage() {
           <div>
             <div className="lp-kicker">
               <span className="lp-dot" />
-              Career direction report · Free individual assessment
+              Career direction for an AI-changing job market · Free during MVP
             </div>
 
             <h1>
-              A career move is not only about what you want.
-              <br />
-              <em>It’s about where the market can believe you.</em>
+              Career direction for an AI-changing job market
             </h1>
 
             <p className="lp-hero-sub">
-              Ortheon helps you identify career directions that are credible
-              from your experience, realistic for your financial situation,
-              aligned with what matters to you, and more durable in an
-              AI-shaped market.
+              Your next move should not be based only on what your resume matches today.
+              <br /><br />
+              Ortheon helps you understand which career directions are still credible from your experience, realistic for your financial situation, aligned with how you actually work — and more durable as AI changes what companies need.
             </p>
 
             <div className="lp-actions">
               <a className="lp-button primary" href="/assessment" onClick={() => logEvent("assessment_started")}>
-                Start Career Direction Assessment
+                Start Free Assessment
               </a>
               <a className="lp-button secondary" href="#sample-report">
                 See Sample Report
@@ -1416,9 +1255,7 @@ export default function OrtheonLandingPage() {
             </div>
 
             <p className="lp-trust">
-              Free individual assessment. No credit card required.
-              <br />
-              Currently in alpha — built with feedback from early users.
+              Get a free Career Direction Report during the MVP stage. No credit card. No account required.
             </p>
           </div>
 
@@ -1427,7 +1264,7 @@ export default function OrtheonLandingPage() {
               <div className="lp-artifact-top">
                 <div>
                   <p className="lp-report-label">Career Direction Map</p>
-                  <p className="lp-artifact-title">Hybrid map + report preview</p>
+                  <p className="lp-artifact-title">Sample Career Direction Report</p>
                 </div>
                 <span className="lp-artifact-pill">Anonymized sample</span>
               </div>
@@ -1480,194 +1317,67 @@ export default function OrtheonLandingPage() {
         </div>
       </section>
 
+      {/* ── 2. Problem ── */}
       <section className="lp-section light">
         <div className="lp-container">
           <div className="lp-section-head">
             <p className="lp-eyebrow">
               <span className="lp-dot" />
-              Who this is for
+              The problem
             </p>
-            <h2>Built for people whose next move is no longer obvious.</h2>
+            <h2>A resume match is not a direction decision</h2>
             <p className="lp-copy">
-              Ortheon is for people making a serious career direction decision,
-              especially when ability, market credibility, financial reality,
-              constraints, and AI durability all need to be considered together.
+              Wanting a direction is not enough. The move has to be credible to
+              the market, financially viable under your specific constraints, and
+              durable enough to stay relevant as AI reshapes what companies need.
             </p>
           </div>
 
-          <div className="lp-icp-grid">
-            {situations.map((situation) => (
-              <article className="lp-icp-card" key={situation.headline}>
+          <div className="lp-how-grid">
+            {riskCards.map((card) => (
+              <article className="lp-icp-card" key={card.headline}>
                 <div className="lp-icp-top">
-                  <span className="lp-icon">{situation.icon}</span>
+                  <span className="lp-icon">{card.icon}</span>
                   <span className="lp-mini-line" aria-hidden="true">
                     <i />
                     <i />
                     <i />
                   </span>
                 </div>
-                <h3>{situation.headline}</h3>
-                <p>{situation.text}</p>
-                <div className="lp-checks">
-                  <strong>Ortheon checks:</strong> {situation.checks}
-                </div>
+                <h3>{card.headline}</h3>
+                <p>{card.text}</p>
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="lp-section warm">
-        <div className="lp-container">
-          <div className="lp-section-head">
-            <p className="lp-eyebrow">
-              <span className="lp-dot" />
-              How it works
-            </p>
-            <h2>Three inputs, one structured career direction report.</h2>
-            <p className="lp-copy">
-              The process is built like a diagnostic: gather evidence, add the
-              reality constraints, then return a report that separates credible
-              directions from bridge paths and longer-term options.
-            </p>
-          </div>
-
-          <div className="lp-how-grid">
-            {howSteps.map((step) => (
-              <article className="lp-how-card" key={step.title}>
-                <div className="lp-how-top">
-                  <span className="lp-how-number">{step.number}</span>
-                  <span className="lp-how-signal">{step.signal}</span>
-                </div>
-                <h3>{step.title}</h3>
-                <p>{step.text}</p>
-                <div className="lp-how-visual" aria-hidden="true">
-                  <span />
-                  <span />
-                  <span />
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="lp-section ink">
-        <div className="lp-container">
-          <div className="lp-section-head">
-            <p className="lp-eyebrow">
-              <span className="lp-dot" />
-              The decision problem
-            </p>
-            <h2>Most career advice skips the part the market cares about.</h2>
-            <p className="lp-copy">
-              The real decision is not one question. It is five at once: desire,
-              market belief, financial reality, practical constraints, and
-              durability as AI changes work.
-            </p>
-          </div>
-
-          <div className="lp-question-grid">
-            {problemQuestions.map((question, index) => (
-              <article className="lp-question-card" key={question}>
-                <span>{index + 1}</span>
-                <h3>{question}</h3>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="lp-section navy">
-        <div className="lp-container">
-          <div className="lp-product-grid">
-            <div>
-              <p className="lp-eyebrow">
-                <span className="lp-dot" />
-                Career Direction Map
-              </p>
-              <h2>A map of credible, adjacent, bridge-based, and conditional paths.</h2>
-              <p className="lp-copy">
-                The map is not a subway diagram or a personality chart. It is a
-                compact decision artifact showing where your current profile
-                sits and how different paths relate to your evidence, financial
-                reality, AI durability, and transition risk.
-              </p>
-            </div>
-
-            <div className="lp-product-panel">
-              <div className="lp-product-map">
-                <div className="lp-map-grid">
-                  <div className="lp-map-origin">
-                    <span>Current profile / You are here</span>
-                    <strong>Senior Operations Manager</strong>
-                  </div>
-                  <div className="lp-map-paths">
-                    <div className="lp-map-path">
-                      <strong>Direct path</strong>
-                      <span>Business Operations / Delivery Leadership · credible now · financially viable</span>
-                    </div>
-                    <div className="lp-map-path">
-                      <strong>Adjacent path</strong>
-                      <span>Digital Operations / Automation Enablement · strong evidence with positioning</span>
-                    </div>
-                    <div className="lp-map-path bridge">
-                      <strong>Bridge-based path</strong>
-                      <span>Independent Operations Advisory · needs offer clarity and runway</span>
-                    </div>
-                    <div className="lp-map-path conditional">
-                      <strong>Conditional / longer-term path</strong>
-                      <span>Operations Technology Strategy · stronger technical proof needed</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="lp-signal-grid">
-                  <div className="lp-signal-card">
-                    <span>Credibility</span>
-                    <strong>Market-believable evidence</strong>
-                  </div>
-                  <div className="lp-signal-card">
-                    <span>Financial fit</span>
-                    <strong>Income-floor aware</strong>
-                  </div>
-                  <div className="lp-signal-card">
-                    <span>AI durability</span>
-                    <strong>D3-D4 signal</strong>
-                  </div>
-                  <div className="lp-signal-card">
-                    <span>Transition path</span>
-                    <strong>Direct / adjacent / bridge</strong>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
+      {/* ── 3. Report preview ── */}
       <section id="sample-report" className="lp-section warm">
         <div className="lp-container">
           <div className="lp-sample-grid">
             <div>
               <p className="lp-eyebrow">
                 <span className="lp-dot" />
-                Sample report
+                What you get
               </p>
-              <h2>Sample Career Direction Report</h2>
+              <h2>A structured Career Direction Report — not a list of roles.</h2>
               <p className="lp-copy">
-                Users receive a structured report, not just a list of roles.
-                It shows ranked directions, key signals, recommended directions,
-                nearby trajectories, what drove the results, and the practical
-                details behind each path.
+                You receive a ranked set of directions with credibility signals,
+                financial reality checks, AI durability ratings, transition
+                pathway, and validation steps for each. It is designed to be a
+                decision-making artifact, not a motivational document.
               </p>
-              <a
-                className="lp-sample-download"
-                href="/sample-career-direction-report.pdf"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Download Sample Career Direction Report
+              <ul className="lp-report-bullets">
+                <li>Ranked direction portfolio (up to 3 credible paths)</li>
+                <li>Market credibility signal for each direction</li>
+                <li>Financial reality check — income floor, ramp, and risk</li>
+                <li>AI durability signals — where the direction looks more exposed or more resilient</li>
+                <li>Transition pathway — direct, adjacent, or bridge</li>
+                <li>Practical next validation steps</li>
+              </ul>
+              <a className="lp-button primary" href="/assessment" onClick={() => logEvent("assessment_started")}>
+                Start Free Assessment
               </a>
             </div>
 
@@ -1709,33 +1419,99 @@ export default function OrtheonLandingPage() {
         </div>
       </section>
 
+      {/* ── 4. Five lenses ── */}
       <section className="lp-section light">
         <div className="lp-container">
           <div className="lp-section-head center">
             <p className="lp-eyebrow">
               <span className="lp-dot" />
-              Method
+              The five lenses
             </p>
-            <h2>Each direction is evaluated through the lenses that shape a real move.</h2>
+            <h2>Each direction is evaluated across five dimensions — not just skills</h2>
             <p className="lp-copy">
-              Ortheon does not match your CV to job titles. It evaluates
-              possible directions through credibility, evidence, anchors,
-              financial reality, constraints, credentials, AI durability, and
-              calibration.
+              Ortheon does not match your CV to job titles. Each direction
+              hypothesis is evaluated across these five dimensions — together,
+              not in isolation.
             </p>
           </div>
 
           <div className="lp-lens-grid">
             {lenses.map((lens, index) => (
-              <article className="lp-lens-card" key={lens}>
+              <article className="lp-lens-card" key={lens.name}>
                 <span>{index + 1}</span>
-                <h3>{lens}</h3>
+                <h3>{lens.name}</h3>
+                <p>{lens.description}</p>
               </article>
             ))}
           </div>
         </div>
       </section>
 
+      {/* ── 5. AI durability ── */}
+      <section className="lp-section ink">
+        <div className="lp-container">
+          <div className="lp-section-head">
+            <p className="lp-eyebrow">
+              <span className="lp-dot" />
+              AI durability
+            </p>
+            <h2>The next move should still make sense in three years</h2>
+            <p className="lp-copy">
+              Career advice cannot ignore AI anymore.
+              <br /><br />
+              It is not enough to say: "You have the skills, so this role is a match."
+              <br /><br />
+              Ortheon also asks whether the direction is likely to stay valuable, become more exposed, or require a different kind of human advantage as AI changes workflows.
+              <br /><br />
+              The goal is not to predict the future perfectly. The goal is to avoid moving blindly toward a path that already looks fragile.
+            </p>
+          </div>
+
+          <div className="lp-durability-grid">
+            {durabilityCards.map((card) => (
+              <article className="lp-durability-card" key={card.tag}>
+                <span className={`lp-durability-tag ${card.tag}`}>{card.tagLabel}</span>
+                <h3>{card.headline}</h3>
+                <p>{card.text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 6. MVP / free alpha ── */}
+      <section className="lp-section light">
+        <div className="lp-container">
+          <div className="lp-mvp-center">
+            <p className="lp-eyebrow">
+              <span className="lp-dot" />
+              Free during MVP
+            </p>
+            <h2>Get a free Career Direction Report during the alpha stage</h2>
+            <p className="lp-copy">
+              Ortheon is currently in MVP launch.
+              <br /><br />
+              The assessment and Career Direction Report are free while I collect feedback and calibrate the logic behind the product.
+              <br /><br />
+              For the first 10 people who complete the assessment, I am also offering a free 30-minute conversation to discuss the report and hear what felt useful, accurate, unclear, or missing.
+            </p>
+            <ul className="lp-mvp-list">
+              <li>Full Career Direction Report at no cost</li>
+              <li>No credit card and no account required to start</li>
+              <li>First 10 users can book a free 30-minute report conversation</li>
+              <li>Your feedback helps calibrate credibility, financial realism, career fit, and AI durability</li>
+            </ul>
+            <a className="lp-button primary" href="/assessment" onClick={() => logEvent("assessment_started")}>
+              Start Free Assessment
+            </a>
+            <p style={{ marginTop: 14, color: "#6b7280", fontSize: 14, lineHeight: 1.55 }}>
+              Takes about 20 minutes.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 7. Founder ── */}
       <section className="lp-section warm">
         <div className="lp-container">
           <div className="lp-founder-grid">
@@ -1744,7 +1520,7 @@ export default function OrtheonLandingPage() {
               <div>
                 <p className="lp-eyebrow">
                   <span className="lp-dot" />
-                  Built by
+                  Founder
                 </p>
                 <h3>George Chakhidze</h3>
                 <p>Talent & Workforce Systems · New York</p>
@@ -1754,13 +1530,13 @@ export default function OrtheonLandingPage() {
             <div>
               <p className="lp-eyebrow">
                 <span className="lp-dot" />
-                Why this exists
+                Why I built this
               </p>
               <blockquote className="lp-quote">
-                “I spent 18 years on the other side of the hiring table.
+                "I spent 18 years on the other side of the hiring table.
                 Recruiting operations, succession planning, workforce decisions
                 — at PepsiCo, Abbott, Kelly, and as co-founder of a workforce
-                marketplace.”
+                marketplace."
               </blockquote>
               <p className="lp-copy">
                 I built Ortheon because the tools candidates use to make career
@@ -1772,16 +1548,18 @@ export default function OrtheonLandingPage() {
         </div>
       </section>
 
+      {/* ── 8. Final CTA ── */}
       <section id="start" className="lp-section light">
         <div className="lp-container">
           <div className="lp-final-panel">
-            <h2>Start your Career Direction Assessment.</h2>
+            <h2>Ready? Start your free Career Direction Report.</h2>
             <p>
-              Receive your Career Direction Map, credibility status, financial
-              signal, AI durability ratings, and the evidence behind the result.
+              During the MVP stage, the full report is free. You get ranked
+              directions, credibility status, AI durability signals, financial
+              reality check, and practical next steps for each path.
             </p>
             <a className="lp-final-cta" href="/assessment" onClick={() => logEvent("assessment_started")}>
-              Start Career Direction Assessment
+              Start Free Assessment
             </a>
             <div className="lp-terms">
               Free individual assessment. No credit card required.
@@ -1794,6 +1572,7 @@ export default function OrtheonLandingPage() {
         </div>
       </section>
 
+      {/* ── 9. Feedback (unchanged) ── */}
       <section className="lp-section warm">
         <div className="lp-container" style={{ maxWidth: 864 }}>
           <div className="lp-section-head">
@@ -1838,6 +1617,7 @@ export default function OrtheonLandingPage() {
         </div>
       </section>
 
+      {/* ── 10. Footer (unchanged) ── */}
       <footer>
         <div className="lp-container lp-footer">
           <div className="lp-footer-logo">
