@@ -1236,7 +1236,7 @@ export default function OrtheonLandingPage() {
             </div>
 
             <h1>
-              Career direction for an AI-changing job market
+              Find a career direction that is credible, realistic, and AI-durable.
             </h1>
 
             <p className="lp-hero-sub">
