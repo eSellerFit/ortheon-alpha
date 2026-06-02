@@ -20,7 +20,7 @@ const PAGE = {
   width: "794px",
   padding: "40px 52px 52px",
   boxSizing: "border-box",
-  background: "#ffffff",
+  background: "#faf9f7",
   fontFamily: "system-ui, -apple-system, 'Segoe UI', sans-serif",
   fontSize: "13px",
   color: "#111827",
@@ -157,148 +157,165 @@ function PdfPage1({ cover, compactDirectionCards, generatedAt }) {
   const cards = safeArray(compactDirectionCards);
 
   return (
-    <div data-v31-pdf-page="true" style={PAGE}>
-      {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          marginBottom: "28px",
-          borderBottom: "2px solid #245f73",
-          paddingBottom: "16px",
-        }}
-      >
-        <div>
-          <div
-            style={{
-              fontSize: "15px",
-              fontWeight: "800",
-              color: "#111",
-              letterSpacing: "0.02em",
-            }}
-          >
-            Ortheon
-          </div>
-          <div
-            style={{
-              fontSize: "10px",
-              color: "#9ca3af",
-              textTransform: "uppercase",
-              letterSpacing: "0.08em",
-              marginTop: "2px",
-            }}
-          >
-            Career Direction Report
-          </div>
+    <div data-v31-pdf-page="true" style={{ ...PAGE, padding: 0 }}>
+
+      {/* ── Top accent band ── */}
+      <div style={{ background: "#1c4f61", height: "8px", width: "100%" }} />
+
+      {/* ── Cover intro ── */}
+      <div style={{ padding: "28px 52px 20px" }}>
+        <div
+          style={{
+            fontSize: "11px",
+            fontWeight: "700",
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+            color: "#1c4f61",
+            marginBottom: "16px",
+          }}
+        >
+          Ortheon
         </div>
-        {dateStr && (
-          <div style={{ fontSize: "11px", color: "#9ca3af", textAlign: "right" }}>
-            {dateStr}
+        <div
+          style={{
+            fontSize: "28px",
+            fontWeight: "800",
+            color: "#111827",
+            lineHeight: "1.2",
+            letterSpacing: "-0.02em",
+            marginBottom: "10px",
+          }}
+        >
+          Career Direction Report
+        </div>
+        <div
+          style={{
+            fontSize: "13px",
+            color: "#6b7280",
+            lineHeight: "1.6",
+            maxWidth: "520px",
+            marginBottom: "16px",
+          }}
+        >
+          This report helps evaluate career directions through market credibility, financial realism, career fit, and AI durability.
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+          <span
+            style={{
+              display: "inline-block",
+              padding: "3px 10px",
+              background: "#e0f2fe",
+              color: "#0369a1",
+              borderRadius: "100px",
+              fontSize: "11px",
+              fontWeight: "600",
+            }}
+          >
+            Career direction assessment
+          </span>
+          {dateStr && (
+            <span style={{ fontSize: "11px", color: "#9ca3af" }}>{dateStr}</span>
+          )}
+        </div>
+      </div>
+
+      {/* ── Overall read / strategy / tension ── */}
+      <div style={{ padding: "0 52px" }}>
+        {cover?.headline && (
+          <div
+            style={{
+              background: "#f0f7fa",
+              border: "1px solid #b0d0dc",
+              borderLeft: "4px solid #245f73",
+              borderRadius: "8px",
+              padding: "11px 16px",
+              marginBottom: "8px",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "10px",
+                fontWeight: "700",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                color: "#245f73",
+                marginBottom: "4px",
+              }}
+            >
+              Overall read
+            </div>
+            <div style={{ fontSize: "13px", color: "#111", lineHeight: "1.5" }}>
+              {cover.headline}
+            </div>
+          </div>
+        )}
+        {cover?.recommendedStrategy && (
+          <div
+            style={{
+              background: "#f0f7fa",
+              border: "1px solid #b0d0dc",
+              borderLeft: "4px solid #245f73",
+              borderRadius: "8px",
+              padding: "11px 16px",
+              marginBottom: "8px",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "10px",
+                fontWeight: "700",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                color: "#245f73",
+                marginBottom: "4px",
+              }}
+            >
+              → Recommended strategy
+            </div>
+            <div style={{ fontSize: "13px", color: "#111", lineHeight: "1.5", fontWeight: "500" }}>
+              {cover.recommendedStrategy}
+            </div>
+          </div>
+        )}
+        {cover?.mainTension && (
+          <div
+            style={{
+              background: "#f0f7fa",
+              border: "1px solid #b0d0dc",
+              borderLeft: "4px solid #245f73",
+              borderRadius: "8px",
+              padding: "11px 16px",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "10px",
+                fontWeight: "700",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                color: "#245f73",
+                marginBottom: "4px",
+              }}
+            >
+              ⊘ Main tension
+            </div>
+            <div style={{ fontSize: "13px", color: "#111", lineHeight: "1.5", fontWeight: "500" }}>
+              {cover.mainTension}
+            </div>
           </div>
         )}
       </div>
 
-      {/* Headline */}
-      {cover?.headline && (
-        <div
-          style={{
-            fontSize: "22px",
-            fontWeight: "700",
-            lineHeight: "1.3",
-            color: "#111",
-            marginBottom: "20px",
-          }}
-        >
-          {cover.headline}
-        </div>
-      )}
-
-      {/* Recommended Strategy */}
-      {cover?.recommendedStrategy && (
-        <div
-          style={{
-            background: "#f0f7fa",
-            border: "1px solid #b0d0dc",
-            borderLeft: "4px solid #245f73",
-            borderRadius: "8px",
-            padding: "14px 18px",
-            marginBottom: "10px",
-          }}
-        >
-          <div
-            style={{
-              fontSize: "10px",
-              fontWeight: "700",
-              textTransform: "uppercase",
-              letterSpacing: "0.08em",
-              color: "#245f73",
-              marginBottom: "6px",
-            }}
-          >
-            → Recommended strategy
-          </div>
-          <div
-            style={{
-              fontSize: "14px",
-              color: "#111",
-              lineHeight: "1.55",
-              fontWeight: "500",
-            }}
-          >
-            {cover.recommendedStrategy}
-          </div>
-        </div>
-      )}
-
-      {/* Main Tension */}
-      {cover?.mainTension && (
-        <div
-          style={{
-            background: "#f0f7fa",
-            border: "1px solid #b0d0dc",
-            borderLeft: "4px solid #245f73",
-            borderRadius: "8px",
-            padding: "14px 18px",
-            marginBottom: "20px",
-          }}
-        >
-          <div
-            style={{
-              fontSize: "10px",
-              fontWeight: "700",
-              textTransform: "uppercase",
-              letterSpacing: "0.08em",
-              color: "#245f73",
-              marginBottom: "6px",
-            }}
-          >
-            ⊘ Main tension
-          </div>
-          <div
-            style={{
-              fontSize: "14px",
-              color: "#111",
-              lineHeight: "1.55",
-              fontWeight: "500",
-            }}
-          >
-            {cover.mainTension}
-          </div>
-        </div>
-      )}
-
-      {/* Direction overview */}
+      {/* ── Direction overview ── */}
       {cards.length > 0 && (
-        <>
+        <div style={{ padding: "0 52px 52px" }}>
           <PdfSectionTitle>Direction overview</PdfSectionTitle>
           {cards.map((card, i) => (
             <div
               key={i}
               style={{
                 padding: "10px 0",
-                borderBottom:
-                  i < cards.length - 1 ? "1px solid #f3f4f6" : "none",
+                borderBottom: i < cards.length - 1 ? "1px solid #f3f4f6" : "none",
                 display: "flex",
                 gap: "10px",
                 alignItems: "flex-start",
@@ -347,7 +364,7 @@ function PdfPage1({ cover, compactDirectionCards, generatedAt }) {
               </div>
             </div>
           ))}
-        </>
+        </div>
       )}
     </div>
   );
