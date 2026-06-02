@@ -140,13 +140,13 @@ function AssessmentFlow() {
       <section className="card">
         <p className="eyebrow">Ortheon Alpha</p>
 
-        <h1>{pageTitle}</h1>
-
-        <p className="intro">{pageIntro}</p>
-
-        <p>
-          Step {currentStep} of {TOTAL_STEPS}
-        </p>
+        {currentStep !== 1 && (
+          <>
+            <h1>{pageTitle}</h1>
+            <p className="intro">{pageIntro}</p>
+            <p>Step {currentStep} of {TOTAL_STEPS}</p>
+          </>
+        )}
 
         {currentStep === 1 && (
           <BasicContextStep
