@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { createAssessmentDraft } from "../../services/assessmentService";
+import { logEvent } from "../../utils/analyticsService";
 
 const initialBasicData = {
   firstName: "",
@@ -11,7 +12,7 @@ const initialBasicData = {
 const chips = [
   "5–7 minutes",
   "CV optional",
-  "Immediate report",
+  "Report in a few minutes",
   "Free alpha",
 ];
 
@@ -268,6 +269,38 @@ function BasicContextStep({ onComplete, values, onValuesChange }) {
           text-decoration: underline;
         }
 
+        /* Walkthrough video */
+        .bc-video-heading {
+          font-size: 17px;
+          font-weight: 700;
+          color: #111827;
+          line-height: 1.3;
+          margin: 24px 0 4px;
+          letter-spacing: -0.01em;
+        }
+
+        .bc-video-sub {
+          font-size: 13px;
+          color: #64748B;
+          margin: 0 0 12px;
+          line-height: 1.5;
+        }
+
+        .bc-walkthrough-video {
+          width: 100%;
+          display: block;
+          border-radius: 10px;
+          border: 1px solid #D8E2E4;
+          margin-bottom: 8px;
+        }
+
+        .bc-video-caption {
+          font-size: 12px;
+          color: #64748B;
+          margin: 0;
+          line-height: 1.5;
+        }
+
         /* ── Form side ── */
         .bc-form {
           display: flex;
@@ -510,6 +543,19 @@ function BasicContextStep({ onComplete, values, onValuesChange }) {
               </p>
             )}
           </form>
+
+          <p className="bc-video-heading">Not ready to start yet?<br />Watch a 50-second walkthrough first.</p>
+          <p className="bc-video-sub">See the questions, optional CV step, and the final Career Direction Report.</p>
+          <video
+            className="bc-walkthrough-video"
+            src="/v/demo.mp4"
+            controls
+            playsInline
+            preload="metadata"
+            onPlay={() => logEvent("assessment_intro_video_played")}
+            onEnded={() => logEvent("assessment_intro_video_ended")}
+          />
+          <p className="bc-video-caption">Questions → optional CV → Career Direction Report</p>
         </div>
       </div>
     </>
