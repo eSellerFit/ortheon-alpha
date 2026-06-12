@@ -152,14 +152,15 @@ export default function OrtheonLandingPage() {
         .lp-brand {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 12px;
           min-width: 0;
         }
 
         .lp-brand img {
-          width: 36px;
-          height: 36px;
+          width: 48px;
+          height: 48px;
           object-fit: contain;
+          display: block;
           flex: 0 0 auto;
         }
 
@@ -1021,13 +1022,14 @@ export default function OrtheonLandingPage() {
         .lp-footer-logo {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 10px;
         }
 
         .lp-footer-logo img {
-          width: 36px;
-          height: 36px;
+          width: 40px;
+          height: 40px;
           object-fit: contain;
+          display: block;
         }
 
         .lp-footer-logo span {
@@ -1220,7 +1222,7 @@ export default function OrtheonLandingPage() {
       <section className="lp-hero">
         <nav className="lp-container lp-nav">
           <div className="lp-brand">
-            <img src="/ortheon-logo.png" alt="Ortheon" />
+            <img src="/brand/ortheon-logo-dark-bg.png" alt="Ortheon" />
             <span>Ortheon</span>
           </div>
           <a className="lp-nav-cta" href="/assessment" onClick={() => logEvent("assessment_started")}>
@@ -1621,7 +1623,7 @@ export default function OrtheonLandingPage() {
       <footer>
         <div className="lp-container lp-footer">
           <div className="lp-footer-logo">
-            <img src="/ortheon-logo.png" alt="Ortheon" />
+            <img src="/brand/ortheon-logo-dark-bg.png" alt="Ortheon" />
             <span>Ortheon</span>
           </div>
           <div className="lp-footer-meta">
