@@ -1,8 +1,10 @@
 import { useEffect } from "react";
 import { logEvent } from "./utils/analyticsService";
+import { captureAttribution } from "./utils/attributionService";
 
 export default function OrtheonLandingPage() {
   useEffect(() => {
+    captureAttribution();
     logEvent("assessment_landed");
   }, []);
 

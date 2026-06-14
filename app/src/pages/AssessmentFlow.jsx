@@ -8,6 +8,7 @@ import CVUploadStep from "../components/assessment/CVUploadStep";
 import PriorityWeightsStep from "../components/assessment/PriorityWeightsStep";
 import V31ReportHandoff from "../v31/report/V31ReportHandoff";
 import { logEvent, updateAssessmentAnalytics } from "../utils/analyticsService";
+import { captureAttribution } from "../utils/attributionService";
 
 const TOTAL_STEPS = 8;
 
@@ -35,8 +36,10 @@ function AssessmentFlow() {
   const [weightsDraft, setWeightsDraft] = useState(null);
   // CVUploadStep (step 6) draft not lifted — main Back only shows in idle state
 
-  // assessment_started on mount (first render = step 1 viewed)
+  // Capture attribution on mount (idempotent — only writes on first visit)
+  // Then fire assessment_started
   useEffect(() => {
+    captureAttribution();
     logEvent("assessment_started", { stepId: 1, stepName: STEP_NAMES[1] });
   }, []);
 

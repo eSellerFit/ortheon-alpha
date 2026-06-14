@@ -7,10 +7,13 @@
  * - Session ID is anonymous and persisted in localStorage.
  * - Events go to `analyticsEvents` Firestore collection.
  * - Assessment-level summary goes in the `analytics` sub-object of the assessment document.
+ * - Attribution (source, medium, campaign, content, term, referrer, device) is automatically
+ *   included on every event from localStorage — set once via captureAttribution().
  */
 
 import { addDoc, collection, doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { db } from "../firebase";
+import { getAttribution } from "./attributionService";
 
 const SESSION_STORAGE_KEY = "ortheon_session_id";
 
@@ -34,6 +37,7 @@ export function getSessionId() {
 
 /**
  * Log a funnel event to analyticsEvents.
+ * Attribution fields are automatically included from localStorage.
  *
  * @param {string} eventName
  * @param {Object} [opts]
@@ -45,11 +49,19 @@ export function getSessionId() {
 export async function logEvent(eventName, opts = {}) {
   try {
     const { assessmentId, stepId, stepName, metadata } = opts;
+    const attr = getAttribution();
     const payload = {
       eventName,
       sessionId: getSessionId(),
       createdAt: serverTimestamp(),
       path: window.location.pathname,
+      source: attr.source || "direct",
+      medium: attr.medium || "",
+      campaign: attr.campaign || "",
+      content: attr.content || "",
+      term: attr.term || "",
+      referrer: attr.referrer || "",
+      device: attr.device || "",
     };
     if (assessmentId) payload.assessmentId = assessmentId;
     if (stepId != null) payload.stepId = stepId;

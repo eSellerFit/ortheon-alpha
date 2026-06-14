@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { collection, getDocs, limit, orderBy, query } from "firebase/firestore";
 import { db } from "../firebase";
 
@@ -39,13 +39,59 @@ function pct(num, den) {
   return `${Math.round((num / den) * 100)}%`;
 }
 
+function filterByDate(events, range) {
+  if (range === "all") return events;
+  const cutoff = new Date();
+  if (range === "today") cutoff.setHours(0, 0, 0, 0);
+  else if (range === "7d") cutoff.setDate(cutoff.getDate() - 7);
+  else if (range === "30d") cutoff.setDate(cutoff.getDate() - 30);
+  return events.filter((e) => {
+    const ts = e.createdAt?.toDate?.() ?? (e.createdAt ? new Date(e.createdAt) : null);
+    return ts && ts >= cutoff;
+  });
+}
+
+const FUNNEL_STATUS_ORDER = [
+  "feedback_call_clicked",
+  "report_downloaded",
+  "report_opened",
+  "report_generated",
+  "assessment_submitted",
+  "assessment_started",
+  "assessment_landed",
+];
+
+const STATUS_LABELS = {
+  feedback_call_clicked: "feedback clicked",
+  report_downloaded: "report downloaded",
+  report_opened: "report opened",
+  report_generated: "report generated",
+  assessment_submitted: "submitted",
+  assessment_started: "started",
+  assessment_landed: "landed",
+};
+
+function sessionStatus(eventSet) {
+  for (const evt of FUNNEL_STATUS_ORDER) {
+    if (eventSet.has(evt)) return STATUS_LABELS[evt];
+  }
+  return "landed";
+}
+
 const FUNNEL_STEPS = [
-  { key: "assessment_landed",       label: "Landed" },
-  { key: "assessment_started",      label: "Started" },
-  { key: "assessment_submitted",    label: "Submitted" },
-  { key: "report_generated",        label: "Report generated" },
-  { key: "report_opened",           label: "Report opened" },
-  { key: "feedback_call_clicked",   label: "Feedback call clicked" },
+  { key: "assessment_landed",     label: "Landed" },
+  { key: "assessment_started",    label: "Started" },
+  { key: "assessment_submitted",  label: "Submitted" },
+  { key: "report_generated",      label: "Report generated" },
+  { key: "report_opened",         label: "Report opened" },
+  { key: "feedback_call_clicked", label: "Feedback call clicked" },
+];
+
+const DATE_RANGES = [
+  { label: "Today",      value: "today" },
+  { label: "Last 7 days", value: "7d" },
+  { label: "Last 30 days", value: "30d" },
+  { label: "All time",   value: "all" },
 ];
 
 export default function FounderAnalytics() {
@@ -53,10 +99,10 @@ export default function FounderAnalytics() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [dateRange, setDateRange] = useState("all");
 
   useEffect(() => {
     if (!hasAccess) return;
-
     async function fetchEvents() {
       try {
         let snap;
@@ -64,11 +110,11 @@ export default function FounderAnalytics() {
           const q = query(
             collection(db, "analyticsEvents"),
             orderBy("createdAt", "desc"),
-            limit(500)
+            limit(2000)
           );
           snap = await getDocs(q);
         } catch {
-          const q = query(collection(db, "analyticsEvents"), limit(500));
+          const q = query(collection(db, "analyticsEvents"), limit(2000));
           snap = await getDocs(q);
         }
         setEvents(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
@@ -78,9 +124,116 @@ export default function FounderAnalytics() {
         setLoading(false);
       }
     }
-
     fetchEvents();
   }, [hasAccess]);
+
+  const filtered = useMemo(() => filterByDate(events, dateRange), [events, dateRange]);
+
+  // Build per-session aggregates from filtered events
+  const { sessionList, countByEvent } = useMemo(() => {
+    const sessMap = {};
+    const countByEvent = {};
+
+    for (const e of filtered) {
+      countByEvent[e.eventName] = (countByEvent[e.eventName] || 0) + 1;
+      if (!e.sessionId) continue;
+      if (!sessMap[e.sessionId]) {
+        sessMap[e.sessionId] = {
+          sessionId: e.sessionId,
+          source: e.source || "direct",
+          medium: e.medium || "",
+          campaign: e.campaign || "",
+          content: e.content || "",
+          assessmentId: null,
+          events: new Set(),
+          eventCount: 0,
+          lastAt: null,
+        };
+      }
+      const s = sessMap[e.sessionId];
+      s.events.add(e.eventName);
+      s.eventCount++;
+      if (e.assessmentId && !s.assessmentId) s.assessmentId = e.assessmentId;
+      // Enrich attribution from events if initial session record was sparse
+      if ((!s.source || s.source === "direct") && e.source && e.source !== "direct") {
+        s.source = e.source;
+      }
+      if (!s.medium && e.medium) s.medium = e.medium;
+      if (!s.campaign && e.campaign) s.campaign = e.campaign;
+      if (!s.content && e.content) s.content = e.content;
+      const ts = e.createdAt?.toDate?.() ?? (e.createdAt ? new Date(e.createdAt) : null);
+      if (ts && (!s.lastAt || ts > s.lastAt)) s.lastAt = ts;
+    }
+
+    return { sessionList: Object.values(sessMap), countByEvent };
+  }, [filtered]);
+
+  // Top-line metrics
+  const metrics = useMemo(() => {
+    const uniqueVisitors = sessionList.length;
+    const starts    = sessionList.filter((s) => s.events.has("assessment_started")).length;
+    const submitted = sessionList.filter((s) => s.events.has("assessment_submitted")).length;
+    const generated = sessionList.filter((s) => s.events.has("report_generated")).length;
+    const opened    = sessionList.filter((s) => s.events.has("report_opened")).length;
+    const feedbackClicks = countByEvent["feedback_call_clicked"] || 0;
+    return {
+      uniqueVisitors,
+      starts,
+      submitted,
+      generated,
+      opened,
+      feedbackClicks,
+      startRate:      pct(starts, uniqueVisitors),
+      completionRate: pct(submitted, starts),
+      reportOpenRate: pct(opened, generated),
+    };
+  }, [sessionList, countByEvent]);
+
+  // Source performance
+  const sourceRows = useMemo(() => {
+    const map = {};
+    for (const s of sessionList) {
+      const src = s.source || "direct";
+      if (!map[src]) map[src] = { source: src, visitors: 0, starts: 0, submitted: 0, reports: 0, opened: 0, feedbackClicks: 0 };
+      const r = map[src];
+      r.visitors++;
+      if (s.events.has("assessment_started"))    r.starts++;
+      if (s.events.has("assessment_submitted"))   r.submitted++;
+      if (s.events.has("report_generated"))       r.reports++;
+      if (s.events.has("report_opened"))          r.opened++;
+      if (s.events.has("feedback_call_clicked"))  r.feedbackClicks++;
+    }
+    return Object.values(map).sort((a, b) => b.visitors - a.visitors);
+  }, [sessionList]);
+
+  // Campaign / Creative
+  const campaignRows = useMemo(() => {
+    const map = {};
+    for (const s of sessionList) {
+      const campaign = s.campaign || "(none)";
+      const content  = s.content  || "(none)";
+      const key = `${campaign}|||${content}`;
+      if (!map[key]) map[key] = { campaign, content, visitors: 0, starts: 0, submitted: 0, reports: 0 };
+      const r = map[key];
+      r.visitors++;
+      if (s.events.has("assessment_started"))   r.starts++;
+      if (s.events.has("assessment_submitted"))  r.submitted++;
+      if (s.events.has("report_generated"))      r.reports++;
+    }
+    return Object.values(map).sort((a, b) => b.visitors - a.visitors);
+  }, [sessionList]);
+
+  // Whether any campaign/content data exists (hide table if everything is "(none)")
+  const hasCampaignData = useMemo(
+    () => campaignRows.some((r) => r.campaign !== "(none)" || r.content !== "(none)"),
+    [campaignRows]
+  );
+
+  // Recent sessions
+  const recentSessions = useMemo(
+    () => [...sessionList].sort((a, b) => (b.lastAt ?? 0) - (a.lastAt ?? 0)).slice(0, 25),
+    [sessionList]
+  );
 
   if (!hasAccess) {
     return (
@@ -90,47 +243,28 @@ export default function FounderAnalytics() {
     );
   }
 
-  // ── Aggregate ──────────────────────────────────────────────────────────────────
-
-  const countByEvent = {};
-  const sessionMap = {};
-
-  for (const e of events) {
-    countByEvent[e.eventName] = (countByEvent[e.eventName] || 0) + 1;
-
-    if (e.sessionId) {
-      if (!sessionMap[e.sessionId]) {
-        sessionMap[e.sessionId] = {
-          sessionId: e.sessionId,
-          assessmentId: null,
-          events: [],
-          firstAt: null,
-          lastAt: null,
-        };
-      }
-      const sess = sessionMap[e.sessionId];
-      if (e.assessmentId && !sess.assessmentId) sess.assessmentId = e.assessmentId;
-      sess.events.push(e.eventName);
-      const ts = e.createdAt?.toDate?.() ?? (e.createdAt ? new Date(e.createdAt) : null);
-      if (ts) {
-        if (!sess.firstAt || ts < sess.firstAt) sess.firstAt = ts;
-        if (!sess.lastAt || ts > sess.lastAt) sess.lastAt = ts;
-      }
-    }
-  }
-
-  const recentSessions = Object.values(sessionMap)
-    .sort((a, b) => (b.lastAt ?? 0) - (a.lastAt ?? 0))
-    .slice(0, 20);
-
   return (
     <div style={S.page}>
+      {/* Header */}
       <div style={S.header}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 16 }}>
           <h1 style={S.h1}>Analytics</h1>
-          <span style={S.muted}>{loading ? "…" : `${events.length} events loaded`}</span>
+          <span style={S.muted}>{loading ? "…" : `${filtered.length} events · ${sessionList.length} sessions`}</span>
         </div>
         <a href="/founder" style={S.navLink}>← Founder Inbox</a>
+      </div>
+
+      {/* Date filter */}
+      <div style={S.filterRow}>
+        {DATE_RANGES.map((r) => (
+          <button
+            key={r.value}
+            style={dateRange === r.value ? S.filterBtnActive : S.filterBtn}
+            onClick={() => setDateRange(r.value)}
+          >
+            {r.label}
+          </button>
+        ))}
       </div>
 
       {error && <p style={S.errorMsg}>{error}</p>}
@@ -138,54 +272,178 @@ export default function FounderAnalytics() {
 
       {!loading && !error && (
         <>
-          {/* ── Funnel ── */}
+          {/* ── Summary cards ── */}
           <div style={S.card}>
-            <h2 style={S.h2}>Funnel</h2>
-            <table style={S.table}>
-              <thead>
-                <tr>
-                  {["Step", "Count", "vs. prev step", "vs. landed"].map((h) => (
-                    <th key={h} style={S.th}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {FUNNEL_STEPS.map((step, i) => {
-                  const count = countByEvent[step.key] || 0;
-                  const prevCount = i > 0 ? (countByEvent[FUNNEL_STEPS[i - 1].key] || 0) : null;
-                  const landedCount = countByEvent["assessment_landed"] || 0;
-                  return (
-                    <tr key={step.key} style={S.tr}>
-                      <td style={S.td}>{step.label}</td>
-                      <td style={{ ...S.td, fontWeight: 700 }}>{count}</td>
-                      <td style={{ ...S.td, color: "#6b7280" }}>
-                        {prevCount !== null ? pct(count, prevCount) : "—"}
-                      </td>
-                      <td style={{ ...S.td, color: "#6b7280" }}>
-                        {i > 0 ? pct(count, landedCount) : "—"}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <h2 style={S.h2}>Summary</h2>
+            <div style={S.metricsGrid}>
+              {[
+                { label: "Unique sessions",   value: metrics.uniqueVisitors },
+                { label: "Assessment starts",  value: metrics.starts },
+                { label: "Submitted",          value: metrics.submitted },
+                { label: "Reports generated",  value: metrics.generated },
+                { label: "Start rate",         value: metrics.startRate },
+                { label: "Completion rate",    value: metrics.completionRate },
+                { label: "Report open rate",   value: metrics.reportOpenRate },
+                { label: "Feedback clicks",    value: metrics.feedbackClicks },
+              ].map(({ label, value }) => (
+                <div key={label} style={S.metricCell}>
+                  <div style={S.metricValue}>{value}</div>
+                  <div style={S.metricLabel}>{label}</div>
+                </div>
+              ))}
+            </div>
           </div>
+
+          {/* ── Overall funnel ── */}
+          <div style={S.card}>
+            <h2 style={S.h2}>Funnel (all sources)</h2>
+            <div style={S.tableWrap}>
+              <table style={S.table}>
+                <thead>
+                  <tr>
+                    {["Step", "Sessions", "vs. prev step", "vs. landed"].map((h) => (
+                      <th key={h} style={S.th}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {FUNNEL_STEPS.map((step, i) => {
+                    const count = sessionList.filter((s) => s.events.has(step.key)).length;
+                    const prevCount = i > 0
+                      ? sessionList.filter((s) => s.events.has(FUNNEL_STEPS[i - 1].key)).length
+                      : null;
+                    const landedCount = sessionList.filter((s) => s.events.has("assessment_landed")).length || sessionList.length;
+                    return (
+                      <tr key={step.key} style={S.tr}>
+                        <td style={S.td}>{step.label}</td>
+                        <td style={{ ...S.td, fontWeight: 700 }}>{count}</td>
+                        <td style={{ ...S.td, color: "#6b7280" }}>
+                          {prevCount !== null ? pct(count, prevCount) : "—"}
+                        </td>
+                        <td style={{ ...S.td, color: "#6b7280" }}>
+                          {i > 0 ? pct(count, landedCount) : "—"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* ── Source performance ── */}
+          <div style={S.card}>
+            <h2 style={S.h2}>Source performance</h2>
+            {sourceRows.length === 0 ? (
+              <p style={S.muted}>No data yet.</p>
+            ) : (
+              <div style={S.tableWrap}>
+                <table style={S.table}>
+                  <thead>
+                    <tr>
+                      {["Source", "Visitors", "Starts", "Submitted", "Reports", "Opened", "Feedback clicks", "Start rate", "Submit rate", "Report rate"].map((h) => (
+                        <th key={h} style={S.th}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sourceRows.map((r) => (
+                      <tr key={r.source} style={S.tr}>
+                        <td style={{ ...S.td, fontWeight: 600 }}>{r.source}</td>
+                        <td style={S.td}>{r.visitors}</td>
+                        <td style={S.td}>{r.starts}</td>
+                        <td style={S.td}>{r.submitted}</td>
+                        <td style={S.td}>{r.reports}</td>
+                        <td style={S.td}>{r.opened}</td>
+                        <td style={S.td}>{r.feedbackClicks}</td>
+                        <td style={{ ...S.td, color: "#6b7280" }}>{pct(r.starts, r.visitors)}</td>
+                        <td style={{ ...S.td, color: "#6b7280" }}>{pct(r.submitted, r.starts)}</td>
+                        <td style={{ ...S.td, color: "#6b7280" }}>{pct(r.reports, r.submitted)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* ── Campaign / Creative — only shown when data exists ── */}
+          {hasCampaignData && (
+            <div style={S.card}>
+              <h2 style={S.h2}>Campaign / Creative</h2>
+              <div style={S.tableWrap}>
+                <table style={S.table}>
+                  <thead>
+                    <tr>
+                      {["Campaign", "Content / Creative", "Visitors", "Starts", "Submitted", "Reports", "Start rate", "Report rate"].map((h) => (
+                        <th key={h} style={S.th}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {campaignRows.map((r, i) => (
+                      <tr key={i} style={S.tr}>
+                        <td style={S.td}>{r.campaign}</td>
+                        <td style={S.td}>{r.content}</td>
+                        <td style={S.td}>{r.visitors}</td>
+                        <td style={S.td}>{r.starts}</td>
+                        <td style={S.td}>{r.submitted}</td>
+                        <td style={S.td}>{r.reports}</td>
+                        <td style={{ ...S.td, color: "#6b7280" }}>{pct(r.starts, r.visitors)}</td>
+                        <td style={{ ...S.td, color: "#6b7280" }}>{pct(r.reports, r.submitted)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* ── Funnel by source ── */}
+          {sourceRows.length > 0 && (
+            <div style={S.card}>
+              <h2 style={S.h2}>Funnel by source</h2>
+              <div style={S.tableWrap}>
+                <table style={S.table}>
+                  <thead>
+                    <tr>
+                      {["Source", "Landed", "Started", "Submitted", "Report gen.", "Report opened"].map((h) => (
+                        <th key={h} style={S.th}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sourceRows.map((r) => (
+                      <tr key={r.source} style={S.tr}>
+                        <td style={{ ...S.td, fontWeight: 600 }}>{r.source}</td>
+                        <td style={S.td}>{r.visitors}</td>
+                        <td style={S.td}>{r.starts} <span style={S.dimPct}>({pct(r.starts, r.visitors)})</span></td>
+                        <td style={S.td}>{r.submitted} <span style={S.dimPct}>({pct(r.submitted, r.visitors)})</span></td>
+                        <td style={S.td}>{r.reports} <span style={S.dimPct}>({pct(r.reports, r.visitors)})</span></td>
+                        <td style={S.td}>{r.opened} <span style={S.dimPct}>({pct(r.opened, r.visitors)})</span></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
           {/* ── CV step breakdown ── */}
           <div style={S.card}>
             <h2 style={S.h2}>CV Step</h2>
-            <div style={S.grid}>
+            <div style={S.metricsGrid}>
               {[
-                ["cv_step_started",   "CV step started"],
-                ["cv_uploaded",       "PDF uploaded"],
-                ["cv_parse_started",  "Parse started"],
-                ["cv_parse_succeeded","Parse succeeded"],
-                ["cv_parse_failed",   "Parse failed"],
-                ["cv_skipped",        "CV skipped"],
+                ["cv_step_started",    "CV step started"],
+                ["cv_uploaded",        "PDF uploaded"],
+                ["cv_parse_started",   "Parse started"],
+                ["cv_parse_succeeded", "Parse succeeded"],
+                ["cv_parse_failed",    "Parse failed"],
+                ["cv_skipped",         "CV skipped"],
               ].map(([key, label]) => (
-                <div key={key} style={S.statCell}>
-                  <div style={S.statCount}>{countByEvent[key] || 0}</div>
-                  <div style={S.statLabel}>{label}</div>
+                <div key={key} style={S.metricCell}>
+                  <div style={S.metricValue}>{countByEvent[key] || 0}</div>
+                  <div style={S.metricLabel}>{label}</div>
                 </div>
               ))}
             </div>
@@ -201,7 +459,7 @@ export default function FounderAnalytics() {
                 <table style={S.table}>
                   <thead>
                     <tr>
-                      {["Session ID", "Assessment ID", "Last seen", "Events"].map((h) => (
+                      {["Session ID", "Source", "Campaign", "Content", "Assessment ID", "Status", "Last seen", "Events"].map((h) => (
                         <th key={h} style={S.th}>{h}</th>
                       ))}
                     </tr>
@@ -210,8 +468,13 @@ export default function FounderAnalytics() {
                     {recentSessions.map((sess) => (
                       <tr key={sess.sessionId} style={S.tr}>
                         <td style={S.td}>
-                          <span style={S.mono}>{sess.sessionId.slice(0, 24)}</span>
+                          <span style={S.mono}>{sess.sessionId.slice(0, 22)}…</span>
                         </td>
+                        <td style={S.td}>
+                          <span style={S.sourcePill}>{sess.source || "direct"}</span>
+                        </td>
+                        <td style={{ ...S.td, color: "#6b7280" }}>{sess.campaign || "—"}</td>
+                        <td style={{ ...S.td, color: "#6b7280" }}>{sess.content || "—"}</td>
                         <td style={S.td}>
                           {sess.assessmentId ? (
                             <a href={`/founder/${sess.assessmentId}`} style={S.inlineLink}>
@@ -221,14 +484,13 @@ export default function FounderAnalytics() {
                             <span style={S.muted}>—</span>
                           )}
                         </td>
-                        <td style={{ ...S.td }}>
+                        <td style={S.td}>
+                          <span style={S.statusPill}>{sessionStatus(sess.events)}</span>
+                        </td>
+                        <td style={S.td}>
                           <span style={S.mono}>{formatTs(sess.lastAt)}</span>
                         </td>
-                        <td style={{ ...S.td, maxWidth: 360 }}>
-                          <span style={S.eventPills}>
-                            {[...new Set(sess.events)].join(" · ")}
-                          </span>
-                        </td>
+                        <td style={{ ...S.td, color: "#6b7280", fontSize: 12 }}>{sess.eventCount}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -262,14 +524,14 @@ const S = {
     background: "var(--color-bg, #f7f6f3)",
     padding: "32px 24px 64px",
     fontFamily: "var(--sans, system-ui)",
-    maxWidth: 960,
+    maxWidth: 1100,
     margin: "0 auto",
   },
   header: {
     display: "flex",
     alignItems: "flex-start",
     justifyContent: "space-between",
-    marginBottom: 24,
+    marginBottom: 16,
     flexWrap: "wrap",
     gap: 12,
   },
@@ -291,6 +553,34 @@ const S = {
     textDecoration: "none",
     fontWeight: 600,
   },
+  filterRow: {
+    display: "flex",
+    gap: 8,
+    marginBottom: 20,
+    flexWrap: "wrap",
+  },
+  filterBtn: {
+    padding: "7px 14px",
+    fontSize: 13,
+    fontWeight: 500,
+    fontFamily: "inherit",
+    background: "var(--color-surface, #ffffff)",
+    border: "1px solid var(--color-border, #e2e0da)",
+    borderRadius: 8,
+    cursor: "pointer",
+    color: "var(--color-text-muted, #6b7280)",
+  },
+  filterBtnActive: {
+    padding: "7px 14px",
+    fontSize: 13,
+    fontWeight: 700,
+    fontFamily: "inherit",
+    background: "var(--color-text-strong, #111827)",
+    border: "1px solid var(--color-text-strong, #111827)",
+    borderRadius: 8,
+    cursor: "pointer",
+    color: "#ffffff",
+  },
   card: {
     background: "var(--color-surface, #ffffff)",
     border: "1px solid var(--color-border, #e2e0da)",
@@ -298,6 +588,32 @@ const S = {
     padding: "20px 24px",
     marginBottom: 16,
     boxShadow: "var(--shadow-sm, 0 1px 3px rgba(17,24,39,0.07))",
+  },
+  metricsGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))",
+    gap: 12,
+  },
+  metricCell: {
+    padding: "12px 14px",
+    background: "var(--color-bg, #f7f6f3)",
+    borderRadius: 10,
+    border: "1px solid var(--color-border, #e2e0da)",
+  },
+  metricValue: {
+    fontSize: 28,
+    fontWeight: 700,
+    color: "var(--color-text-strong, #111827)",
+    lineHeight: 1.1,
+    marginBottom: 4,
+  },
+  metricLabel: {
+    fontSize: 11,
+    color: "var(--color-text-muted, #6b7280)",
+    fontWeight: 600,
+    textTransform: "uppercase",
+    letterSpacing: "0.04em",
+    lineHeight: 1.4,
   },
   tableWrap: {
     overflowX: "auto",
@@ -325,33 +641,16 @@ const S = {
   },
   td: {
     padding: "9px 12px",
-    verticalAlign: "top",
+    verticalAlign: "middle",
   },
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))",
-    gap: 12,
-  },
-  statCell: {
-    padding: "12px 14px",
-    background: "var(--color-bg, #f7f6f3)",
-    borderRadius: "10px",
-    border: "1px solid var(--color-border, #e2e0da)",
-  },
-  statCount: {
-    fontSize: 28,
-    fontWeight: 700,
-    color: "var(--color-text-strong, #111827)",
-    lineHeight: 1.1,
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 11,
+  muted: {
     color: "var(--color-text-muted, #6b7280)",
-    fontWeight: 600,
-    textTransform: "uppercase",
-    letterSpacing: "0.04em",
-    lineHeight: 1.4,
+    fontSize: 13,
+  },
+  dimPct: {
+    fontSize: 11,
+    color: "#9ca3af",
+    marginLeft: 3,
   },
   mono: {
     fontFamily: "var(--mono, monospace)",
@@ -359,9 +658,25 @@ const S = {
     color: "var(--color-text-muted, #6b7280)",
     whiteSpace: "nowrap",
   },
-  muted: {
-    color: "var(--color-text-muted, #6b7280)",
-    fontSize: 13,
+  sourcePill: {
+    display: "inline-block",
+    padding: "2px 8px",
+    borderRadius: 999,
+    background: "#e0f2fe",
+    color: "#0369a1",
+    fontSize: 11,
+    fontWeight: 700,
+    whiteSpace: "nowrap",
+  },
+  statusPill: {
+    display: "inline-block",
+    padding: "2px 8px",
+    borderRadius: 999,
+    background: "#f0fdf4",
+    color: "#166534",
+    fontSize: 11,
+    fontWeight: 700,
+    whiteSpace: "nowrap",
   },
   errorMsg: {
     color: "var(--color-error-text, #991b1b)",
@@ -378,15 +693,5 @@ const S = {
     fontWeight: 600,
     fontFamily: "var(--mono, monospace)",
     fontSize: 11,
-  },
-  eventPills: {
-    fontSize: 11,
-    color: "var(--color-text-muted, #6b7280)",
-    lineHeight: 1.6,
-    display: "block",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-    maxWidth: 360,
   },
 };
