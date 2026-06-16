@@ -5,6 +5,13 @@ import { db } from "../firebase";
 const SESSION_KEY = "ortheon_founder_access";
 const ENV_KEY = import.meta.env.VITE_FOUNDER_ACCESS_KEY;
 
+const getFounderSearch = () => {
+  const search = window.location.search;
+  if (search) return search;
+  const storedKey = sessionStorage.getItem(SESSION_KEY);
+  return storedKey ? `?key=${encodeURIComponent(storedKey)}` : "";
+};
+
 // ── Defensive field extractors ────────────────────────────────────────────────
 
 function extractName(d) {
@@ -165,7 +172,7 @@ export default function FounderInbox() {
       <div style={S.header}>
         <h1 style={S.h1}>Founder Inbox</h1>
         <span style={S.count}>{loading ? "…" : `${docs.length} assessments`}</span>
-        <a href="/founder/analytics" style={S.analyticsLink}>Analytics →</a>
+        <a href={`/founder/analytics${getFounderSearch()}`} style={S.analyticsLink}>Analytics →</a>
       </div>
 
       {error && <p style={S.errorMsg}>{error}</p>}
@@ -203,7 +210,7 @@ export default function FounderInbox() {
                 const topDir = extractTopDirection(d);
                 const dirCount = extractDirectionCount(d);
                 const reportUrl = `/report?documentId=${d.id}`;
-                const rawUrl = `/founder/${d.id}`;
+                const rawUrl = `/founder/${d.id}${getFounderSearch()}`;
 
                 return (
                   <tr key={d.id} style={S.tr}>

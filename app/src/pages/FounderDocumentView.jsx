@@ -5,6 +5,13 @@ import { db } from "../firebase";
 const SESSION_KEY = "ortheon_founder_access";
 const ENV_KEY = import.meta.env.VITE_FOUNDER_ACCESS_KEY;
 
+const getFounderSearch = () => {
+  const search = window.location.search;
+  if (search) return search;
+  const storedKey = sessionStorage.getItem(SESSION_KEY);
+  return storedKey ? `?key=${encodeURIComponent(storedKey)}` : "";
+};
+
 // ── Access gate (same logic as FounderInbox) ──────────────────────────────────
 
 function checkAccess() {
@@ -129,7 +136,7 @@ export default function FounderDocumentView({ documentId }) {
     <div style={S.page}>
       {/* Nav bar */}
       <div style={S.nav}>
-        <a href="/founder" style={S.navLink}>← Founder Inbox</a>
+        <a href={`/founder${getFounderSearch()}`} style={S.navLink}>← Founder Inbox</a>
         <a href={reportUrl} target="_blank" rel="noopener noreferrer" style={S.btnPrimary}>
           Open Report ↗
         </a>

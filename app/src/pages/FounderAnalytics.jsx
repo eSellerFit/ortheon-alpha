@@ -5,6 +5,13 @@ import { db } from "../firebase";
 const SESSION_KEY = "ortheon_founder_access";
 const ENV_KEY = import.meta.env.VITE_FOUNDER_ACCESS_KEY;
 
+const getFounderSearch = () => {
+  const search = window.location.search;
+  if (search) return search;
+  const storedKey = sessionStorage.getItem(SESSION_KEY);
+  return storedKey ? `?key=${encodeURIComponent(storedKey)}` : "";
+};
+
 function checkAccess() {
   if (!ENV_KEY) return false;
   if (sessionStorage.getItem(SESSION_KEY) === ENV_KEY) return true;
@@ -251,7 +258,7 @@ export default function FounderAnalytics() {
           <h1 style={S.h1}>Analytics</h1>
           <span style={S.muted}>{loading ? "…" : `${filtered.length} events · ${sessionList.length} sessions`}</span>
         </div>
-        <a href="/founder" style={S.navLink}>← Founder Inbox</a>
+        <a href={`/founder${getFounderSearch()}`} style={S.navLink}>← Founder Inbox</a>
       </div>
 
       {/* Date filter */}
@@ -477,7 +484,7 @@ export default function FounderAnalytics() {
                         <td style={{ ...S.td, color: "#6b7280" }}>{sess.content || "—"}</td>
                         <td style={S.td}>
                           {sess.assessmentId ? (
-                            <a href={`/founder/${sess.assessmentId}`} style={S.inlineLink}>
+                            <a href={`/founder/${sess.assessmentId}${getFounderSearch()}`} style={S.inlineLink}>
                               {sess.assessmentId.slice(0, 14)}…
                             </a>
                           ) : (
