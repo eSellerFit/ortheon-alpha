@@ -342,6 +342,11 @@ function CVUploadStep({ assessmentId, onComplete, onBack }) {
         will review it before analysis or saving.
       </p>
 
+      <p style={{ fontSize: "13px", color: "#64748B", background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: "8px", padding: "10px 14px", lineHeight: "1.6", margin: "0 0 16px" }}>
+        Your CV may include contact details. We use the CV only to improve your report.
+        We won't contact you unless you choose to leave your email at the end.
+      </p>
+
       <PdfUploadBox onFileSelected={handleFileSelected} />
 
       <div className="action-row">

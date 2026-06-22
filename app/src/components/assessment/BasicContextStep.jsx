@@ -1,10 +1,8 @@
 import { useState } from "react";
-import { createAssessmentDraft } from "../../services/assessmentService";
+import { updateAssessmentBasicContext } from "../../services/assessmentService";
 import { logEvent } from "../../utils/analyticsService";
 
 const initialBasicData = {
-  firstName: "",
-  email: "",
   currentRole: "",
   currentSituation: "",
 };
@@ -22,7 +20,7 @@ const previewDirections = [
   { n: "3", label: "Independent Operations Advisory", meta: "Bridge-based path · AI durability D2/D3", tag: "Bridge", primary: false },
 ];
 
-function BasicContextStep({ onComplete, values, onValuesChange }) {
+function BasicContextStep({ assessmentId, onComplete, values, onValuesChange }) {
   const [basicData, setBasicData] = useState(values ?? initialBasicData);
   const [status, setStatus] = useState("idle");
 
@@ -36,21 +34,16 @@ function BasicContextStep({ onComplete, values, onValuesChange }) {
   async function handleSubmit(event) {
     event.preventDefault();
 
-    if (
-      !basicData.firstName ||
-      !basicData.email ||
-      !basicData.currentRole ||
-      !basicData.currentSituation
-    ) {
+    if (!basicData.currentRole || !basicData.currentSituation) {
       setStatus("missing_fields");
       return;
     }
 
     try {
       setStatus("saving");
-      const newAssessmentId = await createAssessmentDraft(basicData);
+      await updateAssessmentBasicContext(assessmentId, basicData);
       setStatus("success");
-      onComplete({ assessmentId: newAssessmentId, basicData });
+      onComplete();
     } catch (error) {
       console.error("Basic context save failed:", error);
       setStatus("error");
@@ -129,9 +122,7 @@ function BasicContextStep({ onComplete, values, onValuesChange }) {
           overflow: hidden;
         }
 
-        .bc-preview-inner {
-          padding: 16px;
-        }
+        .bc-preview-inner { padding: 16px; }
 
         .bc-preview-header {
           display: flex;
@@ -212,15 +203,8 @@ function BasicContextStep({ onComplete, values, onValuesChange }) {
           white-space: nowrap;
         }
 
-        .bc-preview-tag-primary {
-          background: #EAF6F7;
-          color: #155E75;
-        }
-
-        .bc-preview-tag-secondary {
-          background: #F1F5F9;
-          color: #64748B;
-        }
+        .bc-preview-tag-primary { background: #EAF6F7; color: #155E75; }
+        .bc-preview-tag-secondary { background: #F1F5F9; color: #64748B; }
 
         .bc-preview-signals {
           display: grid;
@@ -265,9 +249,7 @@ function BasicContextStep({ onComplete, values, onValuesChange }) {
           text-decoration: none;
         }
 
-        .bc-preview-link:hover {
-          text-decoration: underline;
-        }
+        .bc-preview-link:hover { text-decoration: underline; }
 
         /* Walkthrough video */
         .bc-video-heading {
@@ -333,9 +315,7 @@ function BasicContextStep({ onComplete, values, onValuesChange }) {
           transition: border-color 0.15s, box-shadow 0.15s;
         }
 
-        .bc-input::placeholder {
-          color: #94A3B8;
-        }
+        .bc-input::placeholder { color: #94A3B8; }
 
         .bc-input:focus,
         .bc-select:focus {
@@ -472,31 +452,6 @@ function BasicContextStep({ onComplete, values, onValuesChange }) {
         <div>
           <form onSubmit={handleSubmit} className="bc-form">
             <div className="bc-form-group">
-              <label className="bc-label" htmlFor="firstName">First name</label>
-              <input
-                id="firstName"
-                className="bc-input"
-                name="firstName"
-                value={basicData.firstName}
-                onChange={handleChange}
-                placeholder="Name"
-              />
-            </div>
-
-            <div className="bc-form-group">
-              <label className="bc-label" htmlFor="email">Email</label>
-              <input
-                id="email"
-                className="bc-input"
-                name="email"
-                type="email"
-                value={basicData.email}
-                onChange={handleChange}
-                placeholder="you@example.com"
-              />
-            </div>
-
-            <div className="bc-form-group">
               <label className="bc-label" htmlFor="currentRole">Current or most recent role</label>
               <input
                 id="currentRole"
@@ -531,7 +486,7 @@ function BasicContextStep({ onComplete, values, onValuesChange }) {
               className="bc-submit"
               disabled={status === "saving"}
             >
-              {status === "saving" ? "Saving…" : "Continue to your career priorities →"}
+              {status === "saving" ? "Saving…" : "Continue →"}
             </button>
 
             {status === "missing_fields" && (

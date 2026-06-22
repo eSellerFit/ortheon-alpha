@@ -16,8 +16,6 @@ const SOURCE = "ortheon-alpha-mvp";
 
 export async function createAssessmentDraft(formData) {
   const payload = {
-    firstName: formData.firstName.trim(),
-    email: formData.email.trim().toLowerCase(),
     currentRole: formData.currentRole.trim(),
     currentSituation: formData.currentSituation,
     status: "intake_submitted",
@@ -29,10 +27,68 @@ export async function createAssessmentDraft(formData) {
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   };
+  if (formData.firstName?.trim()) payload.firstName = formData.firstName.trim();
+  if (formData.email?.trim()) payload.email = formData.email.trim().toLowerCase();
 
   const docRef = await addDoc(collection(db, "assessments"), payload);
 
   return docRef.id;
+}
+
+export async function createAnonymousAssessment(attribution = {}) {
+  const payload = {
+    status: "assessment_started",
+    source: SOURCE,
+    roleLibraryVersion: ROLE_LIBRARY_VERSION,
+    salaryBenchmarkVersion: SALARY_BENCHMARK_VERSION,
+    scoringVersion: SCORING_VERSION,
+    careerMapVersion: CAREER_MAP_VERSION,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    emailProvided: false,
+    emailReportRequested: false,
+    founderCallClicked: false,
+  };
+  if (attribution.utmSource) payload.utmSource = attribution.utmSource;
+  if (attribution.utmMedium) payload.utmMedium = attribution.utmMedium;
+  if (attribution.utmCampaign) payload.utmCampaign = attribution.utmCampaign;
+  const docRef = await addDoc(collection(db, "assessments"), payload);
+  return docRef.id;
+}
+
+export async function updateAssessmentBasicContext(assessmentId, { currentRole, currentSituation }) {
+  await updateDoc(doc(db, "assessments", assessmentId), {
+    currentRole: currentRole.trim(),
+    currentSituation,
+    status: "intake_submitted",
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function saveAssessmentEmail(assessmentId, email) {
+  await updateDoc(doc(db, "assessments", assessmentId), {
+    email: email.trim().toLowerCase(),
+    emailProvided: true,
+    emailReportRequested: true,
+    emailProvidedAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function recordFounderCallClicked(assessmentId) {
+  await updateDoc(doc(db, "assessments", assessmentId), {
+    founderCallClicked: true,
+    founderCallClickedAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function recordReportDownloaded(assessmentId) {
+  await updateDoc(doc(db, "assessments", assessmentId), {
+    reportDownloaded: true,
+    reportDownloadedAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
 }
 
 export async function updateAssessmentAnchors(assessmentId, anchorsData) {

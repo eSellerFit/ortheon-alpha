@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import StartScreen from "../components/assessment/StartScreen";
 import BasicContextStep from "../components/assessment/BasicContextStep";
 import CareerAnchorsStep from "../components/assessment/CareerAnchorsStep";
 import FinancialRealityStep from "../components/assessment/FinancialRealityStep";
@@ -7,12 +8,14 @@ import ProfessionalCredentialsStep from "../components/assessment/ProfessionalCr
 import CVUploadStep from "../components/assessment/CVUploadStep";
 import PriorityWeightsStep from "../components/assessment/PriorityWeightsStep";
 import V31ReportHandoff from "../v31/report/V31ReportHandoff";
-import { logEvent, updateAssessmentAnalytics } from "../utils/analyticsService";
-import { captureAttribution } from "../utils/attributionService";
+import { logEvent, updateAssessmentAnalytics, getSessionId } from "../utils/analyticsService";
+import { captureAttribution, getAttribution } from "../utils/attributionService";
+import { createAnonymousAssessment } from "../services/assessmentService";
 
 const TOTAL_STEPS = 8;
 
 const STEP_NAMES = {
+  0: "start_screen",
   1: "basic_context",
   2: "career_anchors",
   3: "financial_reality",
@@ -24,8 +27,9 @@ const STEP_NAMES = {
 };
 
 function AssessmentFlow() {
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(0);
   const [assessmentId, setAssessmentId] = useState("");
+  const [startStatus, setStartStatus] = useState("idle"); // idle | creating | error
 
   // Draft state — persists across Back/Next so forms don't reset
   const [basicDraft, setBasicDraft] = useState(null);
@@ -34,18 +38,16 @@ function AssessmentFlow() {
   const [constraintsDraft, setConstraintsDraft] = useState(null);
   const [credentialsDraft, setCredentialsDraft] = useState(null);
   const [weightsDraft, setWeightsDraft] = useState(null);
-  // CVUploadStep (step 6) draft not lifted — main Back only shows in idle state
 
-  // Capture attribution on mount (idempotent — only writes on first visit)
-  // Then fire assessment_started
+  // Capture attribution on mount, fire page view
   useEffect(() => {
     captureAttribution();
-    logEvent("assessment_started", { stepId: 1, stepName: STEP_NAMES[1] });
+    logEvent("assessment_page_viewed");
   }, []);
 
-  // assessment_step_viewed on every step change
+  // assessment_step_viewed on steps 2+ (step 0 = page_viewed on mount, step 1 fires on start click)
   useEffect(() => {
-    if (currentStep === 1) return; // already fired as assessment_started
+    if (currentStep <= 1) return;
     logEvent("assessment_step_viewed", {
       assessmentId: assessmentId || undefined,
       stepId: currentStep,
@@ -57,20 +59,37 @@ function AssessmentFlow() {
     setCurrentStep((prev) => Math.max(1, prev - 1));
   }
 
-  function handleBasicContextComplete({ assessmentId: newAssessmentId }) {
+  async function handleStartClick() {
+    setStartStatus("creating");
+    try {
+      const attr = getAttribution();
+      const newAssessmentId = await createAnonymousAssessment({
+        utmSource: attr.source,
+        utmMedium: attr.medium,
+        utmCampaign: attr.campaign,
+      });
+      logEvent("assessment_started", { assessmentId: newAssessmentId, stepId: 0, stepName: STEP_NAMES[0] });
+      updateAssessmentAnalytics(newAssessmentId, {
+        sessionId: getSessionId(),
+        startedAt: new Date().toISOString(),
+        lastStep: STEP_NAMES[0],
+      });
+      setAssessmentId(newAssessmentId);
+      setStartStatus("idle");
+      setCurrentStep(1);
+    } catch (err) {
+      console.error("[AssessmentFlow] Failed to create anonymous assessment:", err?.message);
+      setStartStatus("error");
+    }
+  }
+
+  function handleBasicContextComplete() {
     logEvent("assessment_step_completed", {
-      assessmentId: newAssessmentId,
+      assessmentId,
       stepId: 1,
       stepName: STEP_NAMES[1],
     });
-    updateAssessmentAnalytics(newAssessmentId, {
-      sessionId: (function () {
-        try { return localStorage.getItem("ortheon_session_id") || ""; } catch { return ""; }
-      })(),
-      startedAt: new Date().toISOString(),
-      lastStep: STEP_NAMES[1],
-    });
-    setAssessmentId(newAssessmentId);
+    updateAssessmentAnalytics(assessmentId, { lastStep: STEP_NAMES[1] });
     setCurrentStep(2);
   }
 
@@ -113,9 +132,6 @@ function AssessmentFlow() {
       completedAt: new Date().toISOString(),
     });
 
-    // Kick off server-side QStash generation chain. Fire-and-await the publish
-    // call (fast — just queues the first stage message), then navigate regardless.
-    // V31ReportHandoff handles the case where generation hasn't started yet.
     try {
       await fetch("/api/v31-generation-advance", {
         method: "POST",
@@ -131,7 +147,7 @@ function AssessmentFlow() {
   const isFinalStep = currentStep === 8;
   const pageTitle = isFinalStep
     ? "Your assessment is complete"
-    : "Start your career direction assessment";
+    : "Career direction assessment";
   const pageIntro = isFinalStep
     ? "Thank you for completing the Ortheon Alpha assessment. We're preparing your Career Direction Report based on your profile, constraints, priorities, and transition signals."
     : "Ortheon captures your career context, anchors, financial reality, practical constraints, professional credentials, CV signals, priority weights, and then generates direction recommendations.";
@@ -143,7 +159,13 @@ function AssessmentFlow() {
       <section className="card">
         <p className="eyebrow">Ortheon Alpha</p>
 
-        {currentStep !== 1 && (
+        {/* Step 0: Start screen — no outer header */}
+        {currentStep === 0 && (
+          <StartScreen onStart={handleStartClick} status={startStatus} />
+        )}
+
+        {/* Steps 2–8: outer header + step counter */}
+        {currentStep > 1 && (
           <>
             <h1>{pageTitle}</h1>
             <p className="intro">{pageIntro}</p>
@@ -153,6 +175,7 @@ function AssessmentFlow() {
 
         {currentStep === 1 && (
           <BasicContextStep
+            assessmentId={assessmentId}
             values={basicDraft}
             onValuesChange={setBasicDraft}
             onComplete={handleBasicContextComplete}

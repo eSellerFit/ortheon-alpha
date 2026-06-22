@@ -22,6 +22,7 @@ import {
 } from "./reportActionConfigV31.js";
 import V31PdfReportLayout from "./V31PdfReportLayout.jsx";
 import { logEvent, updateAssessmentAnalytics } from "../../utils/analyticsService";
+import { saveAssessmentEmail, recordFounderCallClicked, recordReportDownloaded } from "../../services/assessmentService";
 
 // ── Styles ─────────────────────────────────────────────────────────────────────
 
@@ -937,6 +938,8 @@ export default function V31UserFacingReportPreview() {
   });
   const [pdfStatus, setPdfStatus] = useState("idle");
   const pdfContainerRef = useRef(null);
+  const [emailValue, setEmailValue] = useState("");
+  const [emailStatus, setEmailStatus] = useState("idle"); // idle | submitting | success | error
 
   useEffect(() => {
     if (!documentId) return;
@@ -963,6 +966,23 @@ export default function V31UserFacingReportPreview() {
         });
       });
   }, [documentId]);
+
+  async function handleEmailSubmit(e) {
+    e.preventDefault();
+    const email = emailValue.trim();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setEmailStatus("error_format");
+      return;
+    }
+    setEmailStatus("submitting");
+    try {
+      await saveAssessmentEmail(documentId, email);
+      logEvent("email_report_requested", { assessmentId: documentId });
+      setEmailStatus("success");
+    } catch {
+      setEmailStatus("error");
+    }
+  }
 
   async function handleDownloadPdf() {
     if (!pdfContainerRef.current) return;
@@ -1011,6 +1031,7 @@ export default function V31UserFacingReportPreview() {
       }
       pdf.save("ortheon-v31-career-report.pdf");
       logEvent("report_downloaded", { assessmentId: documentId });
+      recordReportDownloaded(documentId).catch(() => {});
       setPdfStatus("idle");
     } catch (err) {
       console.error("[V31 PDF] generation failed:", err.message);
@@ -1156,18 +1177,6 @@ export default function V31UserFacingReportPreview() {
 
       {/* Action area */}
       <div style={{ ...S.actionRow, marginTop: "20px" }}>
-        <a
-          href={V31_REPORT_REVIEW_BOOKING_URL}
-          target="_blank"
-          rel="noreferrer"
-          style={S.actionLinkBtn}
-          onClick={() => {
-            logEvent("feedback_call_clicked", { assessmentId: documentId });
-            updateAssessmentAnalytics(documentId, { feedbackCallClickedAt: new Date().toISOString() });
-          }}
-        >
-          Book 30-minute report review
-        </a>
         {V31_DOWNLOAD_REPORT_ENABLED ? (
           <button
             onClick={handleDownloadPdf}
@@ -1185,19 +1194,105 @@ export default function V31UserFacingReportPreview() {
               ? "Generating PDF…"
               : pdfStatus === "error"
                 ? "Error — try again"
-                : "Download report"}
+                : "Download PDF"}
           </button>
         ) : (
           <span
             style={S.actionBtnDisabled}
             title="PDF download is not yet available"
           >
-            Download report — coming soon
+            Download PDF — coming soon
           </span>
         )}
       </div>
-      <div style={S.actionNote}>
-        Use the same email you used for the assessment when booking.
+
+      {/* Email capture */}
+      <div style={{
+        background: "#f8f9fa",
+        border: "1px solid #e2e8ed",
+        borderRadius: "10px",
+        padding: "18px 20px",
+        marginTop: "12px",
+        marginBottom: "8px",
+      }}>
+        <div style={{ fontWeight: "700", fontSize: "15px", color: "#111", marginBottom: "4px" }}>
+          Want a copy in your inbox?
+        </div>
+        <div style={{ fontSize: "13px", color: "#555", marginBottom: "14px" }}>
+          Enter your email and we'll send you a copy of this report.
+        </div>
+        {emailStatus === "success" ? (
+          <p style={{ fontSize: "13px", color: "#166534", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "6px", padding: "8px 12px", margin: 0 }}>
+            Thanks — your email was saved.
+          </p>
+        ) : (
+          <form onSubmit={handleEmailSubmit} style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            <input
+              type="email"
+              value={emailValue}
+              onChange={(e) => setEmailValue(e.target.value)}
+              placeholder="you@example.com"
+              style={{
+                flex: "1 1 200px",
+                padding: "8px 12px",
+                fontSize: "14px",
+                fontFamily: "inherit",
+                border: "1px solid #d1d5db",
+                borderRadius: "6px",
+                color: "#1a1a1a",
+                background: "#fff",
+              }}
+            />
+            <button
+              type="submit"
+              disabled={emailStatus === "submitting"}
+              style={{
+                ...S.actionLinkBtn,
+                fontSize: "13px",
+                padding: "8px 16px",
+                opacity: emailStatus === "submitting" ? 0.6 : 1,
+                cursor: emailStatus === "submitting" ? "not-allowed" : "pointer",
+              }}
+            >
+              {emailStatus === "submitting" ? "Sending…" : "Send me the report"}
+            </button>
+          </form>
+        )}
+        {(emailStatus === "error" || emailStatus === "error_format") && (
+          <p style={{ fontSize: "12px", color: "#991b1b", marginTop: "6px" }}>
+            {emailStatus === "error_format" ? "Please enter a valid email address." : "Something went wrong. Please try again."}
+          </p>
+        )}
+      </div>
+
+      {/* Founder review CTA */}
+      <div style={{
+        background: "#f0f7fa",
+        border: "1px solid #b0d0dc",
+        borderLeft: "4px solid #245f73",
+        borderRadius: "8px",
+        padding: "16px 20px",
+        marginBottom: "8px",
+      }}>
+        <div style={{ fontWeight: "700", fontSize: "14px", color: "#245f73", marginBottom: "4px" }}>
+          Book a 30-minute founder review
+        </div>
+        <div style={{ fontSize: "13px", color: "#374151", marginBottom: "12px", lineHeight: "1.5" }}>
+          Want help interpreting your report? Book a short founder review call.
+        </div>
+        <a
+          href={V31_REPORT_REVIEW_BOOKING_URL}
+          target="_blank"
+          rel="noreferrer"
+          style={S.actionLinkBtn}
+          onClick={() => {
+            logEvent("feedback_call_clicked", { assessmentId: documentId });
+            updateAssessmentAnalytics(documentId, { feedbackCallClickedAt: new Date().toISOString() });
+            recordFounderCallClicked(documentId).catch(() => {});
+          }}
+        >
+          Book founder review
+        </a>
       </div>
 
       {/* ── 2. Career Direction Map ── */}

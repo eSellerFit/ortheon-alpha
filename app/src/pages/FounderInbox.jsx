@@ -15,7 +15,7 @@ const getFounderSearch = () => {
 // ── Defensive field extractors ────────────────────────────────────────────────
 
 function extractName(d) {
-  return d.firstName || d.name || d.userProfile?.name || d.profile?.name || d.intake?.name || null;
+  return d.firstName || d.name || d.userProfile?.name || d.profile?.name || d.intake?.name || "Anonymous user";
 }
 
 function extractEmail(d) {
@@ -192,11 +192,12 @@ export default function FounderInbox() {
                   "Created",
                   "Name",
                   "Email",
-                  "Current role",
+                  "Role / Situation",
                   "Generation",
                   "Pipeline",
                   "Top direction",
                   "Dirs",
+                  "Engagement",
                   "",
                 ].map((h) => (
                   <th key={h} style={S.th}>{h}</th>
@@ -217,12 +218,27 @@ export default function FounderInbox() {
                     <td style={S.td}>
                       <span style={S.mono}>{formatTs(d.createdAt)}</span>
                     </td>
-                    <td style={S.td}>{extractName(d) || <span style={S.muted}>—</span>}</td>
                     <td style={S.td}>
-                      <span style={S.small}>{extractEmail(d) || "—"}</span>
+                      <span style={extractName(d) === "Anonymous user" ? S.muted : undefined}>
+                        {extractName(d)}
+                      </span>
+                    </td>
+                    <td style={S.td}>
+                      {extractEmail(d) ? (
+                        <span style={S.small}>{extractEmail(d)}</span>
+                      ) : d.emailProvided ? (
+                        <span style={{ ...S.small, color: "#166534" }}>Provided</span>
+                      ) : (
+                        <span style={S.muted}>—</span>
+                      )}
                     </td>
                     <td style={S.td}>
                       <span style={S.small}>{extractCurrentRole(d) || "—"}</span>
+                      {d.currentSituation && (
+                        <span style={{ ...S.small, display: "block", color: "#9ca3af", marginTop: "2px" }}>
+                          {d.currentSituation.replace(/_/g, " ")}
+                        </span>
+                      )}
                     </td>
                     <td style={S.td}>
                       {gen ? (
@@ -243,6 +259,22 @@ export default function FounderInbox() {
                     </td>
                     <td style={{ ...S.td, textAlign: "center" }}>
                       {dirCount !== null ? dirCount : "—"}
+                    </td>
+                    <td style={{ ...S.td, whiteSpace: "nowrap" }}>
+                      {d.emailProvided && (
+                        <span style={{ ...S.badge, background: "#f0fdf4", color: "#166534", display: "inline-block", marginBottom: 3 }}>
+                          Email
+                        </span>
+                      )}
+                      {" "}
+                      {d.founderCallClicked && (
+                        <span style={{ ...S.badge, background: "#eff6ff", color: "#1d4ed8", display: "inline-block" }}>
+                          Call
+                        </span>
+                      )}
+                      {!d.emailProvided && !d.founderCallClicked && (
+                        <span style={S.muted}>—</span>
+                      )}
                     </td>
                     <td style={{ ...S.td, whiteSpace: "nowrap" }}>
                       <a href={reportUrl} target="_blank" rel="noopener noreferrer" style={S.btnPrimary}>
