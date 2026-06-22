@@ -179,14 +179,13 @@ function BasicContextStep({ values, onValuesChange, onSubmit }) {
           border: 1px solid #FECACA;
         }
 
-        /* ── Right: preview + video ── */
+        /* ── Right: preview ── */
         .bc-preview-card {
           border: 1px solid #D8E2E4;
           border-radius: 14px;
           background: #ffffff;
           box-shadow: 0 4px 18px rgba(15, 63, 74, 0.09);
           overflow: hidden;
-          margin-bottom: 20px;
         }
         .bc-preview-inner { padding: 16px; }
         .bc-preview-header {
@@ -280,7 +279,13 @@ function BasicContextStep({ values, onValuesChange, onSubmit }) {
         }
         .bc-preview-link:hover { text-decoration: underline; }
 
-        /* Video */
+        /* ── Video row (full-width, centered) ── */
+        .bc-video-row {
+          margin-top: 28px;
+          max-width: 680px;
+          margin-left: auto;
+          margin-right: auto;
+        }
         .bc-video-label {
           font-size: 11px;
           font-weight: 700;
@@ -288,6 +293,7 @@ function BasicContextStep({ values, onValuesChange, onSubmit }) {
           letter-spacing: 0.07em;
           color: #64748B;
           margin: 0 0 10px;
+          text-align: center;
         }
         .bc-walkthrough-video {
           width: 100%;
@@ -299,6 +305,7 @@ function BasicContextStep({ values, onValuesChange, onSubmit }) {
         @media (max-width: 768px) {
           .bc-layout { grid-template-columns: 1fr; gap: 24px; }
           .bc-headline { font-size: 22px; }
+          .bc-video-row { margin-top: 20px; }
         }
       `}</style>
 
@@ -381,7 +388,7 @@ function BasicContextStep({ values, onValuesChange, onSubmit }) {
           </form>
         </div>
 
-        {/* Right: sample preview + video */}
+        {/* Right: sample preview */}
         <div>
           <div className="bc-preview-card">
             <div className="bc-preview-inner">
@@ -416,19 +423,22 @@ function BasicContextStep({ values, onValuesChange, onSubmit }) {
               </a>
             </div>
           </div>
-
-          <p className="bc-video-label">45-second walkthrough</p>
-          <video
-            className="bc-walkthrough-video"
-            src="/v/demo.mp4"
-            controls
-            playsInline
-            preload="metadata"
-            onPlay={() => logEvent("assessment_intro_video_played")}
-            onEnded={() => logEvent("assessment_intro_video_ended")}
-          />
         </div>
 
+      </div>
+
+      {/* ── Video row: full-width, centered ── */}
+      <div className="bc-video-row">
+        <p className="bc-video-label">45-second walkthrough</p>
+        <video
+          className="bc-walkthrough-video"
+          src="/v/demo.mp4"
+          controls
+          playsInline
+          preload="metadata"
+          onPlay={() => logEvent("assessment_intro_video_played")}
+          onEnded={() => logEvent("assessment_intro_video_ended")}
+        />
       </div>
     </>
   );
