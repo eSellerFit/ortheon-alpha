@@ -11,7 +11,7 @@
  *   included on every event from localStorage — set once via captureAttribution().
  */
 
-import { addDoc, collection, doc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { addDoc, arrayUnion, collection, doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { getAttribution } from "./attributionService";
 
@@ -70,6 +70,29 @@ export async function logEvent(eventName, opts = {}) {
     await addDoc(collection(db, "analyticsEvents"), payload);
   } catch {
     // Non-blocking — do not rethrow
+  }
+}
+
+/**
+ * Record per-step progress on an assessment document.
+ * Writes lastStep, lastEvent, lastEventAt, completedSteps (arrayUnion), stepTimestamps.{stepName}.
+ *
+ * @param {string} assessmentId
+ * @param {string} stepName
+ * @param {string} eventName
+ */
+export async function recordStepProgress(assessmentId, stepName, eventName) {
+  if (!assessmentId || !stepName) return;
+  try {
+    await updateDoc(doc(db, "assessments", assessmentId), {
+      "analytics.lastStep": stepName,
+      "analytics.lastEvent": eventName || stepName,
+      "analytics.lastEventAt": serverTimestamp(),
+      "analytics.completedSteps": arrayUnion(stepName),
+      [`analytics.stepTimestamps.${stepName}`]: serverTimestamp(),
+    });
+  } catch {
+    // Non-blocking
   }
 }
 

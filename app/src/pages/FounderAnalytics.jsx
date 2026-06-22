@@ -59,6 +59,7 @@ function filterByDate(events, range) {
 }
 
 const FUNNEL_STATUS_ORDER = [
+  "founder_call_clicked",
   "feedback_call_clicked",
   "report_downloaded",
   "report_opened",
@@ -69,6 +70,7 @@ const FUNNEL_STATUS_ORDER = [
 ];
 
 const STATUS_LABELS = {
+  founder_call_clicked: "founder call clicked",
   feedback_call_clicked: "feedback clicked",
   report_downloaded: "report downloaded",
   report_opened: "report opened",
@@ -77,6 +79,22 @@ const STATUS_LABELS = {
   assessment_started: "started",
   assessment_landed: "landed",
 };
+
+const ASSESSMENT_FUNNEL_STEPS = [
+  { label: "Basic Context",     viewedEvent: "basic_context_started",    completedEvent: "basic_context_submitted" },
+  { label: "Career Anchors",    viewedEvent: "career_anchors_viewed",    completedEvent: "career_anchors_submitted" },
+  { label: "Financial Reality", viewedEvent: "financial_reality_viewed", completedEvent: "financial_reality_submitted" },
+  { label: "Constraints",       viewedEvent: "constraints_viewed",       completedEvent: "constraints_submitted" },
+  { label: "Credentials",       viewedEvent: "credentials_viewed",       completedEvent: "credentials_submitted" },
+  { label: "CV Upload",         viewedEvent: "cv_step_viewed",           completedEvents: ["cv_uploaded", "cv_skipped"] },
+  { label: "Priority Weights",  viewedEvent: "priority_weights_viewed",  completedEvent: "priority_weights_submitted" },
+  { label: "Report",            viewedEvent: "report_opened",            completedEvents: ["report_downloaded", "founder_call_clicked"] },
+];
+
+function stepCompleted(session, step) {
+  if (step.completedEvents) return step.completedEvents.some((e) => session.events.has(e));
+  return session.events.has(step.completedEvent);
+}
 
 function sessionStatus(eventSet) {
   for (const evt of FUNNEL_STATUS_ORDER) {
@@ -182,7 +200,9 @@ export default function FounderAnalytics() {
     const submitted = sessionList.filter((s) => s.events.has("assessment_submitted")).length;
     const generated = sessionList.filter((s) => s.events.has("report_generated")).length;
     const opened    = sessionList.filter((s) => s.events.has("report_opened")).length;
-    const feedbackClicks = countByEvent["feedback_call_clicked"] || 0;
+    const feedbackClicks = sessionList.filter(
+      (s) => s.events.has("feedback_call_clicked") || s.events.has("founder_call_clicked")
+    ).length;
     return {
       uniqueVisitors,
       starts,
@@ -228,6 +248,16 @@ export default function FounderAnalytics() {
       if (s.events.has("report_generated"))      r.reports++;
     }
     return Object.values(map).sort((a, b) => b.visitors - a.visitors);
+  }, [sessionList]);
+
+  // Assessment step funnel
+  const assessmentFunnelRows = useMemo(() => {
+    return ASSESSMENT_FUNNEL_STEPS.map((step) => {
+      const entered = sessionList.filter((s) => s.events.has(step.viewedEvent)).length;
+      const completed = sessionList.filter((s) => stepCompleted(s, step)).length;
+      const dropOff = entered - completed;
+      return { label: step.label, entered, completed, dropOff, convPct: pct(completed, entered) };
+    });
   }, [sessionList]);
 
   // Whether any campaign/content data exists (hide table if everything is "(none)")
@@ -333,6 +363,35 @@ export default function FounderAnalytics() {
                       </tr>
                     );
                   })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* ── Assessment step funnel ── */}
+          <div style={S.card}>
+            <h2 style={S.h2}>Assessment Funnel</h2>
+            <div style={S.tableWrap}>
+              <table style={S.table}>
+                <thead>
+                  <tr>
+                    {["Step", "Entered / Viewed", "Completed", "Drop-off", "Conversion %"].map((h) => (
+                      <th key={h} style={S.th}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {assessmentFunnelRows.map((row) => (
+                    <tr key={row.label} style={S.tr}>
+                      <td style={{ ...S.td, fontWeight: 600 }}>{row.label}</td>
+                      <td style={{ ...S.td, fontWeight: 700 }}>{row.entered}</td>
+                      <td style={S.td}>{row.completed}</td>
+                      <td style={{ ...S.td, color: row.dropOff > 0 ? "#dc2626" : "#6b7280" }}>
+                        {row.dropOff > 0 ? `−${row.dropOff}` : "—"}
+                      </td>
+                      <td style={{ ...S.td, color: "#6b7280" }}>{row.convPct}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>

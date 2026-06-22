@@ -7,7 +7,7 @@ import ProfessionalCredentialsStep from "../components/assessment/ProfessionalCr
 import CVUploadStep from "../components/assessment/CVUploadStep";
 import PriorityWeightsStep from "../components/assessment/PriorityWeightsStep";
 import V31ReportHandoff from "../v31/report/V31ReportHandoff";
-import { logEvent, updateAssessmentAnalytics, getSessionId } from "../utils/analyticsService";
+import { logEvent, updateAssessmentAnalytics, getSessionId, recordStepProgress } from "../utils/analyticsService";
 import { captureAttribution, getAttribution } from "../utils/attributionService";
 import {
   createAnonymousAssessment,
@@ -45,14 +45,23 @@ function AssessmentFlow() {
     logEvent("assessment_page_viewed");
   }, []);
 
-  // Fire step view for steps 2+
+  // Fire specific step-viewed events for steps 2+
   useEffect(() => {
     if (currentStep <= 1) return;
-    logEvent("assessment_step_viewed", {
-      assessmentId: assessmentId || undefined,
-      stepId: currentStep,
-      stepName: STEP_NAMES[currentStep],
-    });
+    const VIEWED_EVENTS = {
+      2: "career_anchors_viewed",
+      3: "financial_reality_viewed",
+      4: "constraints_viewed",
+      5: "credentials_viewed",
+      6: "cv_step_viewed",
+      7: "priority_weights_viewed",
+    };
+    const eventName = VIEWED_EVENTS[currentStep];
+    if (!eventName) return;
+    logEvent(eventName, { assessmentId: assessmentId || undefined, stepId: currentStep, stepName: STEP_NAMES[currentStep] });
+    if (assessmentId) {
+      recordStepProgress(assessmentId, STEP_NAMES[currentStep], eventName);
+    }
   }, [currentStep]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function goBack() {
@@ -72,52 +81,51 @@ function AssessmentFlow() {
     }
     await updateAssessmentBasicContext(id, basicData);
     logEvent("assessment_started", { assessmentId: id, stepId: 1, stepName: STEP_NAMES[1] });
-    logEvent("assessment_step_completed", { assessmentId: id, stepId: 1, stepName: STEP_NAMES[1] });
+    logEvent("basic_context_submitted", { assessmentId: id, stepId: 1, stepName: STEP_NAMES[1] });
     updateAssessmentAnalytics(id, {
       sessionId: getSessionId(),
       startedAt: new Date().toISOString(),
-      lastStep: STEP_NAMES[1],
     });
+    recordStepProgress(id, STEP_NAMES[1], "basic_context_submitted");
     setAssessmentId(id);
     setCurrentStep(2);
   }
 
   function handleCareerAnchorsComplete() {
-    logEvent("assessment_step_completed", { assessmentId, stepId: 2, stepName: STEP_NAMES[2] });
-    updateAssessmentAnalytics(assessmentId, { lastStep: STEP_NAMES[2] });
+    logEvent("career_anchors_submitted", { assessmentId, stepId: 2, stepName: STEP_NAMES[2] });
+    recordStepProgress(assessmentId, STEP_NAMES[2], "career_anchors_submitted");
     setCurrentStep(3);
   }
 
   function handleFinancialRealityComplete() {
-    logEvent("assessment_step_completed", { assessmentId, stepId: 3, stepName: STEP_NAMES[3] });
-    updateAssessmentAnalytics(assessmentId, { lastStep: STEP_NAMES[3] });
+    logEvent("financial_reality_submitted", { assessmentId, stepId: 3, stepName: STEP_NAMES[3] });
+    recordStepProgress(assessmentId, STEP_NAMES[3], "financial_reality_submitted");
     setCurrentStep(4);
   }
 
   function handleTransitionConstraintsComplete() {
-    logEvent("assessment_step_completed", { assessmentId, stepId: 4, stepName: STEP_NAMES[4] });
-    updateAssessmentAnalytics(assessmentId, { lastStep: STEP_NAMES[4] });
+    logEvent("constraints_submitted", { assessmentId, stepId: 4, stepName: STEP_NAMES[4] });
+    recordStepProgress(assessmentId, STEP_NAMES[4], "constraints_submitted");
     setCurrentStep(5);
   }
 
   function handleProfessionalCredentialsComplete() {
-    logEvent("assessment_step_completed", { assessmentId, stepId: 5, stepName: STEP_NAMES[5] });
-    updateAssessmentAnalytics(assessmentId, { lastStep: STEP_NAMES[5] });
+    logEvent("credentials_submitted", { assessmentId, stepId: 5, stepName: STEP_NAMES[5] });
+    recordStepProgress(assessmentId, STEP_NAMES[5], "credentials_submitted");
     setCurrentStep(6);
   }
 
   function handleCVUploadComplete() {
-    logEvent("assessment_step_completed", { assessmentId, stepId: 6, stepName: STEP_NAMES[6] });
-    updateAssessmentAnalytics(assessmentId, { lastStep: STEP_NAMES[6] });
+    recordStepProgress(assessmentId, STEP_NAMES[6], "cv_step_completed");
     setCurrentStep(7);
   }
 
   async function handlePriorityWeightsComplete() {
-    logEvent("assessment_step_completed", { assessmentId, stepId: 7, stepName: STEP_NAMES[7] });
+    logEvent("priority_weights_submitted", { assessmentId, stepId: 7, stepName: STEP_NAMES[7] });
     logEvent("assessment_submitted", { assessmentId });
     logEvent("report_generation_started", { assessmentId });
+    recordStepProgress(assessmentId, STEP_NAMES[7], "priority_weights_submitted");
     updateAssessmentAnalytics(assessmentId, {
-      lastStep: STEP_NAMES[7],
       completedAt: new Date().toISOString(),
     });
 

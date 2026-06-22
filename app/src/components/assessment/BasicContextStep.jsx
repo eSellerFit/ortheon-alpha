@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { logEvent } from "../../utils/analyticsService";
 
 const chips = [
@@ -17,6 +17,10 @@ const previewDirections = [
 function BasicContextStep({ values, onValuesChange, onSubmit }) {
   const [basicData, setBasicData] = useState(values ?? { currentRole: "", currentSituation: "" });
   const [status, setStatus] = useState("idle"); // idle | missing_fields | submitting | error
+
+  useEffect(() => {
+    logEvent("basic_context_started");
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleChange(e) {
     const updated = { ...basicData, [e.target.name]: e.target.value };

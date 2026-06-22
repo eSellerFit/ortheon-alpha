@@ -1171,6 +1171,7 @@ export default function V31UserFacingReportPreview() {
           style={S.actionLinkBtn}
           onClick={() => {
             logEvent("feedback_call_clicked", { assessmentId: documentId });
+            logEvent("founder_call_clicked", { assessmentId: documentId });
             updateAssessmentAnalytics(documentId, { feedbackCallClickedAt: new Date().toISOString() });
             recordFounderCallClicked(documentId).catch(() => {});
           }}
