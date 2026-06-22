@@ -22,7 +22,7 @@ import {
 } from "./reportActionConfigV31.js";
 import V31PdfReportLayout from "./V31PdfReportLayout.jsx";
 import { logEvent, updateAssessmentAnalytics } from "../../utils/analyticsService";
-import { saveAssessmentEmail, recordFounderCallClicked, recordReportDownloaded } from "../../services/assessmentService";
+import { recordFounderCallClicked, recordReportDownloaded } from "../../services/assessmentService";
 
 // ── Styles ─────────────────────────────────────────────────────────────────────
 
@@ -938,8 +938,6 @@ export default function V31UserFacingReportPreview() {
   });
   const [pdfStatus, setPdfStatus] = useState("idle");
   const pdfContainerRef = useRef(null);
-  const [emailValue, setEmailValue] = useState("");
-  const [emailStatus, setEmailStatus] = useState("idle"); // idle | submitting | success | error
 
   useEffect(() => {
     if (!documentId) return;
@@ -966,23 +964,6 @@ export default function V31UserFacingReportPreview() {
         });
       });
   }, [documentId]);
-
-  async function handleEmailSubmit(e) {
-    e.preventDefault();
-    const email = emailValue.trim();
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setEmailStatus("error_format");
-      return;
-    }
-    setEmailStatus("submitting");
-    try {
-      await saveAssessmentEmail(documentId, email);
-      logEvent("email_report_requested", { assessmentId: documentId });
-      setEmailStatus("success");
-    } catch {
-      setEmailStatus("error");
-    }
-  }
 
   async function handleDownloadPdf() {
     if (!pdfContainerRef.current) return;
@@ -1160,35 +1141,17 @@ export default function V31UserFacingReportPreview() {
         <span style={{ fontFamily: "monospace", fontSize: "10px" }}>{assessmentId}</span>
       </div>
 
-      {/* ── 1. Executive Summary ── */}
+      {/* ── 1. Header + compact action row ── */}
       <h1 style={S.productTitle}>Your Career Direction Report</h1>
-      {cover.headline && (
-        <div style={S.overallReadCard}>
-          <div style={S.overallReadLabel}>Overall read</div>
-          <p style={S.overallReadText}>{cover.headline}</p>
-        </div>
-      )}
-      {cover.recommendedStrategy && (
-        <StrategyCard label="Recommended strategy" value={cover.recommendedStrategy} />
-      )}
-      {cover.mainTension && (
-        <StrategyCard label="Main tension" value={cover.mainTension} />
-      )}
 
-      {/* Action area */}
-      <div style={{ ...S.actionRow, marginTop: "20px" }}>
+      {/* Compact action row — right below the title */}
+      <div style={{ ...S.actionRow, marginTop: "16px", marginBottom: "4px" }}>
         {V31_DOWNLOAD_REPORT_ENABLED ? (
           <button
             onClick={handleDownloadPdf}
             disabled={pdfStatus === "generating"}
-            style={
-              pdfStatus === "generating" ? S.actionBtnDisabled : S.actionLinkBtn
-            }
-            title={
-              pdfStatus === "error"
-                ? "PDF generation failed — try again"
-                : undefined
-            }
+            style={pdfStatus === "generating" ? S.actionBtnDisabled : S.actionLinkBtn}
+            title={pdfStatus === "error" ? "PDF generation failed — try again" : undefined}
           >
             {pdfStatus === "generating"
               ? "Generating PDF…"
@@ -1197,89 +1160,10 @@ export default function V31UserFacingReportPreview() {
                 : "Download PDF"}
           </button>
         ) : (
-          <span
-            style={S.actionBtnDisabled}
-            title="PDF download is not yet available"
-          >
+          <span style={S.actionBtnDisabled} title="PDF download is not yet available">
             Download PDF — coming soon
           </span>
         )}
-      </div>
-
-      {/* Email capture */}
-      <div style={{
-        background: "#f8f9fa",
-        border: "1px solid #e2e8ed",
-        borderRadius: "10px",
-        padding: "18px 20px",
-        marginTop: "12px",
-        marginBottom: "8px",
-      }}>
-        <div style={{ fontWeight: "700", fontSize: "15px", color: "#111", marginBottom: "4px" }}>
-          Want a copy in your inbox?
-        </div>
-        <div style={{ fontSize: "13px", color: "#555", marginBottom: "14px" }}>
-          Enter your email and we'll send you a copy of this report.
-        </div>
-        {emailStatus === "success" ? (
-          <p style={{ fontSize: "13px", color: "#166534", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "6px", padding: "8px 12px", margin: 0 }}>
-            Thanks — your email was saved.
-          </p>
-        ) : (
-          <form onSubmit={handleEmailSubmit} style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-            <input
-              type="email"
-              value={emailValue}
-              onChange={(e) => setEmailValue(e.target.value)}
-              placeholder="you@example.com"
-              style={{
-                flex: "1 1 200px",
-                padding: "8px 12px",
-                fontSize: "14px",
-                fontFamily: "inherit",
-                border: "1px solid #d1d5db",
-                borderRadius: "6px",
-                color: "#1a1a1a",
-                background: "#fff",
-              }}
-            />
-            <button
-              type="submit"
-              disabled={emailStatus === "submitting"}
-              style={{
-                ...S.actionLinkBtn,
-                fontSize: "13px",
-                padding: "8px 16px",
-                opacity: emailStatus === "submitting" ? 0.6 : 1,
-                cursor: emailStatus === "submitting" ? "not-allowed" : "pointer",
-              }}
-            >
-              {emailStatus === "submitting" ? "Sending…" : "Send me the report"}
-            </button>
-          </form>
-        )}
-        {(emailStatus === "error" || emailStatus === "error_format") && (
-          <p style={{ fontSize: "12px", color: "#991b1b", marginTop: "6px" }}>
-            {emailStatus === "error_format" ? "Please enter a valid email address." : "Something went wrong. Please try again."}
-          </p>
-        )}
-      </div>
-
-      {/* Founder review CTA */}
-      <div style={{
-        background: "#f0f7fa",
-        border: "1px solid #b0d0dc",
-        borderLeft: "4px solid #245f73",
-        borderRadius: "8px",
-        padding: "16px 20px",
-        marginBottom: "8px",
-      }}>
-        <div style={{ fontWeight: "700", fontSize: "14px", color: "#245f73", marginBottom: "4px" }}>
-          Book a 30-minute founder review
-        </div>
-        <div style={{ fontSize: "13px", color: "#374151", marginBottom: "12px", lineHeight: "1.5" }}>
-          Want help interpreting your report? Book a short founder review call.
-        </div>
         <a
           href={V31_REPORT_REVIEW_BOOKING_URL}
           target="_blank"
@@ -1294,8 +1178,25 @@ export default function V31UserFacingReportPreview() {
           Book founder review
         </a>
       </div>
+      <p style={S.actionNote}>
+        Download your report or book a founder review if you want help interpreting it.
+      </p>
 
-      {/* ── 2. Career Direction Map ── */}
+      {/* ── 2. Summary ── */}
+      {cover.headline && (
+        <div style={{ ...S.overallReadCard, marginTop: "20px" }}>
+          <div style={S.overallReadLabel}>Overall read</div>
+          <p style={S.overallReadText}>{cover.headline}</p>
+        </div>
+      )}
+      {cover.recommendedStrategy && (
+        <StrategyCard label="Recommended strategy" value={cover.recommendedStrategy} />
+      )}
+      {cover.mainTension && (
+        <StrategyCard label="Main tension" value={cover.mainTension} />
+      )}
+
+      {/* ── 3. Career Direction Map ── */}
       {directionMap && (
         <>
           <SectionDivider title="Career direction map" />
@@ -1303,7 +1204,7 @@ export default function V31UserFacingReportPreview() {
         </>
       )}
 
-      {/* ── 3. Your Directions — unified expandable cards ── */}
+      {/* ── 4. Your Directions — unified expandable cards ── */}
       {compactDirectionCards?.length > 0 && (
         <>
           <SectionDivider
@@ -1332,7 +1233,7 @@ export default function V31UserFacingReportPreview() {
         </>
       )}
 
-      {/* ── 4. Not-Now Directions ── */}
+      {/* ── 5. Not-Now Directions ── */}
       {notNowDirections?.length > 0 && (
         <>
           <SectionDivider title="Not recommended at this time" />
@@ -1342,7 +1243,7 @@ export default function V31UserFacingReportPreview() {
         </>
       )}
 
-      {/* ── 5. Your Input Signals — collapsed accordion ── */}
+      {/* ── 6. Your Input Signals — collapsed accordion ── */}
       {inputSignalCards?.length > 0 && (
         <AccordionSection title="Your input signals" defaultOpen={false}>
           <div style={S.signalGrid}>
@@ -1353,7 +1254,7 @@ export default function V31UserFacingReportPreview() {
         </AccordionSection>
       )}
 
-      {/* ── 6. 30-Day Validation Plan — stronger sub-section visuals ── */}
+      {/* ── 7. 30-Day Validation Plan — stronger sub-section visuals ── */}
       {validationPlan.next30Days.length > 0 && (
         <>
           <SectionDivider title="What to do in the next 30 days" />
@@ -1385,7 +1286,7 @@ export default function V31UserFacingReportPreview() {
         </>
       )}
 
-      {/* ── 7. Confidence & Limitations — collapsed accordion at bottom ── */}
+      {/* ── 8. Confidence & Limitations — collapsed accordion at bottom ── */}
       {hasConfidenceNotes && (
         <AccordionSection title="Confidence and limitations" defaultOpen={false}>
           <div style={S.confidenceWrapper}>

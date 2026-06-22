@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import StartScreen from "../components/assessment/StartScreen";
 import BasicContextStep from "../components/assessment/BasicContextStep";
 import CareerAnchorsStep from "../components/assessment/CareerAnchorsStep";
 import FinancialRealityStep from "../components/assessment/FinancialRealityStep";
@@ -10,12 +9,14 @@ import PriorityWeightsStep from "../components/assessment/PriorityWeightsStep";
 import V31ReportHandoff from "../v31/report/V31ReportHandoff";
 import { logEvent, updateAssessmentAnalytics, getSessionId } from "../utils/analyticsService";
 import { captureAttribution, getAttribution } from "../utils/attributionService";
-import { createAnonymousAssessment } from "../services/assessmentService";
+import {
+  createAnonymousAssessment,
+  updateAssessmentBasicContext,
+} from "../services/assessmentService";
 
 const TOTAL_STEPS = 8;
 
 const STEP_NAMES = {
-  0: "start_screen",
   1: "basic_context",
   2: "career_anchors",
   3: "financial_reality",
@@ -27,9 +28,8 @@ const STEP_NAMES = {
 };
 
 function AssessmentFlow() {
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(1);
   const [assessmentId, setAssessmentId] = useState("");
-  const [startStatus, setStartStatus] = useState("idle"); // idle | creating | error
 
   // Draft state — persists across Back/Next so forms don't reset
   const [basicDraft, setBasicDraft] = useState(null);
@@ -39,13 +39,13 @@ function AssessmentFlow() {
   const [credentialsDraft, setCredentialsDraft] = useState(null);
   const [weightsDraft, setWeightsDraft] = useState(null);
 
-  // Capture attribution on mount, fire page view
+  // Capture attribution and fire page view on mount
   useEffect(() => {
     captureAttribution();
     logEvent("assessment_page_viewed");
   }, []);
 
-  // assessment_step_viewed on steps 2+ (step 0 = page_viewed on mount, step 1 fires on start click)
+  // Fire step view for steps 2+
   useEffect(() => {
     if (currentStep <= 1) return;
     logEvent("assessment_step_viewed", {
@@ -59,37 +59,26 @@ function AssessmentFlow() {
     setCurrentStep((prev) => Math.max(1, prev - 1));
   }
 
-  async function handleStartClick() {
-    setStartStatus("creating");
-    try {
+  // Step 1: create anonymous assessment + save basic context in one action
+  async function handleFirstStepSubmit(basicData) {
+    let id = assessmentId;
+    if (!id) {
       const attr = getAttribution();
-      const newAssessmentId = await createAnonymousAssessment({
+      id = await createAnonymousAssessment({
         utmSource: attr.source,
         utmMedium: attr.medium,
         utmCampaign: attr.campaign,
       });
-      logEvent("assessment_started", { assessmentId: newAssessmentId, stepId: 0, stepName: STEP_NAMES[0] });
-      updateAssessmentAnalytics(newAssessmentId, {
-        sessionId: getSessionId(),
-        startedAt: new Date().toISOString(),
-        lastStep: STEP_NAMES[0],
-      });
-      setAssessmentId(newAssessmentId);
-      setStartStatus("idle");
-      setCurrentStep(1);
-    } catch (err) {
-      console.error("[AssessmentFlow] Failed to create anonymous assessment:", err?.message);
-      setStartStatus("error");
     }
-  }
-
-  function handleBasicContextComplete() {
-    logEvent("assessment_step_completed", {
-      assessmentId,
-      stepId: 1,
-      stepName: STEP_NAMES[1],
+    await updateAssessmentBasicContext(id, basicData);
+    logEvent("assessment_started", { assessmentId: id, stepId: 1, stepName: STEP_NAMES[1] });
+    logEvent("assessment_step_completed", { assessmentId: id, stepId: 1, stepName: STEP_NAMES[1] });
+    updateAssessmentAnalytics(id, {
+      sessionId: getSessionId(),
+      startedAt: new Date().toISOString(),
+      lastStep: STEP_NAMES[1],
     });
-    updateAssessmentAnalytics(assessmentId, { lastStep: STEP_NAMES[1] });
+    setAssessmentId(id);
     setCurrentStep(2);
   }
 
@@ -159,9 +148,13 @@ function AssessmentFlow() {
       <section className="card">
         <p className="eyebrow">Ortheon Alpha</p>
 
-        {/* Step 0: Start screen — no outer header */}
-        {currentStep === 0 && (
-          <StartScreen onStart={handleStartClick} status={startStatus} />
+        {/* Step 1: combined first screen — no outer header or step counter */}
+        {currentStep === 1 && (
+          <BasicContextStep
+            values={basicDraft}
+            onValuesChange={setBasicDraft}
+            onSubmit={handleFirstStepSubmit}
+          />
         )}
 
         {/* Steps 2–8: outer header + step counter */}
@@ -171,15 +164,6 @@ function AssessmentFlow() {
             <p className="intro">{pageIntro}</p>
             <p>Step {currentStep} of {TOTAL_STEPS}</p>
           </>
-        )}
-
-        {currentStep === 1 && (
-          <BasicContextStep
-            assessmentId={assessmentId}
-            values={basicDraft}
-            onValuesChange={setBasicDraft}
-            onComplete={handleBasicContextComplete}
-          />
         )}
 
         {currentStep === 2 && (

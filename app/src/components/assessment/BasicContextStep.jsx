@@ -1,17 +1,11 @@
 import { useState } from "react";
-import { updateAssessmentBasicContext } from "../../services/assessmentService";
 import { logEvent } from "../../utils/analyticsService";
-
-const initialBasicData = {
-  currentRole: "",
-  currentSituation: "",
-};
 
 const chips = [
   "5–7 minutes",
   "CV optional",
   "Report in a few minutes",
-  "Free alpha",
+  "No signup required",
 ];
 
 const previewDirections = [
@@ -20,32 +14,26 @@ const previewDirections = [
   { n: "3", label: "Independent Operations Advisory", meta: "Bridge-based path · AI durability D2/D3", tag: "Bridge", primary: false },
 ];
 
-function BasicContextStep({ assessmentId, onComplete, values, onValuesChange }) {
-  const [basicData, setBasicData] = useState(values ?? initialBasicData);
-  const [status, setStatus] = useState("idle");
+function BasicContextStep({ values, onValuesChange, onSubmit }) {
+  const [basicData, setBasicData] = useState(values ?? { currentRole: "", currentSituation: "" });
+  const [status, setStatus] = useState("idle"); // idle | missing_fields | submitting | error
 
-  function handleChange(event) {
-    const { name, value } = event.target;
-    const updated = { ...basicData, [name]: value };
+  function handleChange(e) {
+    const updated = { ...basicData, [e.target.name]: e.target.value };
     setBasicData(updated);
     onValuesChange?.(updated);
   }
 
-  async function handleSubmit(event) {
-    event.preventDefault();
-
-    if (!basicData.currentRole || !basicData.currentSituation) {
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!basicData.currentRole?.trim() || !basicData.currentSituation) {
       setStatus("missing_fields");
       return;
     }
-
+    setStatus("submitting");
     try {
-      setStatus("saving");
-      await updateAssessmentBasicContext(assessmentId, basicData);
-      setStatus("success");
-      onComplete();
-    } catch (error) {
-      console.error("Basic context save failed:", error);
+      await onSubmit(basicData);
+    } catch {
       setStatus("error");
     }
   }
@@ -53,22 +41,13 @@ function BasicContextStep({ assessmentId, onComplete, values, onValuesChange }) 
   return (
     <>
       <style>{`
-        .bc-layout {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 40px;
-          align-items: start;
+        .bc-hero {
+          text-align: center;
+          padding: 4px 0 24px;
+          max-width: 640px;
+          margin: 0 auto;
         }
-
-        /* ── Left intro panel ── */
-        .bc-intro {
-          background: #EAF6F7;
-          border: 1px solid #D8E2E4;
-          border-radius: 16px;
-          padding: 28px 24px 24px;
-        }
-
-        .bc-step-label {
+        .bc-eyebrow {
           font-size: 11px;
           font-weight: 700;
           letter-spacing: 0.07em;
@@ -76,232 +55,68 @@ function BasicContextStep({ assessmentId, onComplete, values, onValuesChange }) 
           color: #155E75;
           margin: 0 0 14px;
         }
-
         .bc-headline {
-          font-size: 22px;
-          font-weight: 700;
+          font-size: 26px;
+          font-weight: 800;
           color: #111827;
-          line-height: 1.28;
-          margin: 0 0 12px;
-          letter-spacing: -0.02em;
+          line-height: 1.22;
+          margin: 0 0 14px;
+          letter-spacing: -0.03em;
         }
-
-        .bc-body {
+        .bc-subtext {
           font-size: 14px;
-          color: #64748B;
+          color: #374151;
           line-height: 1.65;
-          margin: 0 0 22px;
+          margin: 0 0 10px;
         }
-
-        /* Reassurance chips */
+        .bc-trust {
+          font-size: 13px;
+          color: #64748B;
+          line-height: 1.6;
+          margin: 0 0 20px;
+        }
         .bc-chips {
           display: flex;
           flex-wrap: wrap;
           gap: 8px;
-          margin-bottom: 24px;
+          justify-content: center;
         }
-
         .bc-chip {
           display: inline-flex;
           align-items: center;
           padding: 5px 12px;
-          background: #ffffff;
-          border: 1px solid #D8E2E4;
-          border-radius: 999px;
-          font-size: 12px;
-          font-weight: 600;
-          color: #155E75;
-        }
-
-        /* Sample report preview */
-        .bc-preview-card {
-          border: 1px solid #D8E2E4;
-          border-radius: 14px;
-          background: #ffffff;
-          box-shadow: 0 4px 18px rgba(15, 63, 74, 0.09);
-          overflow: hidden;
-        }
-
-        .bc-preview-inner { padding: 16px; }
-
-        .bc-preview-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 14px;
-        }
-
-        .bc-preview-eyebrow {
-          font-size: 10px;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          color: #155E75;
-        }
-
-        .bc-preview-pill {
-          font-size: 10px;
-          font-weight: 700;
           background: #EAF6F7;
-          color: #155E75;
-          padding: 3px 9px;
-          border-radius: 999px;
-        }
-
-        .bc-preview-rows {
-          display: flex;
-          flex-direction: column;
-          gap: 7px;
-          margin-bottom: 12px;
-        }
-
-        .bc-preview-row {
-          display: grid;
-          grid-template-columns: 24px 1fr auto;
-          gap: 9px;
-          align-items: center;
-          padding: 9px 11px;
-          background: #F7F4EF;
-          border-radius: 9px;
-          border: 1px solid #EAE4DC;
-        }
-
-        .bc-preview-num {
-          display: inline-flex;
-          width: 22px;
-          height: 22px;
-          align-items: center;
-          justify-content: center;
-          background: #155E75;
-          color: #ffffff;
-          border-radius: 50%;
-          font-size: 11px;
-          font-weight: 700;
-          flex-shrink: 0;
-        }
-
-        .bc-preview-row-title {
-          display: block;
-          font-size: 12px;
-          font-weight: 600;
-          color: #111827;
-          line-height: 1.3;
-        }
-
-        .bc-preview-row-meta {
-          display: block;
-          font-size: 11px;
-          color: #64748B;
-          margin-top: 1px;
-        }
-
-        .bc-preview-tag {
-          font-size: 10px;
-          font-weight: 700;
-          padding: 3px 8px;
-          border-radius: 999px;
-          white-space: nowrap;
-        }
-
-        .bc-preview-tag-primary { background: #EAF6F7; color: #155E75; }
-        .bc-preview-tag-secondary { background: #F1F5F9; color: #64748B; }
-
-        .bc-preview-signals {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 6px;
-        }
-
-        .bc-preview-signal {
-          padding: 8px 9px;
-          background: #F7F4EF;
-          border: 1px solid #EAE4DC;
-          border-radius: 8px;
-        }
-
-        .bc-preview-signal-label {
-          display: block;
-          font-size: 9px;
-          font-weight: 700;
-          color: #64748B;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          margin-bottom: 3px;
-        }
-
-        .bc-preview-signal-value {
-          display: block;
-          font-size: 12px;
-          font-weight: 600;
-          color: #111827;
-        }
-
-        .bc-preview-caption {
-          font-size: 12px;
-          color: #64748B;
-          margin: 10px 0 4px;
-        }
-
-        .bc-preview-link {
-          font-size: 13px;
-          font-weight: 600;
-          color: #155E75;
-          text-decoration: none;
-        }
-
-        .bc-preview-link:hover { text-decoration: underline; }
-
-        /* Walkthrough video */
-        .bc-video-heading {
-          font-size: 17px;
-          font-weight: 700;
-          color: #111827;
-          line-height: 1.3;
-          margin: 24px 0 4px;
-          letter-spacing: -0.01em;
-        }
-
-        .bc-video-sub {
-          font-size: 13px;
-          color: #64748B;
-          margin: 0 0 12px;
-          line-height: 1.5;
-        }
-
-        .bc-walkthrough-video {
-          width: 100%;
-          display: block;
-          border-radius: 10px;
           border: 1px solid #D8E2E4;
-          margin-bottom: 8px;
+          border-radius: 999px;
+          font-size: 12px;
+          font-weight: 600;
+          color: #155E75;
         }
 
-        .bc-video-caption {
-          font-size: 12px;
-          color: #64748B;
-          margin: 0;
-          line-height: 1.5;
+        /* ── Main two-column layout ── */
+        .bc-layout {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 36px;
+          align-items: start;
         }
 
         /* ── Form side ── */
         .bc-form {
           display: flex;
           flex-direction: column;
-          gap: 20px;
+          gap: 18px;
         }
-
         .bc-form-group {
           display: flex;
           flex-direction: column;
           gap: 6px;
         }
-
         .bc-label {
           font-size: 14px;
           font-weight: 600;
           color: #111827;
         }
-
         .bc-input,
         .bc-select {
           padding: 10px 14px;
@@ -313,17 +128,14 @@ function BasicContextStep({ assessmentId, onComplete, values, onValuesChange }) 
           color: #111827;
           width: 100%;
           transition: border-color 0.15s, box-shadow 0.15s;
+          box-sizing: border-box;
         }
-
         .bc-input::placeholder { color: #94A3B8; }
-
-        .bc-input:focus,
-        .bc-select:focus {
+        .bc-input:focus, .bc-select:focus {
           outline: none;
           border-color: #155E75;
           box-shadow: 0 0 0 3px rgba(21, 94, 117, 0.1);
         }
-
         .bc-submit {
           display: flex;
           align-items: center;
@@ -341,17 +153,14 @@ function BasicContextStep({ assessmentId, onComplete, values, onValuesChange }) 
           transition: background 0.15s, box-shadow 0.15s;
           margin-top: 4px;
         }
-
         .bc-submit:hover:not(:disabled) {
           background: #0F3F4A;
           box-shadow: 0 4px 14px rgba(15, 63, 74, 0.22);
         }
-
         .bc-submit:disabled {
           opacity: 0.55;
           cursor: not-allowed;
         }
-
         .bc-status {
           font-size: 14px;
           padding: 10px 14px;
@@ -359,100 +168,169 @@ function BasicContextStep({ assessmentId, onComplete, values, onValuesChange }) 
           margin: 0;
           line-height: 1.5;
         }
-
         .bc-status-warn {
           background: #FFFBEB;
           color: #92400E;
           border: 1px solid #FDE68A;
         }
-
         .bc-status-error {
           background: #FEF2F2;
           color: #991B1B;
           border: 1px solid #FECACA;
         }
 
+        /* ── Right: preview + video ── */
+        .bc-preview-card {
+          border: 1px solid #D8E2E4;
+          border-radius: 14px;
+          background: #ffffff;
+          box-shadow: 0 4px 18px rgba(15, 63, 74, 0.09);
+          overflow: hidden;
+          margin-bottom: 20px;
+        }
+        .bc-preview-inner { padding: 16px; }
+        .bc-preview-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 14px;
+        }
+        .bc-preview-eyebrow {
+          font-size: 10px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          color: #155E75;
+        }
+        .bc-preview-pill {
+          font-size: 10px;
+          font-weight: 700;
+          background: #EAF6F7;
+          color: #155E75;
+          padding: 3px 9px;
+          border-radius: 999px;
+        }
+        .bc-preview-rows {
+          display: flex;
+          flex-direction: column;
+          gap: 7px;
+        }
+        .bc-preview-row {
+          display: grid;
+          grid-template-columns: 24px 1fr auto;
+          gap: 9px;
+          align-items: center;
+          padding: 9px 11px;
+          background: #F7F4EF;
+          border-radius: 9px;
+          border: 1px solid #EAE4DC;
+        }
+        .bc-preview-num {
+          display: inline-flex;
+          width: 22px;
+          height: 22px;
+          align-items: center;
+          justify-content: center;
+          background: #155E75;
+          color: #ffffff;
+          border-radius: 50%;
+          font-size: 11px;
+          font-weight: 700;
+          flex-shrink: 0;
+        }
+        .bc-preview-row-title {
+          display: block;
+          font-size: 12px;
+          font-weight: 600;
+          color: #111827;
+          line-height: 1.3;
+        }
+        .bc-preview-row-meta {
+          display: block;
+          font-size: 11px;
+          color: #64748B;
+          margin-top: 1px;
+        }
+        .bc-preview-tag {
+          font-size: 10px;
+          font-weight: 700;
+          padding: 3px 8px;
+          border-radius: 999px;
+          white-space: nowrap;
+        }
+        .bc-preview-tag-primary { background: #EAF6F7; color: #155E75; }
+        .bc-preview-tag-secondary { background: #F1F5F9; color: #64748B; }
+        .bc-preview-footer {
+          padding: 10px 16px 12px;
+          border-top: 1px solid #EAE4DC;
+          background: #FAFAF8;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+        .bc-preview-caption {
+          font-size: 12px;
+          color: #64748B;
+        }
+        .bc-preview-link {
+          font-size: 12px;
+          font-weight: 600;
+          color: #155E75;
+          text-decoration: none;
+        }
+        .bc-preview-link:hover { text-decoration: underline; }
+
+        /* Video */
+        .bc-video-label {
+          font-size: 11px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.07em;
+          color: #64748B;
+          margin: 0 0 10px;
+        }
+        .bc-walkthrough-video {
+          width: 100%;
+          display: block;
+          border-radius: 10px;
+          border: 1px solid #D8E2E4;
+        }
+
         @media (max-width: 768px) {
-          .bc-layout {
-            grid-template-columns: 1fr;
-            gap: 28px;
-          }
+          .bc-layout { grid-template-columns: 1fr; gap: 24px; }
+          .bc-headline { font-size: 22px; }
         }
       `}</style>
 
-      <div className="bc-layout">
-        {/* ── Left: intro panel ── */}
-        <div className="bc-intro">
-          <p className="bc-step-label">Step 1 of 8</p>
-          <h2 className="bc-headline">Let's understand your career direction</h2>
-          <p className="bc-body">
-            In 5–7 minutes, Ortheon will build a first Career Direction Report based on your background, priorities, constraints, financial reality, and CV signals.
-          </p>
-          <p className="bc-body">
-            CV is optional. You can upload it, paste text, or continue without it later in the flow.
-          </p>
-
-          <div className="bc-chips">
-            {chips.map((chip) => (
-              <span className="bc-chip" key={chip}>{chip}</span>
-            ))}
-          </div>
-
-          <div className="bc-preview-card">
-            <div className="bc-preview-inner">
-              <div className="bc-preview-header">
-                <span className="bc-preview-eyebrow">Career Direction Report</span>
-                <span className="bc-preview-pill">Sample</span>
-              </div>
-
-              <div className="bc-preview-rows">
-                {previewDirections.map((dir) => (
-                  <div className="bc-preview-row" key={dir.n}>
-                    <span className="bc-preview-num">{dir.n}</span>
-                    <div>
-                      <strong className="bc-preview-row-title">{dir.label}</strong>
-                      <span className="bc-preview-row-meta">{dir.meta}</span>
-                    </div>
-                    <span className={`bc-preview-tag ${dir.primary ? "bc-preview-tag-primary" : "bc-preview-tag-secondary"}`}>
-                      {dir.tag}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="bc-preview-signals">
-                <div className="bc-preview-signal">
-                  <span className="bc-preview-signal-label">Credibility</span>
-                  <span className="bc-preview-signal-value">Evidence-backed</span>
-                </div>
-                <div className="bc-preview-signal">
-                  <span className="bc-preview-signal-label">Financial</span>
-                  <span className="bc-preview-signal-value">Viable</span>
-                </div>
-                <div className="bc-preview-signal">
-                  <span className="bc-preview-signal-label">AI durability</span>
-                  <span className="bc-preview-signal-value">D3</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <p className="bc-preview-caption">Sample report · fictional profile</p>
-          <a
-            className="bc-preview-link"
-            href="/sample-career-direction-report.pdf"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            View sample report →
-          </a>
+      {/* ── Hero ── */}
+      <div className="bc-hero">
+        <p className="bc-eyebrow">Ortheon Alpha · Career Direction Report</p>
+        <h1 className="bc-headline">
+          Find out which career directions<br />are actually credible for you
+        </h1>
+        <p className="bc-subtext">
+          In 5–7 minutes, Ortheon builds a first Career Direction Report based on your background, priorities, constraints, financial reality, CV signals, and AI durability.
+        </p>
+        <p className="bc-trust">
+          No signup required. You can view and download your report at the end.
+        </p>
+        <div className="bc-chips">
+          {chips.map((chip) => (
+            <span className="bc-chip" key={chip}>{chip}</span>
+          ))}
         </div>
+      </div>
 
-        {/* ── Right: form ── */}
+      {/* ── Main two-column block ── */}
+      <div className="bc-layout">
+
+        {/* Left: form */}
         <div>
           <form onSubmit={handleSubmit} className="bc-form">
             <div className="bc-form-group">
-              <label className="bc-label" htmlFor="currentRole">Current or most recent role</label>
+              <label className="bc-label" htmlFor="currentRole">
+                Current or most recent role
+              </label>
               <input
                 id="currentRole"
                 className="bc-input"
@@ -460,11 +338,14 @@ function BasicContextStep({ assessmentId, onComplete, values, onValuesChange }) 
                 value={basicData.currentRole}
                 onChange={handleChange}
                 placeholder="e.g. Senior Operations Manager"
+                autoComplete="off"
               />
             </div>
 
             <div className="bc-form-group">
-              <label className="bc-label" htmlFor="currentSituation">Current situation</label>
+              <label className="bc-label" htmlFor="currentSituation">
+                Current situation
+              </label>
               <select
                 id="currentSituation"
                 className="bc-select"
@@ -484,9 +365,9 @@ function BasicContextStep({ assessmentId, onComplete, values, onValuesChange }) 
             <button
               type="submit"
               className="bc-submit"
-              disabled={status === "saving"}
+              disabled={status === "submitting"}
             >
-              {status === "saving" ? "Saving…" : "Continue →"}
+              {status === "submitting" ? "Starting…" : "Start my Career Direction Review"}
             </button>
 
             {status === "missing_fields" && (
@@ -498,9 +379,45 @@ function BasicContextStep({ assessmentId, onComplete, values, onValuesChange }) 
               </p>
             )}
           </form>
+        </div>
 
-          <p className="bc-video-heading">Not ready to start yet?<br />Watch a 50-second walkthrough first.</p>
-          <p className="bc-video-sub">See the questions, optional CV step, and the final Career Direction Report.</p>
+        {/* Right: sample preview + video */}
+        <div>
+          <div className="bc-preview-card">
+            <div className="bc-preview-inner">
+              <div className="bc-preview-header">
+                <span className="bc-preview-eyebrow">Career Direction Report</span>
+                <span className="bc-preview-pill">Sample</span>
+              </div>
+              <div className="bc-preview-rows">
+                {previewDirections.map((dir) => (
+                  <div className="bc-preview-row" key={dir.n}>
+                    <span className="bc-preview-num">{dir.n}</span>
+                    <div>
+                      <strong className="bc-preview-row-title">{dir.label}</strong>
+                      <span className="bc-preview-row-meta">{dir.meta}</span>
+                    </div>
+                    <span className={`bc-preview-tag ${dir.primary ? "bc-preview-tag-primary" : "bc-preview-tag-secondary"}`}>
+                      {dir.tag}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="bc-preview-footer">
+              <span className="bc-preview-caption">Sample report · fictional profile</span>
+              <a
+                className="bc-preview-link"
+                href="/sample-career-direction-report.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View full sample →
+              </a>
+            </div>
+          </div>
+
+          <p className="bc-video-label">45-second walkthrough</p>
           <video
             className="bc-walkthrough-video"
             src="/v/demo.mp4"
@@ -510,8 +427,8 @@ function BasicContextStep({ assessmentId, onComplete, values, onValuesChange }) 
             onPlay={() => logEvent("assessment_intro_video_played")}
             onEnded={() => logEvent("assessment_intro_video_ended")}
           />
-          <p className="bc-video-caption">Questions → optional CV → Career Direction Report</p>
         </div>
+
       </div>
     </>
   );
