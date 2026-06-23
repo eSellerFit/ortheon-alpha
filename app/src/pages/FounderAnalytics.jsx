@@ -46,12 +46,18 @@ function pct(num, den) {
   return `${Math.round((num / den) * 100)}%`;
 }
 
+const NEW_FLOW_BASELINE_AT = new Date("2026-06-22T20:10:00-04:00");
+
 function filterByDate(events, range) {
   if (range === "all") return events;
-  const cutoff = new Date();
-  if (range === "today") cutoff.setHours(0, 0, 0, 0);
-  else if (range === "7d") cutoff.setDate(cutoff.getDate() - 7);
-  else if (range === "30d") cutoff.setDate(cutoff.getDate() - 30);
+  let cutoff;
+  if (range === "new_flow") {
+    cutoff = NEW_FLOW_BASELINE_AT;
+  } else {
+    cutoff = new Date();
+    if (range === "24h") cutoff.setHours(cutoff.getHours() - 24);
+    else if (range === "7d") cutoff.setDate(cutoff.getDate() - 7);
+  }
   return events.filter((e) => {
     const ts = e.createdAt?.toDate?.() ?? (e.createdAt ? new Date(e.createdAt) : null);
     return ts && ts >= cutoff;
@@ -113,10 +119,10 @@ const FUNNEL_STEPS = [
 ];
 
 const DATE_RANGES = [
-  { label: "Today",      value: "today" },
-  { label: "Last 7 days", value: "7d" },
-  { label: "Last 30 days", value: "30d" },
-  { label: "All time",   value: "all" },
+  { label: "Since new flow launch", value: "new_flow" },
+  { label: "Last 24 hours",         value: "24h" },
+  { label: "Last 7 days",           value: "7d" },
+  { label: "All time",              value: "all" },
 ];
 
 export default function FounderAnalytics() {
@@ -124,7 +130,7 @@ export default function FounderAnalytics() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [dateRange, setDateRange] = useState("all");
+  const [dateRange, setDateRange] = useState("new_flow");
 
   useEffect(() => {
     if (!hasAccess) return;
@@ -303,6 +309,12 @@ export default function FounderAnalytics() {
           </button>
         ))}
       </div>
+
+      {dateRange === "new_flow" && (
+        <p style={S.baselineNote}>
+          Showing data since new flow launch. Historical test data is preserved but hidden by default.
+        </p>
+      )}
 
       {error && <p style={S.errorMsg}>{error}</p>}
       {loading && !error && <p style={S.muted}>Loading…</p>}
@@ -743,6 +755,16 @@ const S = {
     fontSize: 11,
     fontWeight: 700,
     whiteSpace: "nowrap",
+  },
+  baselineNote: {
+    fontSize: 12,
+    color: "#6b7280",
+    background: "#f0f9ff",
+    border: "1px solid #bae6fd",
+    borderRadius: 8,
+    padding: "8px 14px",
+    marginBottom: 16,
+    lineHeight: 1.5,
   },
   errorMsg: {
     color: "var(--color-error-text, #991b1b)",
