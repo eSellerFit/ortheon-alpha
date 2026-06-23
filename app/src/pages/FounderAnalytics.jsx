@@ -128,6 +128,7 @@ const DATE_RANGES = [
 export default function FounderAnalytics() {
   const [hasAccess] = useState(() => checkAccess());
   const [events, setEvents] = useState([]);
+  const [assessmentLinks, setAssessmentLinks] = useState([]); // { assessmentId, sessionId }[]
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [dateRange, setDateRange] = useState("new_flow");
@@ -156,6 +157,31 @@ export default function FounderAnalytics() {
       }
     }
     fetchEvents();
+  }, [hasAccess]);
+
+  // Fetch assessment docs to enrich session→assessmentId links as a fallback
+  // for cases where the assessment_started event fails or has a drifted sessionId.
+  useEffect(() => {
+    if (!hasAccess) return;
+    async function fetchAssessmentLinks() {
+      try {
+        const q = query(
+          collection(db, "assessments"),
+          orderBy("createdAt", "desc"),
+          limit(500)
+        );
+        const snap = await getDocs(q);
+        const links = [];
+        snap.docs.forEach((d) => {
+          const data = d.data();
+          if (data.sessionId) links.push({ assessmentId: d.id, sessionId: data.sessionId });
+        });
+        setAssessmentLinks(links);
+      } catch {
+        // Non-blocking — event-based linking still works without this
+      }
+    }
+    fetchAssessmentLinks();
   }, [hasAccess]);
 
   const filtered = useMemo(() => filterByDate(events, dateRange), [events, dateRange]);
@@ -196,8 +222,15 @@ export default function FounderAnalytics() {
       if (ts && (!s.lastAt || ts > s.lastAt)) s.lastAt = ts;
     }
 
+    // Enrich sessions with assessment-doc links (fallback for when events alone don't link)
+    for (const link of assessmentLinks) {
+      if (link.sessionId && sessMap[link.sessionId] && !sessMap[link.sessionId].assessmentId) {
+        sessMap[link.sessionId].assessmentId = link.assessmentId;
+      }
+    }
+
     return { sessionList: Object.values(sessMap), countByEvent };
-  }, [filtered]);
+  }, [filtered, assessmentLinks]);
 
   // Top-line metrics
   const metrics = useMemo(() => {

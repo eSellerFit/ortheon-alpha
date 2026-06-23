@@ -46,19 +46,25 @@ function inferSource(referrer, utmSource) {
 }
 
 /**
- * Capture UTM/referrer attribution on first visit and persist to localStorage.
- * Idempotent — safe to call on every page render.
+ * Capture UTM/referrer attribution and persist to localStorage.
+ * First-touch for organic visits; always refreshes when explicit UTM params are
+ * present in the URL so that a returning tester clicking a UTM link is correctly
+ * attributed to that campaign rather than their prior direct session.
  *
  * @returns {Object} attribution object
  */
 export function captureAttribution() {
   try {
-    const existing = localStorage.getItem(ATTRIBUTION_KEY);
-    if (existing) return JSON.parse(existing);
-
     const params = new URLSearchParams(window.location.search);
-    const referrer = document.referrer || "";
     const utmSource = params.get("utm_source") || "";
+    const referrer = document.referrer || "";
+
+    const stored = localStorage.getItem(ATTRIBUTION_KEY);
+    let existingData = null;
+    try { existingData = stored ? JSON.parse(stored) : null; } catch {}
+
+    // Return stored attribution if no UTM params in current URL (first-touch for organic)
+    if (existingData && !utmSource) return existingData;
 
     const attribution = {
       source: inferSource(referrer, utmSource),
@@ -70,7 +76,8 @@ export function captureAttribution() {
       landingPage: window.location.pathname + window.location.search,
       device: getDeviceType(),
       browser: getBrowser(),
-      firstSeenAt: new Date().toISOString(),
+      firstSeenAt: existingData?.firstSeenAt ?? new Date().toISOString(),
+      lastCapturedAt: new Date().toISOString(),
     };
 
     localStorage.setItem(ATTRIBUTION_KEY, JSON.stringify(attribution));

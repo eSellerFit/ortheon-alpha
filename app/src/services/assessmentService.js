@@ -48,10 +48,24 @@ export async function createAnonymousAssessment(attribution = {}) {
     emailProvided: false,
     emailReportRequested: false,
     founderCallClicked: false,
+    // Attribution + session link written at creation so the doc is self-contained
+    // even if downstream events fail. sessionId enables FounderAnalytics to join
+    // sessions to assessments without relying solely on event co-occurrence.
+    sessionId:   attribution.sessionId   || null,
+    utmSource:   attribution.utmSource   || null,
+    utmMedium:   attribution.utmMedium   || null,
+    utmCampaign: attribution.utmCampaign || null,
+    utmContent:  attribution.utmContent  || null,
+    referrer:    attribution.referrer    || null,
+    landingPath: attribution.landingPath || null,
+    analytics: {
+      sessionId:   attribution.sessionId   || null,
+      utmSource:   attribution.utmSource   || null,
+      utmMedium:   attribution.utmMedium   || null,
+      utmCampaign: attribution.utmCampaign || null,
+      utmContent:  attribution.utmContent  || null,
+    },
   };
-  if (attribution.utmSource) payload.utmSource = attribution.utmSource;
-  if (attribution.utmMedium) payload.utmMedium = attribution.utmMedium;
-  if (attribution.utmCampaign) payload.utmCampaign = attribution.utmCampaign;
   const docRef = await addDoc(collection(db, "assessments"), payload);
   return docRef.id;
 }

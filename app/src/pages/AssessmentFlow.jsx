@@ -74,9 +74,13 @@ function AssessmentFlow() {
     if (!id) {
       const attr = getAttribution();
       id = await createAnonymousAssessment({
-        utmSource: attr.source,
-        utmMedium: attr.medium,
+        sessionId:   getSessionId(),
+        utmSource:   attr.source,
+        utmMedium:   attr.medium,
         utmCampaign: attr.campaign,
+        utmContent:  attr.content,
+        referrer:    attr.referrer,
+        landingPath: attr.landingPage,
       });
     }
     await updateAssessmentBasicContext(id, basicData);
